@@ -7,13 +7,13 @@
 ## 安装
 
 ```bash
-pnpx skills add antfu/skills --skill='*'
+pnpx skills add tnnevol/skills --skill='*'
 ```
 
 或全局安装：
 
 ```bash
-pnpx skills add antfu/skills --skill='*' -g
+pnpx skills add tnnevol/skills --skill='*' -g
 ```
 
 了解更多 CLI 用法：[skills](https://github.com/vercel-labs/skills)。

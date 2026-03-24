@@ -7,13 +7,13 @@ A curated collection of [Agent Skills](https://agentskills.io/home) reflecting [
 ## Installation
 
 ```bash
-pnpx skills add antfu/skills --skill='*'
+pnpx skills add tnnevol/skills --skill='*'
 ```
 
 Or install globally:
 
 ```bash
-pnpx skills add antfu/skills --skill='*' -g
+pnpx skills add tnnevol/skills --skill='*' -g
 ```
 
 Learn more about CLI usage at [skills](https://github.com/vercel-labs/skills).
