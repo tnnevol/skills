@@ -1,13 +1,13 @@
 ---
 name: setting-up
-description: Project setup files including .gitignore, GitHub Actions workflows, and VS Code extensions. Use when initializing new projects or adding CI/editor config.
+description: 项目设置文件，包括 .gitignore、GitHub Actions 工作流和 VS Code 扩展。在初始化新项目或添加 CI/编辑器配置时使用。
 ---
 
-# Project Setup
+# 项目设置
 
 ## .gitignore
 
-Create when `.gitignore` is not present:
+当 `.gitignore` 不存在时创建：
 
 ```
 *.log
@@ -32,11 +32,11 @@ temp
 
 ## GitHub Actions
 
-Add these workflows when setting up a new project. Skip if workflows already exist. All use [sxzz/workflows](https://github.com/sxzz/workflows) reusable workflows.
+设置新项目时添加这些工作流。如果工作流已存在则跳过。所有工作流均使用 [sxzz/workflows](https://github.com/sxzz/workflows) 可重用工作流。
 
-### Autofix Workflow
+### 自动修复工作流
 
-**`.github/workflows/autofix.yml`** - Auto-fix linting on PRs:
+**`.github/workflows/autofix.yml`** - 在 PR 上自动修复 linting：
 
 ```yaml
 name: autofix.ci
@@ -50,9 +50,9 @@ jobs:
       contents: read
 ```
 
-### Unit Test Workflow
+### 单元测试工作流
 
-**`.github/workflows/unit-test.yml`** - Run tests on push/PR:
+**`.github/workflows/unit-test.yml`** - 在 push/PR 时运行测试：
 
 ```yaml
 name: Unit Test
@@ -70,9 +70,9 @@ jobs:
     uses: sxzz/workflows/.github/workflows/unit-test.yml@v1
 ```
 
-### Release Workflow
+### 发布工作流
 
-**`.github/workflows/release.yml`** - Publish on tag (library projects only):
+**`.github/workflows/release.yml`** - 在标签上发布（仅库项目）：
 
 ```yaml
 name: Release
@@ -92,9 +92,9 @@ jobs:
       id-token: write
 ```
 
-## VS Code Extensions
+## VS Code 扩展
 
-Configure in `.vscode/extensions.json`:
+在 `.vscode/extensions.json` 中配置：
 
 ```json
 {
@@ -109,11 +109,11 @@ Configure in `.vscode/extensions.json`:
 }
 ```
 
-| Extension | Description |
+| 扩展 | 描述 |
 |-----------|-------------|
-| `dbaeumer.vscode-eslint` | ESLint integration for linting and formatting |
-| `antfu.pnpm-catalog-lens` | Shows pnpm catalog version hints inline |
-| `antfu.iconify` | Iconify icon preview and autocomplete |
-| `antfu.unocss` | UnoCSS IntelliSense and syntax highlighting |
-| `antfu.slidev` | Slidev preview and syntax highlighting |
-| `vue.volar` | Vue Language Features |
+| `dbaeumer.vscode-eslint` | 用于 linting 和格式化的 ESLint 集成 |
+| `antfu.pnpm-catalog-lens` | 显示 pnpm 目录版本提示 |
+| `antfu.iconify` | Iconify 图标预览和自动补全 |
+| `antfu.unocss` | UnoCSS IntelliSense 和语法高亮 |
+| `antfu.slidev` | Slidev 预览和语法高亮 |
+| `vue.volar` | Vue 语言特性 |

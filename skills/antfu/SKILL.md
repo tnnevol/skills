@@ -1,24 +1,24 @@
 ---
 name: antfu
-description: Anthony Fu's opinionated tooling and conventions for JavaScript/TypeScript projects. Use when setting up new projects, configuring ESLint/Prettier alternatives, monorepos, library publishing, or when the user mentions Anthony Fu's preferences.
+description: Anthony Fu 针对 JavaScript/TypeScript 项目的约定和工具偏好。在设置新项目、配置 ESLint/Prettier 替代方案、monorepo、库发布或提及 Anthony Fu 偏好时使用。
 metadata:
   author: Anthony Fu
   version: "2026.02.03"
 ---
 
-## Coding Practices
+## 编码实践
 
-### Code Organization
+### 代码组织
 
-- **Single responsibility**: Each source file should have a clear, focused scope/purpose
-- **Split large files**: Break files when they become large or handle too many concerns
-- **Type separation**: Always separate types and interfaces into `types.ts` or `types/*.ts`
-- **Constants extraction**: Move constants to a dedicated `constants.ts` file
+- **单一职责**: 每个源文件应具有明确、专注的作用域/目的
+- **拆分大文件**: 当文件变得过大或处理过多关注点时拆分文件
+- **类型分离**: 始终将类型和接口分离到 `types.ts` 或 `types/*.ts` 中
+- **常量提取**: 将常量移到专用的 `constants.ts` 文件中
 
-### Runtime Environment
+### 运行时环境
 
-- **Prefer isomorphic code**: Write runtime-agnostic code that works in Node, browser, and workers whenever possible
-- **Clear runtime indicators**: When code is environment-specific, add a comment at the top of the file:
+- **首选同构代码**: 编写可在 Node、浏览器和 worker 中运行的运行时无关代码
+- **明确运行时指标**: 当代码特定于环境时，在文件顶部添加注释：
 
 ```ts
 // @env node
@@ -27,38 +27,38 @@ metadata:
 
 ### TypeScript
 
-- **Explicit return types**: Declare return types explicitly when possible
-- **Avoid complex inline types**: Extract complex types into dedicated `type` or `interface` declarations
+- **显式返回类型**: 可能时显式声明返回类型
+- **避免复杂内联类型**: 将复杂类型提取到专用的 `type` 或 `interface` 声明中
 
-### Comments
+### 注释
 
-- **Avoid unnecessary comments**: Code should be self-explanatory
-- **Explain "why" not "how"**: Comments should describe the reasoning or intent, not what the code does
+- **避免不必要的注释**: 代码应自解释
+- **解释"为什么"而非"怎么样"**: 注释应描述原因或意图，而非代码的作用
 
-### Testing (Vitest)
+### 测试 (Vitest)
 
-- Test files: `foo.ts` → `foo.test.ts` (same directory)
-- Use `describe`/`it` API (not `test`)
-- Use `toMatchSnapshot` for complex outputs
-- Use `toMatchFileSnapshot` with explicit path for language-specific snapshots
+- 测试文件: `foo.ts` → `foo.test.ts` (同一目录)
+- 使用 `describe`/`it` API (而非 `test`)
+- 使用 `toMatchSnapshot` 处理复杂输出
+- 对语言特定快照使用带显式路径的 `toMatchFileSnapshot`
 
 ---
 
-## Tooling Choices
+## 工具选择
 
-### @antfu/ni Commands
+### @antfu/ni 命令
 
-| Command | Description |
+| 命令 | 描述 |
 |---------|-------------|
-| `ni` | Install dependencies |
-| `ni <pkg>` / `ni -D <pkg>` | Add dependency / dev dependency |
-| `nr <script>` | Run script |
-| `nu` | Upgrade dependencies |
-| `nun <pkg>` | Uninstall dependency |
-| `nci` | Clean install (`pnpm i --frozen-lockfile`) |
-| `nlx <pkg>` | Execute package (`npx`) |
+| `ni` | 安装依赖 |
+| `ni <pkg>` / `ni -D <pkg>` | 添加依赖 / 开发依赖 |
+| `nr <script>` | 运行脚本 |
+| `nu` | 升级依赖 |
+| `nun <pkg>` | 卸载依赖 |
+| `nci` | 清理安装 (`pnpm i --frozen-lockfile`) |
+| `nlx <pkg>` | 执行包 (`npx`) |
 
-### TypeScript Config
+### TypeScript 配置
 
 ```json
 {
@@ -76,7 +76,7 @@ metadata:
 }
 ```
 
-### ESLint Setup
+### ESLint 设置
 
 ```js
 // eslint.config.mjs
@@ -86,11 +86,11 @@ export default antfu()
 ```
 
 
-When completing tasks, run `pnpm run lint --fix` to format the code and fix coding style.
+完成任务时，运行 `pnpm run lint --fix` 来格式化代码并修复编码风格。
 
-For detailed configuration options: [antfu-eslint-config](references/antfu-eslint-config.md)
+有关详细配置选项：[antfu-eslint-config](references/antfu-eslint-config.md)
 
-### Git Hooks
+### Git 钩子
 
 ```json
 {
@@ -104,27 +104,27 @@ For detailed configuration options: [antfu-eslint-config](references/antfu-eslin
 }
 ```
 
-### pnpm Catalogs
+### pnpm 目录
 
-Use named catalogs in `pnpm-workspace.yaml` for version management:
+在 `pnpm-workspace.yaml` 中使用命名目录进行版本管理：
 
-| Catalog | Purpose |
+| 目录 | 用途 |
 |---------|---------|
-| `prod` | Production dependencies |
-| `inlined` | Bundler-inlined dependencies |
-| `dev` | Dev tools (linter, bundler, testing) |
-| `frontend` | Frontend libraries |
+| `prod` | 生产依赖 |
+| `inlined` | 打包器内联依赖 |
+| `dev` | 开发工具（linter、打包器、测试） |
+| `frontend` | 前端库 |
 
-Avoid the default catalog. Catalog names can be adjusted per project needs.
+避免使用默认目录。可根据项目需求调整目录名称。
 
 ---
 
-## References
+## 参考资料
 
-| Topic | Description | Reference |
+| 主题 | 描述 | 参考 |
 |-------|-------------|-----------|
-| ESLint Config | Framework support, formatters, rule overrides, VS Code settings | [antfu-eslint-config](references/antfu-eslint-config.md) |
-| Project Setup | .gitignore, GitHub Actions, VS Code extensions | [setting-up](references/setting-up.md) |
-| App Development | Vue/Nuxt/UnoCSS conventions and patterns | [app-development](references/app-development.md) |
-| Library Development | tsdown bundling, pure ESM publishing | [library-development](references/library-development.md) |
-| Monorepo | pnpm workspaces, centralized alias, Turborepo | [monorepo](references/monorepo.md) |
+| ESLint 配置 | 框架支持、格式化器、规则覆盖、VS Code 设置 | [antfu-eslint-config](references/antfu-eslint-config.md) |
+| 项目设置 | .gitignore、GitHub Actions、VS Code 扩展 | [setting-up](references/setting-up.md) |
+| 应用开发 | Vue/Nuxt/UnoCSS 约定和模式 | [app-development](references/app-development.md) |
+| 库开发 | tsdown 打包、纯 ESM 发布 | [library-development](references/library-development.md) |
+| Monorepo | pnpm 工作区、集中别名、Turborepo | [monorepo](references/monorepo.md) |
