@@ -1,55 +1,55 @@
 ---
 name: nuxt
-description: Nuxt full-stack Vue framework with SSR, auto-imports, and file-based routing. Use when working with Nuxt apps, server routes, useFetch, middleware, or hybrid rendering.
+description: 全栈 Vue 框架，支持 SSR、自动导入和基于文件的路由。在使用 Nuxt 应用、服务器路由、useFetch、中间件或混合渲染时使用。
 metadata:
   author: Anthony Fu
   version: "2026.1.28"
-  source: Generated from https://github.com/nuxt/nuxt, scripts located at https://github.com/antfu/skills
+  source: 从 https://github.com/nuxt/nuxt 生成，脚本位于 https://github.com/antfu/skills
 ---
 
-Nuxt is a full-stack Vue framework that provides server-side rendering, file-based routing, auto-imports, and a powerful module system. It uses Nitro as its server engine for universal deployment across Node.js, serverless, and edge platforms.
+Nuxt 是一个全栈 Vue 框架，提供服务器端渲染、基于文件的路由、自动导入和强大的模块系统。它使用 Nitro 作为其服务器引擎，可在 Node.js、无服务器和边缘平台上进行通用部署。
 
-> The skill is based on Nuxt 3.x, generated at 2026-01-28.
+> 该技能基于 Nuxt 3.x，生成于 2026-01-28。
 
-## Core
+## 核心
 
-| Topic | Description | Reference |
+| 主题 | 描述 | 参考 |
 |-------|-------------|-----------|
-| Directory Structure | Project folder structure, conventions, file organization | [core-directory-structure](references/core-directory-structure.md) |
-| Configuration | nuxt.config.ts, app.config.ts, runtime config, environment variables | [core-config](references/core-config.md) |
-| CLI Commands | Dev server, build, generate, preview, and utility commands | [core-cli](references/core-cli.md) |
-| Routing | File-based routing, dynamic routes, navigation, middleware, layouts | [core-routing](references/core-routing.md) |
-| Data Fetching | useFetch, useAsyncData, $fetch, caching, refresh | [core-data-fetching](references/core-data-fetching.md) |
-| Modules | Creating and using Nuxt modules, Nuxt Kit utilities | [core-modules](references/core-modules.md) |
-| Deployment | Platform-agnostic deployment with Nitro, Vercel, Netlify, Cloudflare | [core-deployment](references/core-deployment.md) |
+| 目录结构 | 项目文件夹结构、约定、文件组织 | [core-directory-structure](references/core-directory-structure.md) |
+| 配置 | nuxt.config.ts、app.config.ts、运行时配置、环境变量 | [core-config](references/core-config.md) |
+| CLI 命令 | 开发服务器、构建、生成、预览和实用命令 | [core-cli](references/core-cli.md) |
+| 路由 | 基于文件的路由、动态路由、导航、中间件、布局 | [core-routing](references/core-routing.md) |
+| 数据获取 | useFetch、useAsyncData、$fetch、缓存、刷新 | [core-data-fetching](references/core-data-fetching.md) |
+| 模块 | 创建和使用 Nuxt 模块、Nuxt Kit 工具 | [core-modules](references/core-modules.md) |
+| 部署 | 基于 Nitro 的平台无关部署，支持 Vercel、Netlify、Cloudflare | [core-deployment](references/core-deployment.md) |
 
-## Features
+## 特性
 
-| Topic | Description | Reference |
+| 主题 | 描述 | 参考 |
 |-------|-------------|-----------|
-| Composables Auto-imports | Vue APIs, Nuxt composables, custom composables, utilities | [features-composables](references/features-composables.md) |
-| Components Auto-imports | Component naming, lazy loading, hydration strategies | [features-components-autoimport](references/features-components-autoimport.md) |
-| Built-in Components | NuxtLink, NuxtPage, NuxtLayout, ClientOnly, and more | [features-components](references/features-components.md) |
-| State Management | useState composable, SSR-friendly state, Pinia integration | [features-state](references/features-state.md) |
-| Server Routes | API routes, server middleware, Nitro server engine | [features-server](references/features-server.md) |
+| 组合式函数自动导入 | Vue API、Nuxt 组合式函数、自定义组合式函数、工具 | [features-composables](references/features-composables.md) |
+| 组件自动导入 | 组件命名、懒加载、水合策略 | [features-components-autoimport](references/features-components-autoimport.md) |
+| 内置组件 | NuxtLink、NuxtPage、NuxtLayout、ClientOnly 等 | [features-components](references/features-components.md) |
+| 状态管理 | useState 组合式函数、SSR 友好状态、Pinia 集成 | [features-state](references/features-state.md) |
+| 服务器路由 | API 路由、服务器中间件、Nitro 服务器引擎 | [features-server](references/features-server.md) |
 
-## Rendering
+## 渲染
 
-| Topic | Description | Reference |
+| 主题 | 描述 | 参考 |
 |-------|-------------|-----------|
-| Rendering Modes | Universal (SSR), client-side (SPA), hybrid rendering, route rules | [rendering-modes](references/rendering-modes.md) |
+| 渲染模式 | 通用（SSR）、客户端（SPA）、混合渲染、路由规则 | [rendering-modes](references/rendering-modes.md) |
 
-## Best Practices
+## 最佳实践
 
-| Topic | Description | Reference |
+| 主题 | 描述 | 参考 |
 |-------|-------------|-----------|
-| Data Fetching Patterns | Efficient fetching, caching, parallel requests, error handling | [best-practices-data-fetching](references/best-practices-data-fetching.md) |
-| SSR & Hydration | Avoiding context leaks, hydration mismatches, composable patterns | [best-practices-ssr](references/best-practices-ssr.md) |
+| 数据获取模式 | 高效获取、缓存、并行请求、错误处理 | [best-practices-data-fetching](references/best-practices-data-fetching.md) |
+| SSR 和水合 | 避免上下文泄漏、水合不匹配、组合式函数模式 | [best-practices-ssr](references/best-practices-ssr.md) |
 
-## Advanced
+## 高级
 
-| Topic | Description | Reference |
+| 主题 | 描述 | 参考 |
 |-------|-------------|-----------|
-| Layers | Extending applications with reusable layers | [advanced-layers](references/advanced-layers.md) |
-| Lifecycle Hooks | Build-time, runtime, and server hooks | [advanced-hooks](references/advanced-hooks.md) |
-| Module Authoring | Creating publishable Nuxt modules with Nuxt Kit | [advanced-module-authoring](references/advanced-module-authoring.md) |
+| 层 | 使用可重用层扩展应用程序 | [advanced-layers](references/advanced-layers.md) |
+| 生命周期钩子 | 构建时、运行时和服务器钩子 | [advanced-hooks](references/advanced-hooks.md) |
+| 模块创作 | 使用 Nuxt Kit 创建可发布的 Nuxt 模块 | [advanced-module-authoring](references/advanced-module-authoring.md) |
