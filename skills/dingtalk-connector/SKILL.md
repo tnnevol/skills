@@ -2,12 +2,12 @@
 name: dingtalk-connector
 description: 钉钉连接器完整功能集。提供发送消息、管理会话、操作文档、查询目录等功能
 metadata:
-  author: Anthony Fu
-  version: "2026.3.24"
-  source: Generated from dingtalk-openclaw-connector, scripts located at https://github.com/antfu/skills
+  author: Anthony Fu (Modified by Tnnevol)
+  version: "2026.3.26"
+  source: Generated from dingtalk-openclaw-connector v0.8.6, scripts located at https://github.com/antfu/skills
 ---
 
-> The skill is based on dingtalk-connector v1.0, generated at 2026-03-24.
+> The skill is based on dingtalk-connector v0.8.6, generated at 2026-03-26.
 
 钉钉连接器技能提供完整的钉钉集成能力，包括消息发送、会话管理、文档操作、目录查询等功能。
 
@@ -40,9 +40,10 @@ metadata:
 |-------|-------------|-----------|
 | 目录查询 | 查询钉钉用户和群组信息 | [directory-query](references/directory-query.md) |
 
-### 配置与故障排除
+### 配置与高级功能
 
 | Topic | Description | Reference |
 |-------|-------------|-----------|
 | 配置要求 | 钉钉应用配置和认证要求 | [config-setup](references/config-setup.md) |
+| 高级配置 | 多账号、异步模式、会话策略等 | [advanced-config](references/advanced-config.md) |
 | 故障排除 | 常见问题及解决方案 | [troubleshooting](references/troubleshooting.md) |
