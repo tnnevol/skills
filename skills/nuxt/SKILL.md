@@ -2,7 +2,7 @@
 name: nuxt
 description: 全栈 Vue 框架，支持 SSR、自动导入和基于文件的路由。在使用 Nuxt 应用、服务器路由、useFetch、中间件或混合渲染时使用。
 metadata:
-  author: Anthony Fu
+  author: Anthony Fu (Modified by Tnnevol)
   version: "2026.1.28"
   source: 从 https://github.com/nuxt/nuxt 生成，脚本位于 https://github.com/antfu/skills
 ---

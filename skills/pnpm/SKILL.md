@@ -2,7 +2,7 @@
 name: pnpm
 description: Node.js 包管理器，具有严格的依赖解析。在运行 pnpm 特定命令、配置工作区或使用目录、补丁或覆盖管理依赖项时使用。
 metadata:
-  author: Anthony Fu
+  author: Anthony Fu (Modified by Tnnevol)
   version: "2026.1.28"
   source: 从 https://github.com/pnpm/pnpm 生成，脚本位于 https://github.com/antfu/skills
 ---

@@ -1,8 +1,8 @@
 ---
 name: antfu
-description: Anthony Fu 针对 JavaScript/TypeScript 项目的约定和工具偏好。在设置新项目、配置 ESLint/Prettier 替代方案、monorepo、库发布或提及 Anthony Fu 偏好时使用。
+description: Anthony Fu's opinionated tooling and conventions for JavaScript/TypeScript projects (Modified by Tnnevol). Use when setting up new projects, configuring ESLint/Prettier alternatives, monorepos, library publishing, or when the user mentions Anthony Fu's preferences.
 metadata:
-  author: Anthony Fu
+  author: Anthony Fu (Modified by Tnnevol)
   version: "2026.02.03"
 ---
 

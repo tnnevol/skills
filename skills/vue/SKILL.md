@@ -2,7 +2,7 @@
 name: vue
 description: Vue 3 组合式 API、script setup 宏、响应式系统和内置组件。在编写 Vue SFC、defineProps/defineEmits/defineModel、监视器或使用 Transition/Teleport/Suspense/KeepAlive 时使用。
 metadata:
-  author: Anthony Fu
+  author: Anthony Fu (Modified by Tnnevol)
   version: "2026.1.31"
   source: 从 https://github.com/vuejs/docs 生成，脚本位于 https://github.com/antfu/skills
 ---

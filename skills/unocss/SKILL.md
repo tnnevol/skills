@@ -2,7 +2,7 @@
 name: unocss
 description: UnoCSS instant atomic CSS engine, superset of Tailwind CSS. Use when configuring UnoCSS, writing utility rules, shortcuts, or working with presets like Wind, Icons, Attributify.
 metadata:
-  author: Anthony Fu
+  author: Anthony Fu (Modified by Tnnevol)
   version: "2026.1.28"
   source: Generated from https://github.com/unocss/unocss, scripts located at https://github.com/antfu/skills
 ---
