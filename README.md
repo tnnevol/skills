@@ -33,6 +33,7 @@ Manually maintained by Anthony Fu with his preferred tools, setup conventions, a
 | Skill | Description |
 |-------|-------------|
 | [antfu](skills/antfu) | Anthony Fu's preferences and best practices for app/library projects (eslint, pnpm, vitest, vue, etc.) - Modified by Tnnevol |
+| [dotenv-cli-usage](skills/dotenv-cli-usage) | Automatically load .env.local files in npm scripts using dotenv-cli - Tnnevol |
 
 ### Skills Generated from Official Documentation
 
