@@ -83,12 +83,12 @@ async function actionReact(callAPI, argList) {
       console.log(`   表情: ${emoji}`);
     } else {
       // Add new reaction
+      // UpsertMemoReactionRequest: name from URL path {name=memos/*}, body = Reaction
       const body = {
-        reactionType: emoji,
-        contentId: id  // Using the memo's name as contentId
+        reactionType: emoji
       };
       
-      const result = await callAPI("POST", `/api/v1/${id}/reactions`, JSON.stringify(body));
+      await callAPI("POST", `/api/v1/${id}/reactions`, JSON.stringify(body));
       console.log(`\n✅ 表情 ${emoji} 已添加`);
       console.log(`   笔记: ${id}`);
       console.log(`   表情: ${emoji}`);
