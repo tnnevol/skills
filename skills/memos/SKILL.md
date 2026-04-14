@@ -36,7 +36,11 @@ This skill follows these security guidelines to protect credentials:
 | `get` | Get a single memo by ID | `docs/actions-memo.md` |
 | `update` | Update an existing memo | `docs/actions-memo.md` |
 | `delete` | Delete a memo | `docs/actions-memo.md` |
+| `pin` | Pin/unpin a memo | `docs/actions-memo.md` |
 | `tags` | List all tags | `docs/actions-tag.md` |
+| `comments` | View/add comments on a memo | `docs/actions-comment.md` |
+| `whoami` | Show current user info | `docs/actions-user.md` |
+| `user-stats` | Show user statistics | `docs/actions-user.md` |
 | `help` | Answer questions about Memos | `docs/help.md` |
 
 ### `help` (or no arguments) — Show available actions
@@ -48,5 +52,9 @@ This skill follows these security guidelines to protect credentials:
 | `get` | `/memos get <memo_id>` | Get a single memo |
 | `update` | `/memos update <memo_id> "新内容"` | Update a memo's content |
 | `delete` | `/memos delete <memo_id>` | Delete a memo |
+| `pin` | `/memos pin <memo_id>` | Toggle pin/unpin |
 | `tags` | `/memos tags` | List all unique tags |
+| `comments` | `/memos comments <memo_id> ["评论内容"]` | View/add comments |
+| `whoami` | `/memos whoami` | Show current user info |
+| `user-stats` | `/memos user-stats` | Show user statistics |
 | `help` | `/memos help <question>` | Answer questions about Memos |

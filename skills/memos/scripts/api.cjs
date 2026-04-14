@@ -11,7 +11,11 @@
  *   get <memo_id>                    - Get memo
  *   update <memo_id> "content"       - Update memo
  *   delete <memo_id>                 - Delete memo
+ *   pin <memo_id>                    - Toggle pin/unpin
  *   tags                             - List all tags
+ *   comments <memo_id> ["content"]   - View/add comments
+ *   whoami                           - Show current user info
+ *   user-stats                       - Show user statistics
  */
 
 const { BASE_URL, ACCESS_TOKEN } = require("./env.cjs");
@@ -24,7 +28,7 @@ const action = args[0];
 
 if (!action) {
   console.error("Usage: api.js <ACTION> [ARGS...]");
-  console.error("Actions: list, create, get, update, delete, tags");
+  console.error("Actions: list, create, get, update, delete, pin, tags, comments, whoami, user-stats");
   process.exit(1);
 }
 
@@ -355,6 +359,202 @@ async function actionTags() {
   console.log("\n括号内为该标签下的 memo 数量");
 }
 
+// --- Action: pin ---
+
+async function actionPin(argList) {
+  const { positional } = parseFlags(argList);
+  const rawId = positional[0];
+
+  if (!rawId) {
+    console.error("Usage: api.js pin <memo_id>");
+    process.exit(1);
+  }
+
+  const id = normalizeMemoId(rawId);
+
+  // Get current pinned status
+  const memo = await callAPI("GET", `/api/v1/${id}`);
+
+  if (memo.code !== undefined) {
+    console.error(`❌ ${memo.message || "Memo not found"}`);
+    process.exit(1);
+  }
+
+  const newPinned = !memo.pinned;
+
+  // Toggle pinned
+  const data = await callAPI("PATCH", `/api/v1/${id}?updateMask=pinned`, JSON.stringify({ pinned: newPinned }));
+
+  if (newPinned) {
+    console.log("\n📌 Memo pinned successfully");
+    console.log(`   ID: ${data.name || id}`);
+    console.log(`   状态: 已置顶`);
+  } else {
+    console.log("\n📌 Memo unpinned successfully");
+    console.log(`   ID: ${data.name || id}`);
+    console.log(`   状态: 已取消置顶`);
+  }
+}
+
+// --- Action: comments ---
+
+async function actionComments(argList) {
+  const { positional } = parseFlags(argList);
+  const rawId = positional[0];
+  const commentContent = positional.slice(1).join(" ");
+
+  if (!rawId) {
+    console.error("Usage: api.js comments <memo_id> [\"content\"]");
+    process.exit(1);
+  }
+
+  const id = normalizeMemoId(rawId);
+
+  if (commentContent) {
+    // Add comment
+    const data = await callAPI("POST", `/api/v1/${id}/comments`, JSON.stringify({ content: commentContent }));
+
+    console.log("\n✅ Comment added successfully");
+    console.log(`   ID: ${data.name || "unknown"}`);
+    console.log(`   内容: ${truncate(data.content || "", 80)}`);
+    console.log(`   创建时间: ${formatTime(data.createTime)}`);
+  } else {
+    // List comments
+    const data = await callAPI("GET", `/api/v1/${id}/comments`);
+    const comments = data.memos || [];
+
+    if (comments.length === 0) {
+      console.log(`💬 No comments on ${id}`);
+      return;
+    }
+
+    console.log(`💬 Comments on ${id} (共 ${comments.length} 条):\n`);
+    console.log("━".repeat(40));
+
+    for (let i = 0; i < comments.length; i++) {
+      const c = comments[i];
+      console.log(`\n${i + 1}. ${truncate(c.content || "", 100).replace(/\n/g, " ")}`);
+      console.log(`   创建者: ${c.creator || "unknown"}`);
+      console.log(`   创建时间: ${formatTime(c.createTime)}`);
+      console.log("─".repeat(40));
+    }
+  }
+}
+
+// --- Action: whoami ---
+
+async function actionWhoami() {
+  // Try to find current user ID from memo creator, fallback to 1
+  let userId = "1";
+  try {
+    const data = await callAPI("GET", "/api/v1/memos?pageSize=1");
+    const creator = data.memos?.[0]?.creator;
+    if (creator && creator.startsWith("users/")) {
+      userId = creator.replace("users/", "");
+    }
+  } catch {
+    // fallback to userId = 1
+  }
+
+  const user = await callAPI("GET", `/api/v1/users/${userId}`);
+
+  if (user.code !== undefined) {
+    console.error(`❌ ${user.message || "User not found"}`);
+    process.exit(1);
+  }
+
+  const email = user.email || "(未设置)";
+  const maskedEmail = email.length > 6
+    ? email[0] + "***" + email.slice(email.indexOf("@"))
+    : "***";
+
+  console.log("\n👤 Current User");
+  console.log("━".repeat(30));
+  console.log(`用户名: ${user.username || "(未设置)"}`);
+  console.log(`显示名: ${user.displayName || user.username || "(未设置)"}`);
+  console.log(`角色: ${user.role || "USER"}`);
+  console.log(`邮箱: ${maskedEmail}`);
+  console.log(`状态: ${user.state || "UNKNOWN"}`);
+  console.log(`创建时间: ${formatTime(user.createTime)}`);
+  console.log(`更新时间: ${formatTime(user.updateTime)}`);
+  console.log("━".repeat(30));
+}
+
+// --- Action: user-stats ---
+
+async function actionUserStats() {
+  // Get user info
+  let userId = "1";
+  try {
+    const data = await callAPI("GET", "/api/v1/memos?pageSize=1");
+    const creator = data.memos?.[0]?.creator;
+    if (creator && creator.startsWith("users/")) {
+      userId = creator.replace("users/", "");
+    }
+  } catch {
+    // fallback to userId = 1
+  }
+
+  const user = await callAPI("GET", `/api/v1/users/${userId}`);
+
+  if (user.code !== undefined) {
+    console.error(`❌ ${user.message || "User not found"}`);
+    process.exit(1);
+  }
+
+  // Collect all memos for stats
+  const tagCounts = new Map();
+  const visibilityCounts = { PRIVATE: 0, PROTECTED: 0, PUBLIC: 0 };
+  let totalMemos = 0;
+  let pinnedCount = 0;
+  let nextPageToken = "";
+
+  while (true) {
+    let url = `/api/v1/memos?pageSize=100`;
+    if (nextPageToken) {
+      url += `&pageToken=${encodeURIComponent(nextPageToken)}`;
+    }
+
+    const data = await callAPI("GET", url);
+    const memos = data.memos || [];
+
+    for (const memo of memos) {
+      totalMemos++;
+      if (memo.pinned) pinnedCount++;
+      const vis = memo.visibility || "PRIVATE";
+      if (visibilityCounts[vis] !== undefined) visibilityCounts[vis]++;
+      if (memo.tags && Array.isArray(memo.tags)) {
+        for (const tag of memo.tags) {
+          tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+        }
+      }
+    }
+
+    nextPageToken = data.nextPageToken || "";
+    if (!nextPageToken) break;
+  }
+
+  // Top 5 tags
+  const topTags = [...tagCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([tag, count]) => `#${tag} (${count})`)
+    .join(", ") || "(无标签)";
+
+  console.log("\n📊 User Statistics");
+  console.log("━".repeat(35));
+  console.log(`用户名: ${user.displayName || user.username || "unknown"}`);
+  console.log(`总 Memo 数: ${totalMemos}`);
+  console.log(`已置顶: ${pinnedCount}`);
+  console.log(`可见性分布:`);
+  console.log(`  PRIVATE: ${visibilityCounts.PRIVATE}`);
+  console.log(`  PROTECTED: ${visibilityCounts.PROTECTED}`);
+  console.log(`  PUBLIC: ${visibilityCounts.PUBLIC}`);
+  console.log(`唯一标签数: ${tagCounts.size}`);
+  console.log(`常用标签: ${topTags}`);
+  console.log("━".repeat(35));
+}
+
 // --- Main ---
 
 const actionMap = {
@@ -363,14 +563,18 @@ const actionMap = {
   get: actionGet,
   update: actionUpdate,
   delete: actionDelete,
+  pin: actionPin,
   tags: actionTags,
+  comments: actionComments,
+  whoami: actionWhoami,
+  "user-stats": actionUserStats,
 };
 
 const actionFn = actionMap[action];
 
 if (!actionFn) {
   console.error(`Unknown action: ${action}`);
-  console.error("Available actions: list, create, get, update, delete, tags");
+  console.error("Available actions: list, create, get, update, delete, pin, tags, comments, whoami, user-stats");
   process.exit(1);
 }
 

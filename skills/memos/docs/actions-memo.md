@@ -156,3 +156,34 @@ $RUNTIME "$API_SCRIPT" delete abc123
 2. Show: "⚠️ 确定要删除这条 memo 吗？" + content preview
 3. User confirms → proceed with deletion
 4. On success: "✅ Memo deleted: memos/abc123"
+
+---
+
+## `pin` — Pin/Unpin a Memo
+
+Toggle a memo's pinned status.
+
+```bash
+$RUNTIME "$API_SCRIPT" pin abc123
+```
+
+**Implementation details:**
+
+- First calls `GET /api/v1/memos/{id}` to check current pinned status
+- Then calls `PATCH /api/v1/memos/{id}?updateMask=pinned` with `{"pinned": !current_pinned}`
+- Toggles: if pinned → unpin, if unpinned → pin
+- On success, display the new pinned status
+
+**Display format:**
+
+```bash
+# Pinning an unpinned memo
+📌 Memo pinned successfully
+   ID: memos/abc123
+   状态: 已置顶
+
+# Unpinning a pinned memo
+📌 Memo unpinned successfully
+   ID: memos/abc123
+   状态: 已取消置顶
+```
