@@ -42,9 +42,9 @@ This skill follows these security guidelines to protect the API token:
 
 | Action | Usage | Description |
 | -------- | ------- | ------------- |
-| `add-task` | `add-task <share_url> [--name=xxx]` | Add a new auto-save task |
-| `config` | `config` | Get the overall configuration |
-| `update-config` | `update-config <config_json>` | Update the overall configuration |
-| `run-now` | `run-now` | Run the script task immediately |
-| `suggestions` | `suggestions <query>` | Search for task suggestions |
-| `help` | `help <question>` | Answer questions about auto-save |
+| `add-task` | `/auto-save add-task <share_url> [--name=xxx]` | 添加转存任务 |
+| `config` | `/auto-save config` | 获取整体配置 |
+| `update-config` | `/auto-save update-config <config_json>` | 更新整体配置 |
+| `run-now` | `/auto-save run-now` | 立即运行脚本任务 |
+| `suggestions` | `/auto-save suggestions <query>` | 搜索任务建议 |
+| `help` | `/auto-save help <问题>` | 回答相关问题 |
