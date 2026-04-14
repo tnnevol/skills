@@ -41,6 +41,8 @@ This skill follows these security guidelines to protect credentials:
 | `comments` | 查看/添加评论 | `docs/actions-comment.md` |
 | `whoami` | 显示当前用户信息 | `docs/actions-user.md` |
 | `user-stats` | 显示用户统计 | `docs/actions-user.md` |
+| `share` | 创建/撤销/列出分享链接 | `docs/actions-share.md` |
+| `attachments` | 列出笔记附件 | `docs/actions-attachment.md` |
 | `help` | 回答 Memos 相关问题 | `docs/help.md` |
 
 ### `help` (or no arguments) — Show available actions
@@ -57,4 +59,6 @@ This skill follows these security guidelines to protect credentials:
 | `comments` | `/memos comments <memo_id> ["评论内容"]` | 查看/添加评论 |
 | `whoami` | `/memos whoami` | 显示当前用户信息 |
 | `user-stats` | `/memos user-stats` | 显示用户统计 |
+| `share` | `/memos share <memo_id> [--list] [--revoke=ID]` | 创建/撤销分享链接 |
+| `attachments` | `/memos attachments <memo_id>` | 列出笔记附件 |
 | `help` | `/memos help <问题>` | 回答 Memos 相关问题 |

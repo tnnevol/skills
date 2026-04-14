@@ -1,0 +1,228 @@
+/**
+ * Memo 操作: list, create, get, update, delete, pin
+ */
+
+const { normalizeMemoId, stripMemoPrefix, formatVisibility, truncate, formatTime, parseFlags } = require("../utils.cjs");
+
+// --- list ---
+
+async function actionList(callAPI, argList) {
+  const { flags } = parseFlags(argList);
+  const limit = parseInt(flags.limit) || 10;
+  const tagFilter = flags.tag || null;
+
+  let allMemos = [];
+  let nextPageToken = "";
+
+  while (true) {
+    let url = `/api/v1/memos?pageSize=${Math.min(limit, 100)}`;
+    if (nextPageToken) {
+      url += `&pageToken=${encodeURIComponent(nextPageToken)}`;
+    }
+
+    const data = await callAPI("GET", url);
+    const memos = data.memos || [];
+
+    if (tagFilter) {
+      for (const memo of memos) {
+        if (memo.tags && memo.tags.includes(tagFilter)) {
+          allMemos.push(memo);
+          if (allMemos.length >= limit) break;
+        }
+      }
+    } else {
+      allMemos = allMemos.concat(memos.slice(0, limit - allMemos.length));
+    }
+
+    nextPageToken = data.nextPageToken || "";
+    if (!nextPageToken || allMemos.length >= limit) break;
+  }
+
+  allMemos = allMemos.slice(0, limit);
+
+  if (allMemos.length === 0) {
+    console.log("📭 没有找到笔记。");
+    return;
+  }
+
+  console.log(`📝 笔记列表（共 ${allMemos.length} 条）:\n`);
+  console.log("━".repeat(50));
+
+  for (const memo of allMemos) {
+    const id = memo.name || "unknown";
+    const content = truncate(memo.content || "", 120);
+    const tags = (memo.tags || []).map((t) => `#${t}`).join(" ") || "(无标签)";
+    const visibility = memo.visibility || "PRIVATE";
+    const created = formatTime(memo.createTime);
+    const pinned = memo.pinned ? " 📌" : "";
+
+    console.log(`\n📝 ${stripMemoPrefix(id)}${pinned}`);
+    console.log(`   内容: ${content.replace(/\n/g, " ")}`);
+    console.log(`   标签: ${tags}`);
+    console.log(`   可见性: ${visibility}`);
+    console.log(`   创建: ${created}`);
+    console.log("─".repeat(50));
+  }
+}
+
+// --- create ---
+
+async function actionCreate(callAPI, argList) {
+  const { flags, positional } = parseFlags(argList);
+  const content = positional.join(" ");
+  const visibility = formatVisibility(flags.visibility);
+
+  if (!content) {
+    console.error("用法: api.cjs create \"内容\" [--visibility=PUBLIC|PRIVATE|PROTECTED]");
+    process.exit(1);
+  }
+
+  const body = { content, visibility };
+  const data = await callAPI("POST", "/api/v1/memos", JSON.stringify(body));
+
+  const id = data.name || "unknown";
+  const tags = (data.tags || []).map((t) => `#${t}`).join(" ") || "(无标签)";
+
+  console.log("\n✅ 笔记创建成功");
+  console.log(`   ID: ${id}`);
+  console.log(`   可见性: ${data.visibility || visibility}`);
+  console.log(`   标签: ${tags}`);
+}
+
+// --- get ---
+
+async function actionGet(callAPI, argList) {
+  const { positional } = parseFlags(argList);
+  const rawId = positional[0];
+
+  if (!rawId) {
+    console.error("用法: api.cjs get <笔记ID>");
+    process.exit(1);
+  }
+
+  const id = normalizeMemoId(rawId);
+  const data = await callAPI("GET", `/api/v1/${id}`);
+
+  if (data.code !== undefined) {
+    console.error(`❌ ${data.message || "笔记未找到"}`);
+    process.exit(1);
+  }
+
+  console.log(`\n📋 笔记: ${data.name}`);
+  console.log("━".repeat(50));
+  console.log(data.content || "(空内容)");
+  console.log("━".repeat(50));
+
+  const tags = (data.tags || []).map((t) => `#${t}`).join(" ") || "(无标签)";
+  console.log(`\n标签: ${tags}`);
+  console.log(`可见性: ${data.visibility || "PRIVATE"}`);
+  console.log(`创建: ${formatTime(data.createTime)}`);
+  console.log(`更新: ${formatTime(data.updateTime)}`);
+  if (data.pinned) console.log("📌 已置顶");
+}
+
+// --- update ---
+
+async function actionUpdate(callAPI, argList) {
+  const { flags, positional } = parseFlags(argList);
+  const rawId = positional[0];
+  const content = positional.slice(1).join(" ");
+  const visibility = flags.visibility ? formatVisibility(flags.visibility) : null;
+
+  if (!rawId || !content) {
+    console.error("用法: api.cjs update <笔记ID> \"新内容\" [--visibility=PUBLIC|PRIVATE|PROTECTED]");
+    process.exit(1);
+  }
+
+  const id = normalizeMemoId(rawId);
+  let updateMask = "content";
+  const body = { content };
+
+  if (visibility) {
+    updateMask += ",visibility";
+    body.visibility = visibility;
+  }
+
+  const url = `/api/v1/${id}?updateMask=${updateMask}`;
+  const data = await callAPI("PATCH", url, JSON.stringify(body));
+
+  const tags = (data.tags || []).map((t) => `#${t}`).join(" ") || "(无标签)";
+
+  console.log("\n✅ 笔记更新成功");
+  console.log(`   ID: ${data.name || id}`);
+  console.log(`   可见性: ${data.visibility || visibility || "PRIVATE"}`);
+  console.log(`   标签: ${tags}`);
+}
+
+// --- delete ---
+
+async function actionDelete(callAPI, argList) {
+  const { positional } = parseFlags(argList);
+  const rawId = positional[0];
+
+  if (!rawId) {
+    console.error("用法: api.cjs delete <笔记ID>");
+    process.exit(1);
+  }
+
+  const id = normalizeMemoId(rawId);
+
+  const memo = await callAPI("GET", `/api/v1/${id}`);
+
+  if (memo.code !== undefined) {
+    console.error(`❌ ${memo.message || "笔记未找到"}`);
+    process.exit(1);
+  }
+
+  console.log(`\n⚠️  确定要删除这条笔记吗？`);
+  console.log(`   ID: ${memo.name}`);
+  console.log(`   内容: ${truncate(memo.content || "", 100).replace(/\n/g, " ")}`);
+  console.log(`   标签: ${(memo.tags || []).map((t) => `#${t}`).join(" ") || "(无标签)"}`);
+
+  await callAPI("DELETE", `/api/v1/${id}`);
+
+  console.log(`\n✅ 已删除笔记: ${id}`);
+}
+
+// --- pin ---
+
+async function actionPin(callAPI, argList) {
+  const { positional } = parseFlags(argList);
+  const rawId = positional[0];
+
+  if (!rawId) {
+    console.error("用法: api.cjs pin <笔记ID>");
+    process.exit(1);
+  }
+
+  const id = normalizeMemoId(rawId);
+
+  const memo = await callAPI("GET", `/api/v1/${id}`);
+
+  if (memo.code !== undefined) {
+    console.error(`❌ ${memo.message || "笔记未找到"}`);
+    process.exit(1);
+  }
+
+  const newPinned = !memo.pinned;
+  const data = await callAPI("PATCH", `/api/v1/${id}?updateMask=pinned`, JSON.stringify({ pinned: newPinned }));
+
+  if (newPinned) {
+    console.log("\n📌 笔记已置顶");
+    console.log(`   ID: ${data.name || id}`);
+    console.log(`   状态: 已置顶`);
+  } else {
+    console.log("\n📌 笔记已取消置顶");
+    console.log(`   ID: ${data.name || id}`);
+    console.log(`   状态: 已取消置顶`);
+  }
+}
+
+module.exports = {
+  actionList,
+  actionCreate,
+  actionGet,
+  actionUpdate,
+  actionDelete,
+  actionPin,
+};
