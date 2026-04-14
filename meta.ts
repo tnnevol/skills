@@ -74,4 +74,5 @@ export const manual = [
   'antfu',
   'memos',
   'ding-agent',
+  'auto-save',
 ]

@@ -36,6 +36,7 @@ Manually maintained by Anthony Fu with his preferred tools, setup conventions, a
 | [dotenv-cli-usage](skills/dotenv-cli-usage) | Automatically load .env.local files in npm scripts using dotenv-cli - Tnnevol |
 | [memos](skills/memos) | Memos self-hosted memo/note tool - CRUD + tags via API - Tnnevol |
 | [ding-agent](skills/ding-agent) | Quick Agent contact in DingTalk group chats - resolve session key dynamically from config - Tnnevol |
+| [auto-save](skills/auto-save) | Quark cloud drive auto-save service - task management, config, suggestions via API - Tnnevol |
 
 ### Skills Generated from Official Documentation
 
