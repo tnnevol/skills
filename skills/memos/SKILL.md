@@ -31,30 +31,30 @@ This skill follows these security guidelines to protect credentials:
 
 | Action | Description | Details |
 | -------- | ------------- | --------- |
-| `list` | List memos with optional filters | `docs/actions-memo.md` |
-| `create` | Create a new memo | `docs/actions-memo.md` |
-| `get` | Get a single memo by ID | `docs/actions-memo.md` |
-| `update` | Update an existing memo | `docs/actions-memo.md` |
-| `delete` | Delete a memo | `docs/actions-memo.md` |
-| `pin` | Pin/unpin a memo | `docs/actions-memo.md` |
-| `tags` | List all tags | `docs/actions-tag.md` |
-| `comments` | View/add comments on a memo | `docs/actions-comment.md` |
-| `whoami` | Show current user info | `docs/actions-user.md` |
-| `user-stats` | Show user statistics | `docs/actions-user.md` |
-| `help` | Answer questions about Memos | `docs/help.md` |
+| `list` | 列出笔记（支持过滤） | `docs/actions-memo.md` |
+| `create` | 创建笔记 | `docs/actions-memo.md` |
+| `get` | 获取单条笔记 | `docs/actions-memo.md` |
+| `update` | 更新笔记 | `docs/actions-memo.md` |
+| `delete` | 删除笔记 | `docs/actions-memo.md` |
+| `pin` | 切换置顶/取消置顶 | `docs/actions-memo.md` |
+| `tags` | 列出所有标签 | `docs/actions-tag.md` |
+| `comments` | 查看/添加评论 | `docs/actions-comment.md` |
+| `whoami` | 显示当前用户信息 | `docs/actions-user.md` |
+| `user-stats` | 显示用户统计 | `docs/actions-user.md` |
+| `help` | 回答 Memos 相关问题 | `docs/help.md` |
 
 ### `help` (or no arguments) — Show available actions
 
 | Action | Usage | Description |
 | -------- | ------- | ------------- |
-| `list` | `/memos list [--limit=N] [--tag=xxx]` | List memos (default limit: 10) |
-| `create` | `/memos create "内容" [--visibility=PUBLIC\|PRIVATE\|PROTECTED]` | Create a new memo |
-| `get` | `/memos get <memo_id>` | Get a single memo |
-| `update` | `/memos update <memo_id> "新内容"` | Update a memo's content |
-| `delete` | `/memos delete <memo_id>` | Delete a memo |
-| `pin` | `/memos pin <memo_id>` | Toggle pin/unpin |
-| `tags` | `/memos tags` | List all unique tags |
-| `comments` | `/memos comments <memo_id> ["评论内容"]` | View/add comments |
-| `whoami` | `/memos whoami` | Show current user info |
-| `user-stats` | `/memos user-stats` | Show user statistics |
-| `help` | `/memos help <question>` | Answer questions about Memos |
+| `list` | `/memos list [--limit=N] [--tag=xxx]` | 列出笔记（默认 10 条） |
+| `create` | `/memos create "内容" [--visibility=PUBLIC\|PRIVATE\|PROTECTED]` | 创建笔记 |
+| `get` | `/memos get <memo_id>` | 获取单条笔记详情 |
+| `update` | `/memos update <memo_id> "新内容"` | 更新笔记内容 |
+| `delete` | `/memos delete <memo_id>` | 删除笔记 |
+| `pin` | `/memos pin <memo_id>` | 切换置顶/取消置顶 |
+| `tags` | `/memos tags` | 列出所有标签 |
+| `comments` | `/memos comments <memo_id> ["评论内容"]` | 查看/添加评论 |
+| `whoami` | `/memos whoami` | 显示当前用户信息 |
+| `user-stats` | `/memos user-stats` | 显示用户统计 |
+| `help` | `/memos help <问题>` | 回答 Memos 相关问题 |
