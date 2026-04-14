@@ -43,6 +43,9 @@ This skill follows these security guidelines to protect credentials:
 | `user-stats` | 显示用户统计 | `docs/actions-user.md` |
 | `share` | 创建/撤销/列出分享链接 | `docs/actions-share.md` |
 | `attachments` | 列出笔记附件 | `docs/actions-attachment.md` |
+| `reactions` | 查看表情回应 | `docs/actions-reaction.md` |
+| `react` | 添加/切换表情 | `docs/actions-reaction.md` |
+| `unreact` | 取消表情 | `docs/actions-reaction.md` |
 | `help` | 回答 Memos 相关问题 | `docs/help.md` |
 
 ### `help` (or no arguments) — Show available actions
@@ -61,4 +64,7 @@ This skill follows these security guidelines to protect credentials:
 | `user-stats` | `/memos user-stats` | 显示用户统计 |
 | `share` | `/memos share <memo_id> [--list] [--revoke=ID]` | 创建/撤销分享链接 |
 | `attachments` | `/memos attachments <memo_id>` | 列出笔记附件 |
+| `reactions` | `/memos reactions <memo_id>` | 查看表情回应 |
+| `react` | `/memos react <memo_id> <表情>` | 添加/切换表情 |
+| `unreact` | `/memos unreact <memo_id> <表情>` | 取消表情 |
 | `help` | `/memos help <问题>` | 回答 Memos 相关问题 |

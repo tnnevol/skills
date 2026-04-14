@@ -33,6 +33,7 @@ const comment = require("./actions/comment.cjs");
 const user = require("./actions/user.cjs");
 const share = require("./actions/share.cjs");
 const attachment = require("./actions/attachment.cjs");
+const reaction = require("./actions/reaction.cjs");
 
 // 参数解析
 const args = process.argv.slice(2);
@@ -40,7 +41,7 @@ const action = args[0];
 
 if (!action) {
   console.error("用法: api.cjs <操作> [参数...]");
-  console.error("可用操作: list, create, get, update, delete, pin, tags, comments, whoami, user-stats, share, attachments");
+  console.error("可用操作: list, create, get, update, delete, pin, tags, comments, whoami, user-stats, share, attachments, reactions, react, unreact");
   process.exit(1);
 }
 
@@ -58,13 +59,16 @@ const actionMap = {
   "user-stats": () => user.actionUserStats(api),
   share: (a) => share.actionShare(api, BASE_URL, ACCESS_TOKEN, a),
   attachments: (a) => attachment.actionAttachments(api, BASE_URL, a),
+  reactions: (a) => reaction.actionReactions(api, a),
+  react: (a) => reaction.actionReact(api, a),
+  unreact: (a) => reaction.actionUnreact(api, a),
 };
 
 const actionFn = actionMap[action];
 
 if (!actionFn) {
   console.error(`未知操作: ${action}`);
-  console.error("可用操作: list, create, get, update, delete, pin, tags, comments, whoami, user-stats, share, attachments");
+  console.error("可用操作: list, create, get, update, delete, pin, tags, comments, whoami, user-stats, share, attachments, reactions, react, unreact");
   process.exit(1);
 }
 
