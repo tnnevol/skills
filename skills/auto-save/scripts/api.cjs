@@ -159,10 +159,10 @@ async function suggestions(args, env) {
   const result = await apiRequest(env.baseUrl, path, 'GET');
   
   // Perform validity check on results
-  if (result.data && Array.isArray(result.data)) {
+  if (result.data && result.data.data && Array.isArray(result.data.data)) {
     // Limit validation to first 5 results to avoid too many API calls
     const maxValidations = 5;
-    const resultsToValidate = result.data.slice(0, maxValidations);
+    const resultsToValidate = result.data.data.slice(0, maxValidations);
     
     // Validate each result concurrently
     const validatedResults = await Promise.all(resultsToValidate.map(async (item) => {
@@ -185,7 +185,7 @@ async function suggestions(args, env) {
       if (a.isValid && !b.isValid) return -1;
       if (!a.isValid && b.isValid) return 1;
       return 0;
-    }), ...result.data.slice(maxValidations)];
+    }), ...result.data.data.slice(maxValidations)];
     
     // Mark invalid items
     for (const item of sortedResults) {
