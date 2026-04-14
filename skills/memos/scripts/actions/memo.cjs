@@ -10,27 +10,52 @@ async function actionList(callAPI, argList) {
   const { flags } = parseFlags(argList);
   const limit = parseInt(flags.limit) || 10;
   const tagFilter = flags.tag || null;
+  const state = flags.state || null;  // NORMAL or ARCHIVED
+  const order = flags.order || null;  // orderBy
+  const filter = flags.filter || null;  // CEL expression filter
+  const showDeleted = flags['show-deleted'] ? true : null;  // show deleted memos
 
   let allMemos = [];
   let nextPageToken = "";
 
   while (true) {
-    let url = `/api/v1/memos?pageSize=${Math.min(limit, 100)}`;
-    if (nextPageToken) {
-      url += `&pageToken=${encodeURIComponent(nextPageToken)}`;
+    // Build query parameters
+    const params = [];
+    params.push(`pageSize=${Math.min(limit, 100)}`);
+    
+    if (state) params.push(`state=${encodeURIComponent(state)}`);
+    if (order) params.push(`orderBy=${encodeURIComponent(order)}`);
+    if (filter) params.push(`filter=${encodeURIComponent(filter)}`);
+    if (showDeleted) params.push(`showDeleted=true`);
+    
+    // Add tag filter via CEL if specified
+    if (tagFilter) {
+      // If filter is already specified, combine with AND
+      if (filter) {
+        params.push(`filter=${encodeURIComponent(`(${filter}) && tags == ["${tagFilter}"]`)}`);
+      } else {
+        params.push(`filter=${encodeURIComponent(`tags == ["${tagFilter}"]`)}`);
+      }
     }
-
+    
+    if (nextPageToken) {
+      params.push(`pageToken=${encodeURIComponent(nextPageToken)}`);
+    }
+    
+    const url = `/api/v1/memos?${params.join('&')}`;
+    
     const data = await callAPI("GET", url);
     const memos = data.memos || [];
 
-    if (tagFilter) {
-      for (const memo of memos) {
-        if (memo.tags && memo.tags.includes(tagFilter)) {
-          allMemos.push(memo);
-          if (allMemos.length >= limit) break;
-        }
-      }
+    // If tag filter was applied via API, we don't need to filter client-side
+    if (tagFilter && filter) {
+      // Both filters applied via API, no client-side filtering needed
+      allMemos = allMemos.concat(memos.slice(0, limit - allMemos.length));
+    } else if (tagFilter && !filter) {
+      // Tag filter was applied via API, no client-side filtering needed
+      allMemos = allMemos.concat(memos.slice(0, limit - allMemos.length));
     } else {
+      // Original logic when no tag filter was applied via API
       allMemos = allMemos.concat(memos.slice(0, limit - allMemos.length));
     }
 

@@ -49,7 +49,7 @@ This skill follows these security guidelines to protect credentials:
 
 | Action | Usage | Description |
 | -------- | ------- | ------------- |
-| `list` | `/memos list [--limit=N] [--tag=xxx]` | 列出笔记（默认 10 条） |
+| `list` | `/memos list [--limit=N] [--tag=xxx] [--state=NORMAL|ARCHIVED] [--order=xxx] [--filter=xxx] [--show-deleted]` | 列出笔记（默认 10 条） |
 | `create` | `/memos create "内容" [--visibility=PUBLIC\|PRIVATE\|PROTECTED]` | 创建笔记 |
 | `get` | `/memos get <memo_id>` | 获取单条笔记详情 |
 | `update` | `/memos update <memo_id> "新内容"` | 更新笔记内容 |

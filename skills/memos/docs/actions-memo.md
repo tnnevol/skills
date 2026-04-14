@@ -2,7 +2,7 @@
 
 ## `list` — List Memos
 
-List memos with optional pagination and tag filtering.
+List memos with optional pagination, filtering, and sorting.
 
 ```bash
 # Default: list 10 most recent memos
@@ -14,14 +14,32 @@ $RUNTIME "$API_SCRIPT" list --limit=20
 # Filter by tag
 $RUNTIME "$API_SCRIPT" list --tag=ai
 
-# Combine: limit + tag
-$RUNTIME "$API_SCRIPT" list --limit=5 --tag=录音
+# Filter by state (NORMAL or ARCHIVED)
+$RUNTIME "$API_SCRIPT" list --state=ARCHIVED
+
+# Order by different criteria
+$RUNTIME "$API_SCRIPT" list --order="create_time asc"
+$RUNTIME "$API_SCRIPT" list --order="pinned desc, display_time desc"
+
+# Filter using CEL expressions
+$RUNTIME "$API_SCRIPT" list --filter='tags == ["ai"]'
+
+# Show deleted memos
+$RUNTIME "$API_SCRIPT" list --show-deleted
+
+# Combine multiple parameters
+$RUNTIME "$API_SCRIPT" list --limit=20 --state=NORMAL --order="create_time desc" --tag=ai
 ```
 
 **Implementation details:**
 
-- Calls `GET /api/v1/memos?pageSize=N`
-- When `--tag` is specified, calls `GET /api/v1/memos?pageSize=100` and filters client-side by matching the tag in the memo's `tags` array
+- Calls `GET /api/v1/memos` with query parameters:
+  - `pageSize=N` (from `--limit`)
+  - `state` (from `--state=NORMAL|ARCHIVED`)
+  - `orderBy` (from `--order=xxx`)
+  - `filter` (from `--filter=xxx` or combined with tag)
+  - `showDeleted=true` (when `--show-deleted` is present)
+- When `--tag` is specified, combines with filter parameter using CEL expressions
 - Displays results as a formatted list showing:
   - Memo ID (shortened)
   - Content (first 100 chars)
