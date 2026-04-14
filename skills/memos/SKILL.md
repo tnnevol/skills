@@ -46,6 +46,9 @@ This skill follows these security guidelines to protect credentials:
 | `reactions` | 查看表情回应 | `docs/actions-reaction.md` |
 | `react` | 添加/切换表情 | `docs/actions-reaction.md` |
 | `unreact` | 取消表情 | `docs/actions-reaction.md` |
+| `relations` | 查看关联笔记 | `docs/actions-relation.md` |
+| `relate` | 建立笔记关系 | `docs/actions-relation.md` |
+| `unrelate` | 解除笔记关系 | `docs/actions-relation.md` |
 | `help` | 回答 Memos 相关问题 | `docs/help.md` |
 
 ### `help` (or no arguments) — Show available actions
@@ -67,4 +70,7 @@ This skill follows these security guidelines to protect credentials:
 | `reactions` | `/memos reactions <memo_id>` | 查看表情回应 |
 | `react` | `/memos react <memo_id> <表情>` | 添加/切换表情 |
 | `unreact` | `/memos unreact <memo_id> <表情>` | 取消表情 |
+| `relations` | `/memos relations <memo_id>` | 查看关联笔记 |
+| `relate` | `/memos relate <memo_id> <target_id> [--type=REFERENCE]` | 建立笔记关系 |
+| `unrelate` | `/memos unrelate <memo_id> <target_id>` | 解除笔记关系 |
 | `help` | `/memos help <问题>` | 回答 Memos 相关问题 |
