@@ -40,7 +40,7 @@ A: When you list memos (`/memos list`), each memo shows its ID (e.g., `memos/abc
 A: You haven't set the required environment variables. Run:
 
 ```bash
-export MEMOS_BASE_URL=https://memos.tnnevol.cn
+export MEMOS_BASE_URL=https://your-memos-instance.com
 export MEMOS_ACCESS_TOKEN=your-token
 ```
 
