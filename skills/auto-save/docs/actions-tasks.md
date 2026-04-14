@@ -35,7 +35,7 @@
 
 ---
 
-## `suggestions` — 搜索任务建议
+## `search` — 搜索任务建议
 
 **API:** `GET {AUTO_SAVE_BASE_URL}/task_suggestions?q={query}&d={depth}&token={AUTO_SAVE_TOKEN}`
 
@@ -45,10 +45,13 @@
 **可选参数：**
 - `--depth` — 搜索深度，默认 1
 
+**功能增强：**
+搜索结果会进行有效性预检查，对每个结果调用 `get_share_detail` 接口验证有效性。有效结果排在前面，无效/过期的结果会标注"已失效"。结果会显示：标题、文件大小（size）、文件数量（all_file_num）、是否有效。
+
 **示例：**
 ```
-/auto-save suggestions --query "test"
-/auto-save suggestions --query "团战" --depth 2
+/auto-save search --query "test"
+/auto-save search --query "团战" --depth 2
 ```
 
 **响应示例：**

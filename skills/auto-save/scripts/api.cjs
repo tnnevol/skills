@@ -14,15 +14,19 @@ const ACTIONS = {
   'update-config': updateConfig,
   'run-now': runNow,
   'suggestions': suggestions,
+  'search': suggestions,  // Alias for suggestions
+  'detail': detail,
 };
 
 function parseArgs(argv) {
-  const args = {};
+  const args = { _: [] };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i].startsWith('--')) {
       const key = argv[i].slice(2);
       const val = argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[++i] : true;
       args[key] = val;
+    } else {
+      args._.push(argv[i]);
     }
   }
   return args;
@@ -153,6 +157,138 @@ async function suggestions(args, env) {
   const depth = args.depth || 1;
   const path = `/task_suggestions?q=${encodeURIComponent(args.query)}&d=${depth}&token=${env.token}`;
   const result = await apiRequest(env.baseUrl, path, 'GET');
+  
+  // Perform validity check on results
+  if (result.data && Array.isArray(result.data)) {
+    // Limit validation to first 5 results to avoid too many API calls
+    const maxValidations = 5;
+    const resultsToValidate = result.data.slice(0, maxValidations);
+    
+    // Validate each result concurrently
+    const validatedResults = await Promise.all(resultsToValidate.map(async (item) => {
+      try {
+        const detailResult = await getShareDetail(item.shareurl, env);
+        item.isValid = !!(detailResult.data && detailResult.data.share);
+        if (detailResult.data) {
+          item.title = detailResult.data.share?.title;
+          item.size = detailResult.data.share?.size;
+          item.all_file_num = detailResult.data.share?.all_file_num;
+        }
+      } catch (err) {
+        item.isValid = false;
+      }
+      return item;
+    }));
+    
+    // Sort: valid results first, then invalid ones
+    const sortedResults = [...validatedResults.sort((a, b) => {
+      if (a.isValid && !b.isValid) return -1;
+      if (!a.isValid && b.isValid) return 1;
+      return 0;
+    }), ...result.data.slice(maxValidations)];
+    
+    // Mark invalid items
+    for (const item of sortedResults) {
+      if ('isValid' in item && !item.isValid) {
+        item.status = '已失效';
+      }
+    }
+    
+    console.log(JSON.stringify(sortedResults, null, 2));
+  } else {
+    console.log(JSON.stringify(result.data, null, 2));
+  }
+}
+
+async function getShareDetail(shareurl, env) {
+  const body = {
+    "shareurl": shareurl,
+    "stoken": "",
+    "task": {},
+    "magic_regex": ""
+  };
+  
+  // Get config to fill in task and magic_regex values
+  try {
+    const configResult = await apiRequest(env.baseUrl, `/data?token=${env.token}`, 'GET');
+    if (configResult.data) {
+      // Fill in task information from config
+      body.magic_regex = configResult.data.magic_regex || "";
+      
+      // Look for matching task in config if available
+      if (configResult.data.task_list && Array.isArray(configResult.data.task_list)) {
+        const matchingTask = configResult.data.task_list.find(task => 
+          task.shareurl === shareurl || 
+          (task.taskname && shareurl.toLowerCase().includes(task.taskname.toLowerCase()))
+        );
+        if (matchingTask) {
+          body.task = {
+            ...matchingTask,
+            addition: configResult.data.task_plugins_config_default || {},
+            runweek: matchingTask.runweek || [1,2,3,4,5,6,7]
+          };
+        }
+      }
+      
+      // Set default savepath if not already set
+      if (!body.task.savepath) {
+        body.task.savepath = "/media/";
+      }
+    }
+  } catch (err) {
+    // Config fetch failed, continue with minimal body
+  }
+  
+  const result = await apiRequest(env.baseUrl, `/get_share_detail?token=${env.token}`, 'POST', body);
+  return result;
+}
+
+async function detail(args, env) {
+  if (!args._ || args._.length === 0) {
+    console.error('Error: share URL is required');
+    process.exit(1);
+  }
+  
+  const shareurl = args._[0];
+  const stoken = args.stoken || "";
+  const savepath = args.savepath || "/media/";
+  
+  const body = {
+    "shareurl": shareurl,
+    "stoken": stoken,
+    "task": {
+      "savepath": savepath
+    },
+    "magic_regex": ""
+  };
+  
+  // Get config to fill in additional values
+  try {
+    const configResult = await apiRequest(env.baseUrl, `/data?token=${env.token}`, 'GET');
+    if (configResult.data) {
+      body.magic_regex = configResult.data.magic_regex || "";
+      
+      // Look for matching task in config
+      if (configResult.data.task_list && Array.isArray(configResult.data.task_list)) {
+        const matchingTask = configResult.data.task_list.find(task => 
+          task.shareurl === shareurl || 
+          (task.taskname && shareurl.toLowerCase().includes(task.taskname.toLowerCase()))
+        );
+        if (matchingTask) {
+          body.task = {
+            ...matchingTask,
+            savepath: savepath,
+            addition: configResult.data.task_plugins_config_default || {},
+            runweek: matchingTask.runweek || [1,2,3,4,5,6,7]
+          };
+        }
+      }
+    }
+  } catch (err) {
+    // Config fetch failed, continue with minimal body
+  }
+  
+  const result = await apiRequest(env.baseUrl, `/get_share_detail?token=${env.token}`, 'POST', body);
   console.log(JSON.stringify(result.data, null, 2));
 }
 
@@ -168,6 +304,8 @@ Actions:
   update-config  --field xxx --value xxx
   run-now        [--tasklist xxx] [--quark-test]
   suggestions    --query xxx [--depth 1]
+  search         --query xxx [--depth 1] (alias for suggestions)
+  detail         <share_url> [--stoken xxx] [--savepath xxx]
   help           Show this help`);
     return;
   }

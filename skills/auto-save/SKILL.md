@@ -35,7 +35,8 @@ This skill follows these security guidelines to protect the API token:
 | `config` | Get the overall configuration | `docs/actions-config.md` |
 | `update-config` | Update the overall configuration | `docs/actions-config.md` |
 | `run-now` | Run the script task immediately | `docs/actions-run.md` |
-| `search` | Search for task suggestions | `docs/actions-tasks.md` |
+| `search` | Search for task suggestions with validity check | `docs/actions-tasks.md` |
+| `detail` | View share details | `docs/actions-detail.md` |
 | `help` | FAQ and help | `docs/help.md` |
 
 ### `help` (or no arguments) — Show available actions
@@ -46,5 +47,6 @@ This skill follows these security guidelines to protect the API token:
 | `config` | `/auto-save config` | 获取整体配置 |
 | `update-config` | `/auto-save update-config <config_json>` | 更新整体配置 |
 | `run-now` | `/auto-save run-now` | 立即运行脚本任务 |
-| `search` | `/auto-save search <query>` | 搜索任务建议 |
+| `search` | `/auto-save search <query>` | 搜索任务建议（带有效性检查） |
+| `detail` | `/auto-save detail <share_url>` | 查看分享详情 |
 | `help` | `/auto-save help <问题>` | 回答相关问题 |
