@@ -1,5 +1,5 @@
 ---
-name: ding-agent
+name: ding
 description: 在钉钉群聊中快速定位并联系其他 Agent（demo1、demo2 等）。
 ---
 
