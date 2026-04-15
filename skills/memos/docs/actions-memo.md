@@ -70,6 +70,8 @@ $RUNTIME "$API_SCRIPT" create "这是一条新笔记 #test"
 $RUNTIME "$API_SCRIPT" create "公开笔记内容" --visibility=PUBLIC
 
 $RUNTIME "$API_SCRIPT" create "受保护的笔记" --visibility=PROTECTED
+
+$RUNTIME "$API_SCRIPT" create "自定义ID笔记" --memo-id=my-custom-id
 ```
 
 **Implementation details:**
@@ -78,10 +80,12 @@ $RUNTIME "$API_SCRIPT" create "受保护的笔记" --visibility=PROTECTED
   ```json
   {
     "content": "内容",
-    "visibility": "PRIVATE"  // default, or specified value
+    "visibility": "PRIVATE",  // default, or specified value
+    "memo_id": "my-custom-id"  // optional, when --memo-id is provided
   }
   ```
 - Valid visibility values: `PRIVATE` (default), `PROTECTED`, `PUBLIC`
+- `memo_id` is optional; if not provided, the server auto-generates an ID
 - Tags are automatically extracted from `#tag` patterns in content
 - Returns the created memo's ID and a summary
 
@@ -160,20 +164,24 @@ Delete a memo permanently.
 
 ```bash
 $RUNTIME "$API_SCRIPT" delete abc123
+
+$RUNTIME "$API_SCRIPT" delete abc123 --force
 ```
 
 **Implementation details:**
 
-- Calls `DELETE /api/v1/memos/{id}`
+- Calls `DELETE /api/v1/memos/{id}` (normal) or `DELETE /api/v1/memos/{id}?force=true` (with `--force`)
 - **Confirmation required**: Before deletion, confirm with the user by showing the memo content preview
+- `force` parameter: when `true`, forcefully deletes memos that have related data (e.g., comments, relations)
 - On success, display confirmation message
 
 **Confirmation flow:**
 
 1. Fetch memo content with `get`
 2. Show: "⚠️ 确定要删除这条 memo 吗？" + content preview
-3. User confirms → proceed with deletion
-4. On success: "✅ Memo deleted: memos/abc123"
+3. If `--force` is provided, show: "模式: 强制删除（含关联数据）"
+4. User confirms → proceed with deletion
+5. On success: "✅ Memo deleted: memos/abc123"
 
 ---
 

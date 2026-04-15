@@ -56,10 +56,10 @@ This skill follows these security guidelines to protect credentials:
 | Action | Usage | Description |
 | -------- | ------- | ------------- |
 | `list` | `/memos list [--limit=N] [--tag=xxx] [--state=NORMAL|ARCHIVED] [--order=xxx] [--filter=xxx] [--show-deleted]` | 列出笔记（默认 10 条） |
-| `create` | `/memos create "内容" [--visibility=PUBLIC\|PRIVATE\|PROTECTED]` | 创建笔记 |
+| `create` | `/memos create "内容" [--visibility=PUBLIC\|PRIVATE\|PROTECTED] [--memo-id=自定义ID]` | 创建笔记（可自定义ID） |
 | `get` | `/memos get <memo_id>` | 获取单条笔记详情 |
 | `update` | `/memos update <memo_id> "新内容"` | 更新笔记内容 |
-| `delete` | `/memos delete <memo_id>` | 删除笔记 |
+| `delete` | `/memos delete <memo_id> [--force]` | 删除笔记（可强制删除） |
 | `pin` | `/memos pin <memo_id>` | 切换置顶/取消置顶 |
 | `tags` | `/memos tags` | 列出所有标签 |
 | `comments` | `/memos comments <memo_id> ["评论内容"]` | 查看/添加评论 |
