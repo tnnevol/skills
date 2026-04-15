@@ -3,14 +3,14 @@ name: ding
 description: 在钉钉群聊中快速定位并联系其他 Agent（demo1、demo2 等）。
 ---
 
-# SKILL: ding-agent
+# SKILL: ding
 
-ding-agent is a skill for quickly locating and contacting other Agents (demo1, demo2, etc.) within DingTalk group chats.
+ding is a skill for quickly locating and contacting other Agents (demo1, demo2, etc.) within DingTalk group chats.
 
 ## Usage
 
 ```
-/ding-agent <Agent名称>
+/ding <Agent名称>
 ```
 
 ## Core Resolution Rules (No Hardcoded agentId)
@@ -45,24 +45,24 @@ ding-agent is a skill for quickly locating and contacting other Agents (demo1, d
 2. Match the action from the table below.
 3. Read the corresponding doc file for detailed steps.
 4. If no arguments or unrecognized action, show the help table below.
-5. If the user asks about ding-agent (what it is, how to use it) — read `${CLAUDE_SKILL_DIR}/docs/help.md` and follow the instructions there.
+5. If the user asks about ding (what it is, how to use it) — read `${CLAUDE_SKILL_DIR}/docs/help.md` and follow the instructions there.
 
 ## Actions
 
 | Action | Description | Details |
 | -------- | ------------- | --------- |
-| `contact` | Contact a specified Agent by name | `docs/actions-contact.md` |
-| `list-agents` | List all available Agents from config | `docs/actions-query.md` |
-| `current-session` | Show current session information | `docs/actions-query.md` |
-| `list-sessions` | List sessions for a specific Agent | `docs/actions-query.md` |
-| `help` | FAQ and help | `docs/help.md` |
+| `send` | 发送消息给指定 Agent | `docs/actions-contact.md` |
+| `list` | 列出所有可用 Agent | `docs/actions-query.md` |
+| `info` | 显示当前会话信息 | `docs/actions-query.md` |
+| `sessions` | 列出指定 Agent 的会话 | `docs/actions-query.md` |
+| `help` | 常见问题解答 | `docs/help.md` |
 
 ### `help` (or no arguments) — Show available actions
 
 | Action | Usage | Description |
-| -------- | ------- | ------------- |
-| `contact` | `/ding-agent contact <Agent名称> <message> [--delivery=none|announce]` | Contact a specified Agent by name |
-| `list-agents` | `/ding-agent list-agents` | List all available Agents from config |
-| `current-session` | `/ding-agent current-session` | Show current session information |
-| `list-sessions` | `/ding-agent list-sessions <Agent名称>` | List sessions for a specific Agent |
-| `help` | `/ding-agent help <question>` | Answer questions about ding-agent |
+|--------|-------|-------------|
+| `send` | `/ding send <Agent名称> <消息>` | 发消息给指定 Agent |
+| `list` | `/ding list` | 列出在线 Agent |
+| `info` | `/ding info` | 当前会话信息 |
+| `sessions` | `/ding sessions <Agent名称>` | 查某人的会话列表 |
+| `help` | `/ding help <问题>` | 回答相关问题 |

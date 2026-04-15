@@ -1,18 +1,17 @@
-# `contact` — 联系指定 Agent
+# `send` — 发送消息给指定 Agent
 
 ## Usage
 
 ```
-/ding-agent contact <Agent名称> <消息内容> [--delivery=none|announce]
+/ding send <Agent名称> <消息内容>
 ```
 
 ## Parameters
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `<Agent名称>` | string | Yes | - | Name of the target Agent |
-| `<消息内容>` | string | Yes | - | Message content to send |
-| `--delivery` | string | No | `none` | Delivery mode: `none` (no reply), `announce` (reply to current session) |
+| `<Agent名称>` | string | Yes | - | 目标 Agent 名称 |
+| `<消息内容>` | string | Yes | - | 消息内容 |
 
 ## Execution Flow
 
@@ -51,9 +50,8 @@ agent:<agentId>:<channel>:group:<当前群ID>:<当前发送者ID>
 ## Examples
 
 ```
-/ding-agent contact demo1 帮我检查一下 demo skill 的进度                    # 默认 delivery=none
-/ding-agent contact demo1 帮我检查一下 demo skill 的进度 --delivery=none   # 显式指定不推送回复
-/ding-agent contact demo1 帮我检查一下 demo skill 的进度 --delivery=announce  # 推送回复到当前会话
+/ding send 小钱 帮我检查一下 demo skill 的进度
+/ding send 小张 帮我看看网络配置
 ```
 
 ## Error Handling

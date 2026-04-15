@@ -1,12 +1,12 @@
-# Actions: list-agents, current-session, list-sessions
+# Actions: list, info, sessions
 
-## `list-agents` — 列出所有可用 Agent
+## `list` — 列出所有可用 Agent
 
 **功能：** 读取 OpenClaw 配置中的 `agents.list`，输出可用 Agent 列表
 
 **使用方式：**
 ```
-/ding-agent list-agents
+/ding list
 ```
 
 **执行流程：**
@@ -26,13 +26,13 @@
 
 ---
 
-## `current-session` — 获取当前会话信息
+## `info` — 获取当前会话信息
 
 **功能：** 从 inbound metadata 中提取当前会话信息
 
 **使用方式：**
 ```
-/ding-agent current-session
+/ding info
 ```
 
 **输出内容：**
@@ -43,13 +43,13 @@
 
 ---
 
-## `list-sessions` — 获取指定 Agent 的会话列表
+## `sessions` — 获取指定 Agent 的会话列表
 
 **功能：** 列出指定 Agent 的所有可见会话
 
 **使用方式：**
 ```
-/ding-agent list-sessions <Agent名称>
+/ding sessions <Agent名称>
 ```
 
 **执行流程：**
