@@ -30,13 +30,13 @@ async function actionRelations(callAPI, argList) {
     console.log("━".repeat(50));
 
     for (const relation of relations) {
-      const targetMemo = relation.relatedMemo || relation.memo || "未知";
+      const targetMemo = (relation.relatedMemo && relation.relatedMemo.name) || (relation.relatedMemoName) || relation.relatedMemo || "未知";
+      const sourceMemo = (relation.memo && relation.memo.name) || (relation.memoName) || relation.memo || "未知";
       const type = relation.type || "未知";
-      const creator = relation.creator || "未知";
 
-      console.log(`\n📝 关联笔记: ${targetMemo}`);
-      console.log(`   类型: ${type}`);
-      console.log(`   创建者: ${creator}`);
+      console.log(`\n📝 源笔记: ${sourceMemo}`);
+      console.log(`   目标笔记: ${targetMemo}`);
+      console.log(`   关系类型: ${type}`);
       console.log("─".repeat(50));
     }
   } catch (err) {
@@ -66,7 +66,8 @@ async function actionRelate(callAPI, argList) {
     const relationData = {
       relations: [
         {
-          memo: targetId,
+          memo: { name: id },
+          relatedMemo: { name: targetId },
           type: type
         }
       ]
@@ -105,8 +106,12 @@ async function actionUnrelate(callAPI, argList) {
     const data = await callAPI("GET", `/api/v1/${id}/relations`);
     const relations = data.relations || [];
     
-    // Find the relation to the target memo
-    const relationToRemove = relations.find(rel => rel.relatedMemo === targetId || rel.memo === targetId);
+    // Find the relation to the target memo (new format: memo.name / relatedMemo.name)
+    const relationToRemove = relations.find(rel => {
+      const rn = (rel.relatedMemo && rel.relatedMemo.name) || rel.relatedMemo;
+      const mn = (rel.memo && rel.memo.name) || rel.memo;
+      return rn === targetId || mn === targetId;
+    });
     
     if (!relationToRemove) {
       console.log(`\n⚠️  未找到与 ${targetId} 的关系`);
@@ -115,14 +120,19 @@ async function actionUnrelate(callAPI, argList) {
       return;
     }
 
-    // To remove a relation, we call PATCH with an empty relations array
-    // Actually, we should only remove the specific relation. Let's update all relations except the one to remove
-    const filteredRelations = relations.filter(rel => 
-      rel.relatedMemo !== targetId && rel.memo !== targetId
-    );
+    // Filter out the specific relation and send remaining ones
+    const filteredRelations = relations.filter(rel => {
+      const rn = (rel.relatedMemo && rel.relatedMemo.name) || rel.relatedMemo;
+      const mn = (rel.memo && rel.memo.name) || rel.memo;
+      return rn !== targetId && mn !== targetId;
+    });
     
     const relationData = {
-      relations: filteredRelations
+      relations: filteredRelations.map(rel => ({
+        memo: { name: (rel.memo && rel.memo.name) || rel.memo || rel.memoName },
+        relatedMemo: { name: (rel.relatedMemo && rel.relatedMemo.name) || rel.relatedMemo || rel.relatedMemoName },
+        type: rel.type
+      }))
     };
 
     // Update the relations (removing the specific one)

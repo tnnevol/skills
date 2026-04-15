@@ -47,12 +47,21 @@ async function actionShare(callAPI, BASE_URL, ACCESS_TOKEN, argList) {
 
   if (flags.revoke) {
     const shareId = typeof flags.revoke === "string" ? flags.revoke : flags.revoke;
-    const res = await softCall(BASE_URL, ACCESS_TOKEN, "DELETE", `/api/v1/${shareId}`);
+    // Normalize shareId: if user passes just the short ID, build full path
+    let sharePath;
+    if (shareId.startsWith("memos/")) {
+      sharePath = `/api/v1/${shareId}`;
+    } else {
+      // Short ID only → construct full path using memo id
+      const memoName = id.replace("memos/", "");
+      sharePath = `/api/v1/memos/${memoName}/shares/${shareId}`;
+    }
+    const res = await softCall(BASE_URL, ACCESS_TOKEN, "DELETE", sharePath);
     if (res.ok) {
       console.log("\n✅ 分享链接已撤销");
       console.log(`   分享ID: ${shareId}`);
     } else {
-      console.error(`❌ 撤销失败: 该 Memos 实例可能不支持分享 API`);
+      console.error(`❌ 撤销失败 (${res.status}): ${res.data?.message || res.text}`);
       process.exit(1);
     }
     return;

@@ -83,9 +83,12 @@ async function actionReact(callAPI, argList) {
       console.log(`   表情: ${emoji}`);
     } else {
       // Add new reaction
-      // UpsertMemoReactionRequest: name from URL path {name=memos/*}, body = Reaction
+      // UpsertMemoReactionRequest: body = { reaction: { reactionType, contentId } }
       const body = {
-        reactionType: emoji
+        reaction: {
+          reactionType: emoji,
+          contentId: id
+        }
       };
       
       await callAPI("POST", `/api/v1/${id}/reactions`, JSON.stringify(body));
