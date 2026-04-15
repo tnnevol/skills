@@ -1,5 +1,5 @@
 ---
-name: auto-save
+name: autosave
 description: Assistant for auto-save, an open-source cloud drive auto-save service. Use when the user asks about managing save tasks, configurations, or securely interacting with the auto-save service via API.
 ---
 
@@ -43,10 +43,10 @@ This skill follows these security guidelines to protect the API token:
 
 | Action | Usage | Description |
 | -------- | ------- | ------------- |
-| `add-task` | `/auto-save add-task <share_url> [--name=xxx]` | 添加转存任务 |
-| `config` | `/auto-save config` | 获取整体配置 |
-| `update-config` | `/auto-save update-config <config_json>` | 更新整体配置 |
-| `run-now` | `/auto-save run-now` | 立即运行脚本任务 |
-| `search` | `/auto-save search <query>` | 搜索任务建议（带有效性检查） |
-| `detail` | `/auto-save detail <share_url>` | 查看分享详情 |
-| `help` | `/auto-save help <问题>` | 回答相关问题 |
+| `add-task` | `/autosave add-task <share_url> [--name=xxx]` | 添加转存任务 |
+| `config` | `/autosave config` | 获取整体配置 |
+| `update-config` | `/autosave update-config <config_json>` | 更新整体配置 |
+| `run-now` | `/autosave run-now` | 立即运行脚本任务 |
+| `search` | `/autosave search <query>` | 搜索任务建议（带有效性检查） |
+| `detail` | `/autosave detail <share_url>` | 查看分享详情 |
+| `help` | `/autosave help <问题>` | 回答相关问题 |

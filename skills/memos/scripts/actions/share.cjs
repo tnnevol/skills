@@ -47,7 +47,7 @@ async function actionShare(callAPI, BASE_URL, ACCESS_TOKEN, argList) {
 
   if (flags.revoke) {
     const shareId = typeof flags.revoke === "string" ? flags.revoke : flags.revoke;
-    const res = await softCall(BASE_URL, ACCESS_TOKEN, "DELETE", `/api/v1/shares/${shareId}`);
+    const res = await softCall(BASE_URL, ACCESS_TOKEN, "DELETE", `/api/v1/${shareId}`);
     if (res.ok) {
       console.log("\n✅ 分享链接已撤销");
       console.log(`   分享ID: ${shareId}`);
@@ -59,12 +59,12 @@ async function actionShare(callAPI, BASE_URL, ACCESS_TOKEN, argList) {
   }
 
   if (flags.list) {
-    const res = await softCall(BASE_URL, ACCESS_TOKEN, "GET", `/api/v1/${id.replace("memos/", "")}/shares`);
+    const res = await softCall(BASE_URL, ACCESS_TOKEN, "GET", `/api/v1/${id}/shares`);
     if (!res.ok) {
       console.error(`❌ 无法获取分享列表: 该 Memos 实例可能不支持分享 API`);
       process.exit(1);
     }
-    const shares = res.data.shares || [];
+    const shares = res.data.memoShares || res.data.shares || [];
     if (shares.length === 0) {
       console.log(`🔗 ${id} 暂无分享链接`);
       return;
@@ -72,8 +72,8 @@ async function actionShare(callAPI, BASE_URL, ACCESS_TOKEN, argList) {
     console.log(`🔗 ${id} 的分享链接（共 ${shares.length} 个）:\n`);
     console.log("━".repeat(50));
     for (const share of shares) {
-      console.log(`\n📎 分享ID: ${share.name || share.id || "未知"}`);
-      console.log(`   链接: ${BASE_URL}/s/${share.name || share.id}`);
+      const shareName = share.name || share.id || "未知";
+      console.log(`\n📎 分享ID: ${shareName}`);
       console.log(`   创建时间: ${formatTime(share.createTime)}`);
       console.log("─".repeat(50));
     }
