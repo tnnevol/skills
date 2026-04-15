@@ -47,7 +47,7 @@ function sanitizeToken(str, token) {
   return str.replace(new RegExp(token, 'g'), '****');
 }
 
-function apiRequest(baseUrl, path, method, body) {
+function apiRequest(baseUrl, path, method, body, handleStream = false) {
   return new Promise((resolve, reject) => {
     const url = new URL(path, baseUrl);
     const isHttps = url.protocol === 'https:';
@@ -68,16 +68,64 @@ function apiRequest(baseUrl, path, method, body) {
     }
 
     const req = lib.request(options, (res) => {
-      let data = '';
-      res.on('data', (chunk) => (data += chunk));
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          resolve({ status: res.statusCode, data: parsed });
-        } catch {
-          resolve({ status: res.statusCode, data: data.substring(0, 500) });
-        }
-      });
+      if (handleStream && res.headers['content-type'] && res.headers['content-type'].includes('text/event-stream')) {
+        // Handle SSE stream
+        let buffer = '';
+        const events = [];
+        
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => {
+          buffer += chunk;
+          
+          // Process complete lines
+          let newlineIndex;
+          while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+            const line = buffer.substring(0, newlineIndex);
+            buffer = buffer.substring(newlineIndex + 1);
+            
+            if (line.startsWith('data: ')) {
+              try {
+                const eventData = JSON.parse(line.substring(6));
+                events.push(eventData);
+                // Print the event data directly to stdout
+                console.log(JSON.stringify(eventData, null, 2));
+              } catch (e) {
+                // Ignore malformed JSON lines
+              }
+            } else if (line === '') {
+              // Empty line indicates end of event
+            }
+          }
+        });
+        
+        res.on('end', () => {
+          // Process any remaining data in buffer
+          if (buffer.trim() !== '') {
+            if (buffer.startsWith('data: ')) {
+              try {
+                const eventData = JSON.parse(buffer.substring(6));
+                events.push(eventData);
+                console.log(JSON.stringify(eventData, null, 2));
+              } catch (e) {
+                // Ignore malformed JSON
+              }
+            }
+          }
+          resolve({ status: res.statusCode, data: events });
+        });
+      } else {
+        // Handle regular response
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(data);
+            resolve({ status: res.statusCode, data: parsed });
+          } catch {
+            resolve({ status: res.statusCode, data: data.substring(0, 500) });
+          }
+        });
+      }
     });
 
     req.on('error', reject);
@@ -126,16 +174,35 @@ async function updateConfig(args, env) {
 
 async function runNow(args, env) {
   let body = undefined;
-  if (args.tasklist) {
-    body = {
-      tasklist: [
-        {
-          taskname: args.tasklist,
-          shareurl: '',
-          savepath: '',
-        },
-      ],
-    };
+  
+  if (args.tasklist || (args.taskname && args.shareurl && args.savepath)) {
+    // Handle the legacy tasklist parameter for backward compatibility
+    if (args.tasklist) {
+      body = {
+        tasklist: [
+          {
+            taskname: args.tasklist,
+            shareurl: args.shareurl || '',
+            savepath: args.savepath || '',
+            pattern: args.pattern,
+            replace: args.replace
+          },
+        ],
+      };
+    } else if (args.taskname) {
+      // Handle the new parameter format
+      body = {
+        tasklist: [
+          {
+            taskname: args.taskname,
+            shareurl: args.shareurl,
+            savepath: args.savepath,
+            pattern: args.pattern,
+            replace: args.replace
+          },
+        ],
+      };
+    }
   } else if (args['quark-test']) {
     body = {
       quark_test: true,
@@ -144,9 +211,14 @@ async function runNow(args, env) {
       },
     };
   }
+  
   // body = undefined means run all tasks
-  const result = await apiRequest(env.baseUrl, `/run_script_now?token=${env.token}`, 'POST', body);
-  console.log(JSON.stringify(result.data, null, 2));
+  const result = await apiRequest(env.baseUrl, `/run_script_now?token=${env.token}`, 'POST', body, true);
+  
+  // Only print the result if not handling stream (stream data is printed directly)
+  if (!body || !body.tasklist) {
+    console.log(JSON.stringify(result.data, null, 2));
+  }
 }
 
 async function suggestions(args, env) {
@@ -422,7 +494,7 @@ Actions:
   add-task       --name xxx --shareurl xxx --savepath xxx [--pattern xxx] [--replace xxx]
   config         
   update-config  --field xxx --value xxx
-  run-now        [--tasklist xxx] [--quark-test]
+  run-now        [--tasklist xxx] [--taskname xxx] [--shareurl xxx] [--savepath xxx] [--pattern xxx] [--replace xxx] [--quark-test]
   suggestions    --query xxx [--depth 1] [--tree] [--max-depth N]
   search         --query xxx [--depth 1] [--tree] [--max-depth N] (alias for suggestions)
   detail         <share_url> [--stoken xxx] [--savepath xxx]

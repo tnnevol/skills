@@ -46,7 +46,7 @@ This skill follows these security guidelines to protect the API token:
 | `add-task` | `/autosave add-task <share_url> [--name=xxx]` | 添加转存任务 |
 | `config` | `/autosave config` | 获取整体配置 |
 | `update-config` | `/autosave update-config <config_json>` | 更新整体配置 |
-| `run-now` | `/autosave run-now` | 立即运行脚本任务 |
+| `run-now` | `/autosave run-now [--taskname=xxx] [--shareurl=xxx] [--savepath=xxx] [--pattern=xxx] [--replace=xxx]` | 立即运行脚本任务 |
 | `search` | `/autosave search <query> [--depth=N] [--tree] [--max-depth=N]` | 搜索任务建议（带有效性检查和可选目录树） |
 | `detail` | `/autosave detail <share_url>` | 查看分享详情 |
 | `help` | `/autosave help <问题>` | 回答相关问题 |
