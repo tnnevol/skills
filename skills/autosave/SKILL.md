@@ -47,6 +47,6 @@ This skill follows these security guidelines to protect the API token:
 | `config` | `/autosave config` | 获取整体配置 |
 | `update-config` | `/autosave update-config <config_json>` | 更新整体配置 |
 | `run-now` | `/autosave run-now` | 立即运行脚本任务 |
-| `search` | `/autosave search <query>` | 搜索任务建议（带有效性检查） |
+| `search` | `/autosave search <query> [--depth=N] [--tree] [--max-depth=N]` | 搜索任务建议（带有效性检查和可选目录树） |
 | `detail` | `/autosave detail <share_url>` | 查看分享详情 |
 | `help` | `/autosave help <问题>` | 回答相关问题 |
