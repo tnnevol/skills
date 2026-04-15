@@ -96,13 +96,17 @@ async function actionCreate(callAPI, argList) {
   const { flags, positional } = parseFlags(argList);
   const content = positional.join(" ");
   const visibility = formatVisibility(flags.visibility);
+  const memoId = flags['memo-id'] || null;
 
   if (!content) {
-    console.error("用法: api.cjs create \"内容\" [--visibility=PUBLIC|PRIVATE|PROTECTED]");
+    console.error("用法: api.cjs create \"内容\" [--visibility=PUBLIC|PRIVATE|PROTECTED] [--memo-id=自定义ID]");
     process.exit(1);
   }
 
   const body = { content, visibility };
+  if (memoId) {
+    body.memo_id = memoId;
+  }
   const data = await callAPI("POST", "/api/v1/memos", JSON.stringify(body));
 
   const id = data.name || "unknown";
@@ -110,6 +114,9 @@ async function actionCreate(callAPI, argList) {
 
   console.log("\n✅ 笔记创建成功");
   console.log(`   ID: ${id}`);
+  if (memoId) {
+    console.log(`   自定义ID: ${memoId}`);
+  }
   console.log(`   可见性: ${data.visibility || visibility}`);
   console.log(`   标签: ${tags}`);
   console.log(`   链接: ${process.env.MEMOS_BASE_URL}/${data.name}`);
@@ -185,11 +192,12 @@ async function actionUpdate(callAPI, argList) {
 // --- delete ---
 
 async function actionDelete(callAPI, argList) {
-  const { positional } = parseFlags(argList);
+  const { flags, positional } = parseFlags(argList);
   const rawId = positional[0];
+  const force = flags.force ? true : null;
 
   if (!rawId) {
-    console.error("用法: api.cjs delete <笔记ID>");
+    console.error("用法: api.cjs delete <笔记ID> [--force]");
     process.exit(1);
   }
 
@@ -206,8 +214,16 @@ async function actionDelete(callAPI, argList) {
   console.log(`   ID: ${memo.name}`);
   console.log(`   内容: ${truncate(memo.content || "", 100).replace(/\n/g, " ")}`);
   console.log(`   标签: ${(memo.tags || []).map((t) => `#${t}`).join(" ") || "(无标签)"}`);
+  if (force) {
+    console.log(`   模式: 强制删除（含关联数据）`);
+  }
 
-  await callAPI("DELETE", `/api/v1/${id}`);
+  let deleteUrl = `/api/v1/${id}`;
+  if (force) {
+    deleteUrl += `?force=true`;
+  }
+
+  await callAPI("DELETE", deleteUrl);
 
   console.log(`\n✅ 已删除笔记: ${id}`);
   console.log(`   链接: ${process.env.MEMOS_BASE_URL}/${id}`);
