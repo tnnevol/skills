@@ -96,7 +96,8 @@ async function actionShare(callAPI, BASE_URL, ACCESS_TOKEN, argList) {
     console.log("\n✅ 分享链接创建成功");
     console.log(`   笔记: ${id}`);
     console.log(`   分享ID: ${shareId}`);
-    console.log(`   链接: ${BASE_URL}/s/${shareId.replace("memos/shares/", "")}`);
+    const shareToken = shareId.replace(/.*shares\//, "");
+    console.log(`   链接: ${BASE_URL}/memos/shares/${shareToken}`);
   } else {
     console.error(`❌ 分享功能不可用: 该 Memos 实例可能不支持分享 API`);
     process.exit(1);
