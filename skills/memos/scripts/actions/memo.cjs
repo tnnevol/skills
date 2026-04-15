@@ -112,6 +112,7 @@ async function actionCreate(callAPI, argList) {
   console.log(`   ID: ${id}`);
   console.log(`   可见性: ${data.visibility || visibility}`);
   console.log(`   标签: ${tags}`);
+  console.log(`   链接: ${process.env.MEMOS_BASE_URL}/${data.name}`);
 }
 
 // --- get ---
@@ -144,6 +145,7 @@ async function actionGet(callAPI, argList) {
   console.log(`创建: ${formatTime(data.createTime)}`);
   console.log(`更新: ${formatTime(data.updateTime)}`);
   if (data.pinned) console.log("📌 已置顶");
+  console.log(`链接: ${process.env.MEMOS_BASE_URL}/${data.name}`);
 }
 
 // --- update ---
@@ -177,6 +179,7 @@ async function actionUpdate(callAPI, argList) {
   console.log(`   ID: ${data.name || id}`);
   console.log(`   可见性: ${data.visibility || visibility || "PRIVATE"}`);
   console.log(`   标签: ${tags}`);
+  console.log(`   链接: ${process.env.MEMOS_BASE_URL}/${data.name || id}`);
 }
 
 // --- delete ---
@@ -207,6 +210,7 @@ async function actionDelete(callAPI, argList) {
   await callAPI("DELETE", `/api/v1/${id}`);
 
   console.log(`\n✅ 已删除笔记: ${id}`);
+  console.log(`   链接: ${process.env.MEMOS_BASE_URL}/${id}`);
 }
 
 // --- pin ---
@@ -236,10 +240,12 @@ async function actionPin(callAPI, argList) {
     console.log("\n📌 笔记已置顶");
     console.log(`   ID: ${data.name || id}`);
     console.log(`   状态: 已置顶`);
+    console.log(`   链接: ${process.env.MEMOS_BASE_URL}/${data.name || id}`);
   } else {
     console.log("\n📌 笔记已取消置顶");
     console.log(`   ID: ${data.name || id}`);
     console.log(`   状态: 已取消置顶`);
+    console.log(`   链接: ${process.env.MEMOS_BASE_URL}/${data.name || id}`);
   }
 }
 

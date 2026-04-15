@@ -80,6 +80,8 @@ async function actionRelate(callAPI, argList) {
     console.log(`   源笔记: ${id}`);
     console.log(`   目标笔记: ${targetId}`);
     console.log(`   关系类型: ${type}`);
+    console.log(`   源笔记链接: ${process.env.MEMOS_BASE_URL}/${id}`);
+    console.log(`   目标笔记链接: ${process.env.MEMOS_BASE_URL}/${targetId}`);
   } catch (err) {
     console.error(`❌ 建立关系失败: ${err.message || "API 调用错误"}`);
     process.exit(1);
@@ -141,6 +143,8 @@ async function actionUnrelate(callAPI, argList) {
     console.log(`\n✅ 笔记关系已解除`);
     console.log(`   源笔记: ${id}`);
     console.log(`   目标笔记: ${targetId}`);
+    console.log(`   源笔记链接: ${process.env.MEMOS_BASE_URL}/${id}`);
+    console.log(`   目标笔记链接: ${process.env.MEMOS_BASE_URL}/${targetId}`);
   } catch (err) {
     console.error(`❌ 解除关系失败: ${err.message || "API 调用错误"}`);
     process.exit(1);

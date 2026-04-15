@@ -221,6 +221,7 @@ async function actionAttachmentDelete(callAPI, argList) {
   await callAPI("DELETE", `/api/v1/${name}`);
 
   console.log(`\n✅ 已删除附件: ${name}`);
+  console.log(`   链接: ${process.env.MEMOS_BASE_URL}/${name}`);
 }
 
 // --- batch-delete-attachment ---
@@ -250,6 +251,7 @@ async function actionAttachmentBatchDelete(callAPI, argList) {
   await callAPI("POST", "/api/v1/attachments:batchDelete", JSON.stringify(body));
 
   console.log(`\n✅ 已批量删除 ${names.length} 个附件`);
+  console.log(`   链接: ${names.map(name => `${process.env.MEMOS_BASE_URL}/${name}`).join(', ')}`);
 }
 
 module.exports = {

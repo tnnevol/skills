@@ -24,6 +24,7 @@ async function actionComments(callAPI, argList) {
     console.log(`   ID: ${data.name || "未知"}`);
     console.log(`   内容: ${truncate(data.content || "", 80)}`);
     console.log(`   创建时间: ${formatTime(data.createTime)}`);
+    console.log(`   笔记链接: ${process.env.MEMOS_BASE_URL}/${id}`);
   } else {
     // 查看评论
     const data = await callAPI("GET", `/api/v1/${id}/comments`);
