@@ -3,23 +3,56 @@
  * resolve-session.cjs
  *
  * Dynamically resolves a target session key from an Agent nickname.
+ * Also parses delivery mode parameter.
  *
  * Usage:
- *   node resolve-session.cjs <Agent昵称> <群ID> <发送者ID>
+ *   node resolve-session.cjs <Agent昵称> <群ID> <发送者ID> [--delivery=none|announce]
  *
  * Output:
- *   JSON with sessionKey, agentId, accountId, channel (or error)
+ *   JSON with sessionKey, agentId, accountId, channel, delivery (or error)
  */
 
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-function main() {
-  const nickname = process.argv[2];
-  const groupId = process.argv[3];
-  const senderId = process.argv[4];
+function parseArgs(argv) {
+  const args = { _: [] };
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i].startsWith('--')) {
+      const argStr = argv[i].substring(2);
+      const delimiterIndex = argStr.indexOf('=');
+      if (delimiterIndex > 0) {
+        const key = argStr.substring(0, delimiterIndex);
+        const value = argStr.substring(delimiterIndex + 1);
+        args[key] = value;
+      } else {
+        const key = argStr;
+        const nextArg = argv[i + 1];
+        if (nextArg && !nextArg.startsWith('--')) {
+          args[key] = nextArg;
+          i++; // Skip next argument since we consumed it
+        } else {
+          args[key] = true;
+        }
+      }
+    } else {
+      args._.push(argv[i]);
+    }
+  }
+  return args;
+}
 
+function main() {
+  const args = parseArgs(process.argv.slice(2));
+  
+  if (args._.length < 3) {
+    console.error(JSON.stringify({ error: '请提供 Agent 昵称、群 ID 和发送者 ID' }));
+    process.exit(1);
+  }
+
+  const [nickname, groupId, senderId] = args._;
+  
   if (!nickname) {
     console.error(JSON.stringify({ error: '请提供 Agent 昵称' }));
     process.exit(1);
@@ -98,13 +131,22 @@ function main() {
 
   // 4. Compose Session Key
   const sessionKey = `agent:${agentId}:${channel}:group:${groupId}:${senderId}`;
+  
+  // 5. Determine delivery mode (default to 'none' to prevent reply loops)
+  let deliveryMode = args.delivery || 'none';
+  if (!['none', 'announce'].includes(deliveryMode)) {
+    deliveryMode = 'none'; // fallback to default if invalid
+  }
 
-  // 5. Output
+  // 6. Output
   console.log(JSON.stringify({
     sessionKey,
     agentId,
     accountId,
-    channel
+    channel,
+    delivery: {
+      mode: deliveryMode
+    }
   }));
 }
 

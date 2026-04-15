@@ -61,7 +61,7 @@ ding-agent is a skill for quickly locating and contacting other Agents (demo1, d
 
 | Action | Usage | Description |
 | -------- | ------- | ------------- |
-| `contact` | `/ding-agent contact <Agent名称> <message>` | Contact a specified Agent by name |
+| `contact` | `/ding-agent contact <Agent名称> <message> [--delivery=none|announce]` | Contact a specified Agent by name |
 | `list-agents` | `/ding-agent list-agents` | List all available Agents from config |
 | `current-session` | `/ding-agent current-session` | Show current session information |
 | `list-sessions` | `/ding-agent list-sessions <Agent名称>` | List sessions for a specific Agent |

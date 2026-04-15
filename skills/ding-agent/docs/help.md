@@ -37,6 +37,17 @@ agent:<agentId>:dingtalk-connector:direct:<用户ID>
 
 A: 纯文本消息。如果需要 demo1 执行任务，请使用标准任务格式。
 
+### Q: 什么是 delivery 模式？
+
+A: delivery 模式控制目标 Agent 回复的处理方式：
+
+| 模式 | 效果 |
+|------|------|
+| `none`（默认） | 不推送回复，避免回复循环 |
+| `announce` | 回复推送到当前会话 |
+
+使用方式：`/ding-agent contact demo1 消息内容 --delivery=none|announce`
+
 ## Related Resources
 
 - [OpenClaw Documentation](https://docs.openclaw.ai)

@@ -3,8 +3,16 @@
 ## Usage
 
 ```
-/ding-agent contact <Agent名称> <消息内容>
+/ding-agent contact <Agent名称> <消息内容> [--delivery=none|announce]
 ```
+
+## Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `<Agent名称>` | string | Yes | - | Name of the target Agent |
+| `<消息内容>` | string | Yes | - | Message content to send |
+| `--delivery` | string | No | `none` | Delivery mode: `none` (no reply), `announce` (reply to current session) |
 
 ## Execution Flow
 
@@ -43,8 +51,9 @@ agent:<agentId>:<channel>:group:<当前群ID>:<当前发送者ID>
 ## Examples
 
 ```
-/ding-agent demo1 帮我检查一下 demo skill 的进度
-/ding-agent demo2 帮我看看配置有没有问题
+/ding-agent contact demo1 帮我检查一下 demo skill 的进度                    # 默认 delivery=none
+/ding-agent contact demo1 帮我检查一下 demo skill 的进度 --delivery=none   # 显式指定不推送回复
+/ding-agent contact demo1 帮我检查一下 demo skill 的进度 --delivery=announce  # 推送回复到当前会话
 ```
 
 ## Error Handling
