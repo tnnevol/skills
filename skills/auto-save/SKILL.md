@@ -1,11 +1,11 @@
 ---
 name: auto-save
-description: Assistant for quark-auto-save (https://github.com/Cp0204/quark-auto-save), an open-source auto-save service for Quark Cloud Drive. Use when the user asks about managing save tasks, configurations, or securely interacting with the auto-save service via API.
+description: Assistant for auto-save, an open-source cloud drive auto-save service. Use when the user asks about managing save tasks, configurations, or securely interacting with the auto-save service via API.
 ---
 
 # SKILL: auto-save
 
-quark-auto-save ([quark-auto-save](https://github.com/Cp0204/quark-auto-save)) is an open-source auto-save service for Quark Cloud Drive.
+auto-save is an open-source cloud drive auto-save service.
 It automatically saves and manages cloud drive resources (e.g., shared links, folders) by converting them into persistent save tasks.
 
 ## Security Guidelines
