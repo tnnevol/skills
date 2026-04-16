@@ -33,7 +33,7 @@ HALO_PAT=pat_xxx
 
 通过 npm 包调用 CLI 工具：
 
-- **临时使用**: `npx @tnnevol/halo-cli <action>`
+- **临时使用**: `npx -y @tnnevol/halo-cli <action>`
 - **全局安装**: `npm install -g @tnnevol/halo-cli` 然后使用 `halo-cli <action>`
 
 该 npm 包内部会根据操作系统自动选择合适的二进制文件：
@@ -45,16 +45,16 @@ HALO_PAT=pat_xxx
 
 | 命令 | 示例 | 说明 |
 |------|------|------|
-| `list` | `npx @tnnevol/halo-cli list` | 列出文章（默认20条） |
-| `list` | `npx @tnnevol/halo-cli list --limit=10 --page=2` | 分页列出，每页10条 |
-| `list` | `npx @tnnevol/halo-cli list --keyword=xxx` | 按关键词搜索 |
-| `get` | `npx @tnnevol/halo-cli get <name>` | 获取文章详情 |
-| `create` | `npx @tnnevol/halo-cli create --title=标题 --raw=内容` | 创建文章（默认 PRIVATE + HTML 格式） |
-| `create` | `npx @tnnevol/halo-cli create --title=标题 --raw=内容 --publish --public` | 创建并立即发布，公开可见 |
-| `update` | `npx @tnnevol/halo-cli update <name> --title=新标题` | 更新文章标题 |
-| `update` | `npx @tnnevol/halo-cli update <name> --raw=新内容` | 更新文章内容 |
-| `delete` | `npx @tnnevol/halo-cli delete <name>` | 删除文章 |
-| `publish` | `npx @tnnevol/halo-cli publish <name>` | 发布文章 |
-| `unpublish` | `npx @tnnevol/halo-cli unpublish <name>` | 取消发布 |
+| `list` | `npx -y @tnnevol/halo-cli list` | 列出文章（默认20条） |
+| `list` | `npx -y @tnnevol/halo-cli list --limit=10 --page=2` | 分页列出，每页10条 |
+| `list` | `npx -y @tnnevol/halo-cli list --keyword=xxx` | 按关键词搜索 |
+| `get` | `npx -y @tnnevol/halo-cli get <name>` | 获取文章详情 |
+| `create` | `npx -y @tnnevol/halo-cli create --title=标题 --raw=内容` | 创建文章（默认 PRIVATE + HTML 格式） |
+| `create` | `npx -y @tnnevol/halo-cli create --title=标题 --raw=内容 --publish --public` | 创建并立即发布，公开可见 |
+| `update` | `npx -y @tnnevol/halo-cli update <name> --title=新标题` | 更新文章标题 |
+| `update` | `npx -y @tnnevol/halo-cli update <name> --raw=新内容` | 更新文章内容 |
+| `delete` | `npx -y @tnnevol/halo-cli delete <name>` | 删除文章 |
+| `publish` | `npx -y @tnnevol/halo-cli publish <name>` | 发布文章 |
+| `unpublish` | `npx -y @tnnevol/halo-cli unpublish <name>` | 取消发布 |
 
-> 所有调用走 `npx @tnnevol/halo-cli`，底层 API 细节已封装在 Go 二进制中。
+> 所有调用走 `npx -y @tnnevol/halo-cli`，底层 API 细节已封装在 Go 二进制中。

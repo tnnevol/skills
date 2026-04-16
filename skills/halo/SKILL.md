@@ -1,6 +1,7 @@
 ---
 name: halo
-description: Assistant for Halo CMS (https://www.halo.run/). Use when the user types /halo commands or asks about Halo blog posts management. Triggers: /halo help, /halo list, /halo create, /halo get, /halo update, /halo delete, /halo publish, managing Halo blog posts, creating articles in Halo.
+description: >
+  Assistant for Halo CMS (https://www.halo.run/). Use when the user types /halo commands or asks about Halo blog posts management. Triggers: /halo help, /halo list, /halo create, /halo get, /halo update, /halo delete, /halo publish, managing Halo blog posts, creating articles in Halo.
 ---
 
 # SKILL: halo
@@ -11,7 +12,7 @@ Use this skill to manage blog posts via the Halo RESTful API — list, view, cre
 ## Security Guidelines
 
 1. **Never expose** the `HALO_PAT` (Personal Access Token) value in chat, files, code, or logs.
-2. **All API calls** must go through `npx @tnnevol/halo-cli` — never use `curl`, `wget`, `fetch`, or other HTTP clients directly.
+2. **All API calls** must go through `npx -y @tnnevol/halo-cli` — never use `curl`, `wget`, `fetch`, or other HTTP clients directly.
 3. **Never read** `.env` files or echo credential values in conversation output.
 4. Sensitive values in API responses are automatically sanitized.
 
@@ -25,9 +26,9 @@ If no arguments or unrecognized action, show the help table.
 When the user types `/halo <action>`, execute via npm package:
 
 ```
-/halo list  →  npx @tnnevol/halo-cli list
-/halo get my-post  →  npx @tnnevol/halo-cli get my-post
-/halo create --title=标题 --raw=内容  →  npx @tnnevol/halo-cli create --title=标题 --raw=内容
+/halo list  →  npx -y @tnnevol/halo-cli list
+/halo get my-post  →  npx -y @tnnevol/halo-cli get my-post
+/halo create --title=标题 --raw=内容  →  npx -y @tnnevol/halo-cli create --title=标题 --raw=内容
 ```
 
 Alternatively, install globally: `npm install -g @tnnevol/halo-cli` then use `halo-cli <action>`.
