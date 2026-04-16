@@ -1,0 +1,31 @@
+{
+  "name": "@tnnevol/halo-cli",
+  "version": "2.0.0",
+  "description": "CLI tool to manage blog posts in Halo CMS (Rust)",
+  "bin": {
+    "halo-cli": "./index.js"
+  },
+  "scripts": {
+    "build": "cargo build --release",
+    "bump": "bumpp",
+    "bump:patch": "bumpp patch -y",
+    "bump:minor": "bumpp minor -y",
+    "bump:major": "bumpp major -y",
+    "release": "bumpp patch -y --execute \"npm publish\"",
+    "check-version": "echo \"Rust binary version: $(./bin/halo-linux version)\" && echo \"package.json version: $(node -p \"require('./package.json').version\")\""
+  },
+  "files": [
+    "index.js",
+    "bin/"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tnnevol/skills.git",
+    "directory": "apps/halo-cli"
+  },
+  "author": "tnnevol",
+  "devDependencies": {
+    "bumpp": "^11.0.1"
+  }
+}
