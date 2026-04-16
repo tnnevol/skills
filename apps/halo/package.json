@@ -6,7 +6,12 @@
     "halo-cli": "./index.js"
   },
   "scripts": {
-    "build": "make build-all"
+    "build": "make build-all",
+    "bump": "bumpp",
+    "bump:patch": "bumpp patch -y",
+    "bump:minor": "bumpp minor -y",
+    "bump:major": "bumpp major -y",
+    "release": "bumpp patch -y --execute \"npm publish\""
   },
   "files": [
     "index.js",
@@ -18,5 +23,8 @@
     "url": "https://github.com/tnnevol/skills.git",
     "directory": "apps/halo"
   },
-  "author": "tnnevol"
+  "author": "tnnevol",
+  "devDependencies": {
+    "bumpp": "^11.0.1"
+  }
 }
