@@ -11,7 +11,7 @@ Use this skill to manage blog posts via the Halo RESTful API — list, view, cre
 ## Security Guidelines
 
 1. **Never expose** the `HALO_PAT` (Personal Access Token) value in chat, files, code, or logs.
-2. **All API calls** must go through `scripts/api.cjs` — never use `curl`, `wget`, `fetch`, or other HTTP clients directly.
+2. **All API calls** must go through `bin/halo-*` binaries — never use `curl`, `wget`, `fetch`, or other HTTP clients directly.
 3. **Never read** `.env` files or echo credential values in conversation output.
 4. Sensitive values in API responses are automatically sanitized.
 
@@ -24,13 +24,15 @@ Use this skill to manage blog posts via the Halo RESTful API — list, view, cre
 
 ### Calling Convention
 
-When the user types `/halo <action>`, execute `node scripts/api.cjs <action>`:
+When the user types `/halo <action>`, execute the appropriate binary based on the operating system:
 
 ```
-/halo list  →  node scripts/api.cjs list
-/halo get my-post  →  node scripts/api.cjs get my-post
-/halo create --title=标题 --raw=内容  →  node scripts/api.cjs create --title=标题 --raw=内容
+/halo list  →  bin/halo-linux list         (Linux)
+/halo list  →  bin/halo-macos list         (macOS)  
+/halo list  →  bin/halo-windows.exe list   (Windows)
 ```
+
+The skill automatically detects the current platform and executes the corresponding binary file.
 
 ## Actions
 
@@ -40,19 +42,26 @@ When the user types `/halo <action>`, execute `node scripts/api.cjs <action>`:
 | `list` | `/halo list [--limit=N] [--page=N] [--keyword=xxx]` | 列出文章 |
 | `get` | `/halo get <name>` | 获取文章详情 |
 | `create` | `/halo create --title=标题 --raw=内容 [--slug=xxx] [--publish] [--public]` | 创建文章（默认 PRIVATE + HTML 格式） |
-| `update` | `/halo update <name> [--title=xxx] [--raw=xxx]` | 更新文章 |
+| `update` | `/halo update <name> [--title=xxx] [--raw=xxx] [--content=xxx]` | 更新文章 |
 | `delete` | `/halo delete <name>` | 删除文章 |
 | `publish` | `/halo publish <name>` | 发布文章 |
 | `unpublish` | `/halo unpublish <name>` | 取消发布 |
+
+### Parameter Details
+
+- `--raw`: Accepts Markdown content, which is converted to HTML using goldmark before sending to Halo API
+- `--content`: Accepts pre-rendered HTML content, sent directly to Halo API without conversion
+- `--publish`: Publish the article immediately after creation
+- `--public`: Set visibility to PUBLIC (default is PRIVATE)
 
 ## ⚠️ Important Notes
 
 1. **Console API vs Extension API** — create/publish/unpublish use **Console API** (`/apis/api.console.halo.run/v1alpha1/posts`) which triggers snapshot creation. list/get/update/delete use **Extension API** (`/apis/content.halo.run/v1alpha1/posts`). Console API's `PUT /posts/{name}` requires a complete nested format with valid content, so update uses Extension API flat format instead. If content update is needed, use Console API's `/posts/{name}/content` endpoint first. See `references/posts-api.md` for details.
 2. **Request Body Format** — Console API requires **nested format** `{ post: {...}, content: {...} }`, not flat format. Extension API uses flat format.
-3. **Optimistic Locking** — Updates require `metadata.version`. The script auto-fetches the latest version before updating, so you don't need to track it manually.
+3. **Optimistic Locking** — Updates require `metadata.version`. The binary auto-fetches the latest version before updating, so you don't need to track it manually.
 4. **metadata.name Rules** — ≤253 characters, only lowercase letters, digits, and hyphens. The `create` action auto-generates a valid slug from the title if `--slug` is not provided.
 5. **Search Tip** — When searching Halo documentation online, use `site:docs.halo.run` to avoid game-related content pollution.
-6. **Content Format** — Fixed to `rawType: HTML` (Halo only uses HTML format). Markdown content will be converted to HTML via md2html function.
+6. **Content Format** — Fixed to `rawType: HTML` (Halo only uses HTML format). Markdown content will be converted to HTML via goldmark.
 7. **Visibility** — Default is `PRIVATE`. Use `--public` to set to PUBLIC.
 
 ## Environment Variables
