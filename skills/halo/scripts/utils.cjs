@@ -8,6 +8,10 @@
  */
 function md2html(md) {
   if (!md) return "";
+  
+  // 修复：处理 \n 字面量 → 实际换行
+  md = md.replace(/\\n/g, '\n');
+  
   const lines = md.split("\n");
   const html = [];
   let inCodeBlock = false;
@@ -60,6 +64,9 @@ function md2html(md) {
   }
 
   function inlineFormat(text) {
+    // 在代码块内不处理行内格式
+    if (inCodeBlock) return text;
+    
     // 行内代码
     text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
     // 粗体
@@ -111,7 +118,8 @@ function md2html(md) {
   // 处理剩余的代码块或表格
   if (inCodeBlock) {
     const code = codeBlockContent.join("\n").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    html.push(`<pre><code>${code}</code></pre>`);
+    const cls = codeLang ? ` class="language-${codeLang}"` : "";
+    html.push(`<pre><code${cls}>${code}</code></pre>`);
   }
   if (inTable) flushTable();
 
