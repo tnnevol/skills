@@ -29,15 +29,17 @@ HALO_PAT=pat_xxx
 3. 找到 **个人访问令牌** 区域
 4. 创建新令牌，复制 `pat_xxx` 值（仅显示一次）
 
-## 平台检测说明
+## 使用方式
 
-CLI 二进制文件根据操作系统自动选择：
+通过 npm 包调用 CLI 工具：
 
-- **Linux**: `bin/halo-linux`
-- **macOS**: `bin/halo-macos`
-- **Windows**: `bin/halo-windows.exe`
+- **临时使用**: `npx @tnnevol/halo-cli <action>`
+- **全局安装**: `npm install -g @tnnevol/halo-cli` 然后使用 `halo-cli <action>`
 
-技能自动检测当前平台并执行相应的二进制文件。
+该 npm 包内部会根据操作系统自动选择合适的二进制文件：
+- **Linux**: `halo-linux`
+- **macOS**: `halo-macos` 
+- **Windows**: `halo-windows.exe`
 
 ## API 映射参考
 

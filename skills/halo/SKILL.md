@@ -11,7 +11,7 @@ Use this skill to manage blog posts via the Halo RESTful API — list, view, cre
 ## Security Guidelines
 
 1. **Never expose** the `HALO_PAT` (Personal Access Token) value in chat, files, code, or logs.
-2. **All API calls** must go through `bin/halo-*` binaries — never use `curl`, `wget`, `fetch`, or other HTTP clients directly.
+2. **All API calls** must go through `npx @tnnevol/halo-cli` — never use `curl`, `wget`, `fetch`, or other HTTP clients directly.
 3. **Never read** `.env` files or echo credential values in conversation output.
 4. Sensitive values in API responses are automatically sanitized.
 
@@ -22,15 +22,15 @@ If no arguments or unrecognized action, show the help table.
 
 ### Calling Convention
 
-When the user types `/halo <action>`, execute the appropriate binary based on the operating system:
+When the user types `/halo <action>`, execute via npm package:
 
 ```
-/halo list  →  bin/halo-linux list         (Linux)
-/halo list  →  bin/halo-macos list         (macOS)  
-/halo list  →  bin/halo-windows.exe list   (Windows)
+/halo list  →  npx @tnnevol/halo-cli list
+/halo get my-post  →  npx @tnnevol/halo-cli get my-post
+/halo create --title=标题 --raw=内容  →  npx @tnnevol/halo-cli create --title=标题 --raw=内容
 ```
 
-The skill automatically detects the current platform and executes the corresponding binary file.
+Alternatively, install globally: `npm install -g @tnnevol/halo-cli` then use `halo-cli <action>`.
 
 ## Actions
 

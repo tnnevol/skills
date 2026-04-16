@@ -1,0 +1,11 @@
+{
+  "name": "@tnnevol/halo-cli",
+  "version": "0.1.0",
+  "description": "CLI tool to manage blog posts in Halo CMS",
+  "bin": {
+    "halo-cli": "./index.js"
+  },
+  "scripts": {
+    "build": "make build-all"
+  }
+}
