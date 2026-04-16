@@ -1,6 +1,7 @@
 ---
 name: halo
-description: Assistant for Halo CMS (https://www.halo.run/). Use when the user types /halo commands or asks about Halo blog posts management. Triggers: /halo help, /halo list, /halo create, /halo get, /halo update, /halo delete, /halo publish, managing Halo blog posts, creating articles in Halo.
+description: >
+  Assistant for Halo CMS (https://www.halo.run/). Use when the user types /halo commands or asks about Halo blog posts management. Triggers: /halo help, /halo list, /halo create, /halo get, /halo update, /halo delete, /halo publish, managing Halo blog posts, creating articles in Halo.
 ---
 
 # SKILL: halo
