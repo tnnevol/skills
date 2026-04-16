@@ -17,10 +17,8 @@ Use this skill to manage blog posts via the Halo RESTful API — list, view, cre
 
 ## How to Execute
 
-1. **First invocation only** — read `${CLAUDE_SKILL_DIR}/docs/setup.md` for configuration and runtime detection.
-2. For **API reference** (endpoints, data structures, error codes) — read `${CLAUDE_SKILL_DIR}/references/posts-api.md`.
-3. Match the action from the table below.
-4. If no arguments or unrecognized action, show the help table.
+Match the action from the table below.
+If no arguments or unrecognized action, show the help table.
 
 ### Calling Convention
 
@@ -56,9 +54,9 @@ The skill automatically detects the current platform and executes the correspond
 
 ## ⚠️ Important Notes
 
-1. **Console API vs Extension API** — create/publish/unpublish use **Console API** (`/apis/api.console.halo.run/v1alpha1/posts`) which triggers snapshot creation. list/get/update/delete use **Extension API** (`/apis/content.halo.run/v1alpha1/posts`). Console API's `PUT /posts/{name}` requires a complete nested format with valid content, so update uses Extension API flat format instead. If content update is needed, use Console API's `/posts/{name}/content` endpoint first. See `references/posts-api.md` for details.
-2. **Request Body Format** — Console API requires **nested format** `{ post: {...}, content: {...} }`, not flat format. Extension API uses flat format.
-3. **Optimistic Locking** — Updates require `metadata.version`. The binary auto-fetches the latest version before updating, so you don't need to track it manually.
+1. **Console API vs Extension API** — create/publish/unpublish use **Console API** which triggers snapshot creation. list/get/update/delete use **Extension API**.
+2. **Request Body Format** — Console API requires **nested format**, Extension API uses flat format.
+3. **Optimistic Locking** — Updates require `metadata.version`. The binary auto-fetches the latest version before updating.
 4. **metadata.name Rules** — ≤253 characters, only lowercase letters, digits, and hyphens. The `create` action auto-generates a valid slug from the title if `--slug` is not provided.
 5. **Search Tip** — When searching Halo documentation online, use `site:docs.halo.run` to avoid game-related content pollution.
 6. **Content Format** — Fixed to `rawType: HTML` (Halo only uses HTML format). Markdown content will be converted to HTML via goldmark.
