@@ -41,18 +41,20 @@ HALO_PAT=pat_xxx
 - **macOS**: `halo-macos` 
 - **Windows**: `halo-windows.exe`
 
-## API 映射参考
+## CLI 命令参考
 
-| Action | 使用的 API | 端点 |
-|--------|-----------|------|
-| `list` | Extension API | GET `/apis/content.halo.run/v1alpha1/posts` |
-| `get` | Extension API | GET `/apis/content.halo.run/v1alpha1/posts/{name}` |
-| `create` | Console API | POST `/apis/api.console.halo.run/v1alpha1/posts` |
-| `update` | Extension API | PUT `/apis/content.halo.run/v1alpha1/posts/{name}` |
-| `delete` | Extension API | DELETE `/apis/content.halo.run/v1alpha1/posts/{name}` |
-| `publish` | Console API | PUT `/apis/api.console.halo.run/v1alpha1/posts/{name}/publish` |
+| 命令 | 示例 | 说明 |
+|------|------|------|
+| `list` | `npx @tnnevol/halo-cli list` | 列出文章（默认20条） |
+| `list` | `npx @tnnevol/halo-cli list --limit=10 --page=2` | 分页列出，每页10条 |
+| `list` | `npx @tnnevol/halo-cli list --keyword=xxx` | 按关键词搜索 |
+| `get` | `npx @tnnevol/halo-cli get <name>` | 获取文章详情 |
+| `create` | `npx @tnnevol/halo-cli create --title=标题 --raw=内容` | 创建文章（默认 PRIVATE + HTML 格式） |
+| `create` | `npx @tnnevol/halo-cli create --title=标题 --raw=内容 --publish --public` | 创建并立即发布，公开可见 |
+| `update` | `npx @tnnevol/halo-cli update <name> --title=新标题` | 更新文章标题 |
+| `update` | `npx @tnnevol/halo-cli update <name> --raw=新内容` | 更新文章内容 |
+| `delete` | `npx @tnnevol/halo-cli delete <name>` | 删除文章 |
+| `publish` | `npx @tnnevol/halo-cli publish <name>` | 发布文章 |
+| `unpublish` | `npx @tnnevol/halo-cli unpublish <name>` | 取消发布 |
 
-**为什么 update 用 Extension API？**
-- Console API `PUT /posts/{name}` 需要完整 PostRequest（嵌套格式 + 有效 content），不带有效 content 会返回 500
-- Extension API `PUT /posts/{name}` 只需平铺的 spec，不需要 content
-- 如果用户传了 `--raw`/`--content`，先调用 Console API `/posts/{name}/content` 更新内容，再用 Extension API 更新元数据
+> 所有调用走 `npx @tnnevol/halo-cli`，底层 API 细节已封装在 Go 二进制中。
