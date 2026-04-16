@@ -7,5 +7,16 @@
   },
   "scripts": {
     "build": "make build-all"
-  }
+  },
+  "files": [
+    "index.js",
+    "bin/"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tnnevol/skills.git",
+    "directory": "apps/halo"
+  },
+  "author": "tnnevol"
 }
