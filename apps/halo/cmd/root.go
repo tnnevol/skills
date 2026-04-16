@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 
 	"github.com/spf13/cobra"
 	"halo-cli/internal/actions"
@@ -138,10 +141,28 @@ var unpublishCmd = &cobra.Command{
 	},
 }
 
+func getVersion() string {
+	_, filename, _, _ := runtime.Caller(0)
+	dir := filepath.Dir(filename)
+	// go up to apps/halo/
+	pkgPath := filepath.Join(dir, "..", "package.json")
+	data, err := os.ReadFile(pkgPath)
+	if err != nil {
+		return "v1.0.1" // fallback
+	}
+	var pkg struct {
+		Version string `json:"version"`
+	}
+	if err := json.Unmarshal(data, &pkg); err != nil {
+		return "v1.0.1" // fallback
+	}
+	return "v" + pkg.Version
+}
+
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("halo-cli v1.0.0")
+		fmt.Println("halo-cli " + getVersion())
 	},
 }

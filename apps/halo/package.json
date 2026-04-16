@@ -1,6 +1,6 @@
 {
   "name": "@tnnevol/halo-cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "CLI tool to manage blog posts in Halo CMS",
   "bin": {
     "halo-cli": "./index.js"
@@ -11,7 +11,9 @@
     "bump:patch": "bumpp patch -y",
     "bump:minor": "bumpp minor -y",
     "bump:major": "bumpp major -y",
-    "release": "bumpp patch -y --execute \"npm publish\""
+    "release": "bumpp patch -y --execute \"npm publish\"",
+    "preversion": "echo 'version will be read from package.json by Go binary'",
+    "check-version": "echo \"Go binary version: $(./bin/halo-linux version)\" && echo \"package.json version: $(node -p \"require('./package.json').version\")\""
   },
   "files": [
     "index.js",
