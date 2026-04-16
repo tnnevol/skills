@@ -142,6 +142,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("halo-cli v0.1.0")
+		fmt.Println("halo-cli v1.0.0")
 	},
 }
