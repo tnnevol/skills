@@ -12,7 +12,11 @@
     "halo:build:windows": "pnpm --filter @tnnevol/halo-cli build:windows",
     "halo:clean": "pnpm --filter @tnnevol/halo-cli clean",
     "halo:verify": "pnpm --filter @tnnevol/halo-cli verify",
-    "halo:publish": "pnpm --filter @tnnevol/halo-cli publish"
+    "halo:publish": "pnpm --filter @tnnevol/halo-cli publish",
+    "halo:bump": "pnpm --filter @tnnevol/halo-cli bump",
+    "halo:bump:patch": "pnpm --filter @tnnevol/halo-cli bump:patch",
+    "halo:bump:minor": "pnpm --filter @tnnevol/halo-cli bump:minor",
+    "halo:bump:major": "pnpm --filter @tnnevol/halo-cli bump:major"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^7.7.2",
