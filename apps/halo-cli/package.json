@@ -14,6 +14,7 @@
     "build:targets": "make install-targets",
     "clean": "make clean",
     "verify": "make verify",
+    "publish": "npm publish --access public",
     "bump": "bumpp",
     "bump:patch": "bumpp patch -y",
     "bump:minor": "bumpp minor -y",

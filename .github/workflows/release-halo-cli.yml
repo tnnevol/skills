@@ -30,6 +30,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -46,8 +51,7 @@ jobs:
           restore-keys: ${{ runner.os }}-cargo-
 
       - name: Build
-        working-directory: apps/halo-cli
-        run: cargo build --release --target ${{ matrix.target }}
+        run: pnpm --filter @tnnevol/halo-cli run build --target ${{ matrix.target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -69,7 +73,12 @@ jobs:
           registry-url: https://registry.npmjs.org/
 
       - name: Setup pnpm
-        run: npm i -g pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -91,6 +100,6 @@ jobs:
 
       - name: Publish to npm
         working-directory: apps/halo-cli
-        run: npm publish --access public
+        run: pnpm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
