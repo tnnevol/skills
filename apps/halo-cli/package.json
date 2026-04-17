@@ -1,6 +1,6 @@
 {
   "name": "@tnnevol/halo-cli",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "CLI tool to manage blog posts in Halo CMS (Rust)",
   "bin": {
     "halo-cli": "./index.js"
