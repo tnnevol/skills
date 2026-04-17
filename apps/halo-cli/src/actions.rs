@@ -212,13 +212,7 @@ pub fn action_update(client: &Client, args: &UpdateArgs) -> Result<(), String> {
         return Err("用法: halo update <name> [--title=xxx] [--raw=xxx] [--content=xxx]".to_string());
     }
 
-    // 1. Fetch latest version (optimistic locking)
     let api_path = format!("{}/{}", client.ext_posts_api(), args.name);
-    let resp = client.do_request("GET", &api_path, None)?;
-    let current: Value = serde_json::from_slice(&resp.body).map_err(|e| format!("解析响应失败: {}", e))?;
-
-    let current_spec = utils::get_obj(&current, "spec").ok_or("文章结构异常")?.clone();
-    let current_meta = utils::get_obj(&current, "metadata").ok_or("文章结构异常")?.clone();
 
     // 2. If content needs updating, update it first via Console API
     if !args.raw.is_empty() || !args.content.is_empty() {
@@ -241,7 +235,14 @@ pub fn action_update(client: &Client, args: &UpdateArgs) -> Result<(), String> {
         client.do_request("PUT", &content_path, Some(&content_body))?;
     }
 
-    // 3. Build flat-format Post for metadata update
+    // 3. Re-fetch latest version (optimistic locking)
+    let resp = client.do_request("GET", &api_path, None)?;
+    let current: Value = serde_json::from_slice(&resp.body).map_err(|e| format!("解析响应失败: {}", e))?;
+
+    let current_spec = utils::get_obj(&current, "spec").ok_or("文章结构异常")?.clone();
+    let current_meta = utils::get_obj(&current, "metadata").ok_or("文章结构异常")?.clone();
+
+    // 4. Build flat-format Post for metadata update
     let mut updated_post = serde_json::Map::new();
     updated_post.insert("apiVersion".into(), current["apiVersion"].clone());
     updated_post.insert("kind".into(), current["kind"].clone());
