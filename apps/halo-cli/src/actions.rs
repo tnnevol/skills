@@ -214,6 +214,13 @@ pub fn action_update(client: &Client, args: &UpdateArgs) -> Result<(), String> {
 
     let api_path = format!("{}/{}", client.ext_posts_api(), args.name);
 
+    // 1. Fetch current version for optimistic locking
+    let resp = client.do_request("GET", &api_path, None)?;
+    let current: Value = serde_json::from_slice(&resp.body).map_err(|e| format!("解析响应失败: {}", e))?;
+
+    let current_spec = utils::get_obj(&current, "spec").ok_or("文章结构异常")?.clone();
+    let current_meta = utils::get_obj(&current, "metadata").ok_or("文章结构异常")?.clone();
+
     // 2. If content needs updating, update it first via Console API
     if !args.raw.is_empty() || !args.content.is_empty() {
         let (raw_content, content_content) = if !args.raw.is_empty() && args.content.is_empty() {
@@ -233,58 +240,96 @@ pub fn action_update(client: &Client, args: &UpdateArgs) -> Result<(), String> {
 
         let content_path = format!("{}/{}/content", client.console_posts_api(), args.name);
         client.do_request("PUT", &content_path, Some(&content_body))?;
-    }
 
-    // 3. Re-fetch latest version (optimistic locking)
-    let resp = client.do_request("GET", &api_path, None)?;
-    let current: Value = serde_json::from_slice(&resp.body).map_err(|e| format!("解析响应失败: {}", e))?;
+        // 3. Re-fetch latest version after content update (Console API bumps version)
+        let resp = client.do_request("GET", &api_path, None)?;
+        let current: Value = serde_json::from_slice(&resp.body).map_err(|e| format!("解析响应失败: {}", e))?;
+        let current_spec = utils::get_obj(&current, "spec").ok_or("文章结构异常")?.clone();
+        let current_meta = utils::get_obj(&current, "metadata").ok_or("文章结构异常")?.clone();
 
-    let current_spec = utils::get_obj(&current, "spec").ok_or("文章结构异常")?.clone();
-    let current_meta = utils::get_obj(&current, "metadata").ok_or("文章结构异常")?.clone();
+        // 4. Build flat-format Post for metadata update
+        let mut updated_post = serde_json::Map::new();
+        updated_post.insert("apiVersion".into(), current["apiVersion"].clone());
+        updated_post.insert("kind".into(), current["kind"].clone());
+        updated_post.insert("metadata".into(), current_meta);
+        updated_post.insert("spec".into(), current_spec.clone());
 
-    // 4. Build flat-format Post for metadata update
-    let mut updated_post = serde_json::Map::new();
-    updated_post.insert("apiVersion".into(), current["apiVersion"].clone());
-    updated_post.insert("kind".into(), current["kind"].clone());
-    updated_post.insert("metadata".into(), current_meta);
-    updated_post.insert("spec".into(), current_spec.clone());
-
-    // Apply field updates
-    if let Some(spec) = updated_post.get_mut("spec").and_then(|v| v.as_object_mut()) {
-        if !args.title.is_empty() {
-            spec.insert("title".into(), Value::String(args.title.clone()));
+        // Apply field updates
+        if let Some(spec) = updated_post.get_mut("spec").and_then(|v| v.as_object_mut()) {
+            if !args.title.is_empty() {
+                spec.insert("title".into(), Value::String(args.title.clone()));
+            }
+            if !args.slug.is_empty() {
+                spec.insert("slug".into(), Value::String(args.slug.clone()));
+            }
+            if !args.visible.is_empty() {
+                spec.insert("visible".into(), Value::String(args.visible.clone()));
+            }
+            if let Some(ref cover) = args.cover {
+                spec.insert("cover".into(), Value::String(cover.clone()));
+            }
+            if let Some(ref pinned) = args.pinned {
+                spec.insert("pinned".into(), Value::Bool(*pinned));
+            }
+            clean_spec(spec);
         }
-        if !args.slug.is_empty() {
-            spec.insert("slug".into(), Value::String(args.slug.clone()));
-        }
-        if !args.visible.is_empty() {
-            spec.insert("visible".into(), Value::String(args.visible.clone()));
-        }
-        if let Some(ref cover) = args.cover {
-            spec.insert("cover".into(), Value::String(cover.clone()));
-        }
-        if let Some(ref pinned) = args.pinned {
-            spec.insert("pinned".into(), Value::Bool(*pinned));
-        }
-        // Clean empty fields
-        clean_spec(spec);
-    }
 
-    let updated_post = Value::Object(updated_post);
-    let resp = client.do_request("PUT", &api_path, Some(&updated_post))?;
-    let data: Value = serde_json::from_slice(&resp.body).map_err(|e| format!("解析响应失败: {}", e))?;
+        // 5. PUT metadata update
+        let data = client.do_request("PUT", &api_path, Some(&Value::Object(updated_post)))?;
+        let data: Value = serde_json::from_slice(&data.body).map_err(|e| format!("解析响应失败: {}", e))?;
 
-    let spec = utils::get_obj(&data, "spec");
-    let meta = utils::get_obj(&data, "metadata");
+        // 6. Republish to refresh releaseSnapshot so frontend sees all updates
+        let publish_path = format!("{}/{}/publish", client.console_posts_api(), args.name);
+        client.do_request("PUT", &publish_path, None)?;
 
-    println!("\n✅ 文章更新成功");
-    println!("  标题: {}", spec.map(|s| utils::get_str(s, "title")).unwrap_or_default());
-    println!("  名称: {}", meta.map(|m| utils::get_str(m, "name")).unwrap_or_default());
-    println!("  版本: {}", meta.and_then(|m| m.get("version")).map(|v| v.to_string()).unwrap_or_default());
-    if !args.raw.is_empty() || !args.content.is_empty() {
+        let spec = utils::get_obj(&data, "spec");
+        let meta = utils::get_obj(&data, "metadata");
+
+        println!("\n✅ 文章更新成功");
+        println!("  标题: {}", spec.map(|s| utils::get_str(s, "title")).unwrap_or_default());
+        println!("  名称: {}", meta.map(|m| utils::get_str(m, "name")).unwrap_or_default());
+        println!("  版本: {}", meta.and_then(|m| m.get("version")).map(|v| v.to_string()).unwrap_or_default());
         println!("  内容: 已更新");
+        println!("  链接: {}", utils::build_post_link(&client.base_url, &data));
+    } else {
+        // Metadata-only update (no content change)
+        let mut updated_post = serde_json::Map::new();
+        updated_post.insert("apiVersion".into(), current["apiVersion"].clone());
+        updated_post.insert("kind".into(), current["kind"].clone());
+        updated_post.insert("metadata".into(), current_meta);
+        updated_post.insert("spec".into(), current_spec.clone());
+
+        if let Some(spec) = updated_post.get_mut("spec").and_then(|v| v.as_object_mut()) {
+            if !args.title.is_empty() {
+                spec.insert("title".into(), Value::String(args.title.clone()));
+            }
+            if !args.slug.is_empty() {
+                spec.insert("slug".into(), Value::String(args.slug.clone()));
+            }
+            if !args.visible.is_empty() {
+                spec.insert("visible".into(), Value::String(args.visible.clone()));
+            }
+            if let Some(ref cover) = args.cover {
+                spec.insert("cover".into(), Value::String(cover.clone()));
+            }
+            if let Some(ref pinned) = args.pinned {
+                spec.insert("pinned".into(), Value::Bool(*pinned));
+            }
+            clean_spec(spec);
+        }
+
+        let data = client.do_request("PUT", &api_path, Some(&Value::Object(updated_post)))?;
+        let data: Value = serde_json::from_slice(&data.body).map_err(|e| format!("解析响应失败: {}", e))?;
+
+        let spec = utils::get_obj(&data, "spec");
+        let meta = utils::get_obj(&data, "metadata");
+
+        println!("\n✅ 文章更新成功");
+        println!("  标题: {}", spec.map(|s| utils::get_str(s, "title")).unwrap_or_default());
+        println!("  名称: {}", meta.map(|m| utils::get_str(m, "name")).unwrap_or_default());
+        println!("  版本: {}", meta.and_then(|m| m.get("version")).map(|v| v.to_string()).unwrap_or_default());
+        println!("  链接: {}", utils::build_post_link(&client.base_url, &data));
     }
-    println!("  链接: {}", utils::build_post_link(&client.base_url, &data));
 
     Ok(())
 }
