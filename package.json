@@ -7,7 +7,6 @@
     "start": "node scripts/cli.ts",
     "prepare": "simple-git-hooks && git submodule update --init --recursive",
     "halo:build": "pnpm --filter @tnnevol/halo-cli build",
-    "halo:build:all": "pnpm --filter @tnnevol/halo-cli build:all",
     "halo:build:linux": "pnpm --filter @tnnevol/halo-cli build:linux",
     "halo:build:macos": "pnpm --filter @tnnevol/halo-cli build:macos",
     "halo:build:windows": "pnpm --filter @tnnevol/halo-cli build:windows",
