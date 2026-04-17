@@ -49,11 +49,15 @@ jobs:
         working-directory: apps/halo-cli
         run: cargo build --release --target ${{ matrix.target }}
 
+      - name: Rename binary
+        working-directory: apps/halo-cli
+        run: cp target/${{ matrix.target }}/release/halo-cli${{ matrix.bin == 'halo-windows.exe' && '.exe' || '' }} ${{ matrix.bin }}
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.bin }}
-          path: apps/halo-cli/target/${{ matrix.target }}/release/${{ matrix.bin == 'halo-windows.exe' && 'halo-windows.exe' || 'halo-cli' }}
+          path: apps/halo-cli/${{ matrix.bin }}
           if-no-files-found: error
 
   publish:
@@ -79,18 +83,11 @@ jobs:
         with:
           path: apps/halo-cli/bin/
 
-      - name: Rename artifacts
+      - name: Flatten artifact directories
         working-directory: apps/halo-cli/bin/
         run: |
-          mv halo-linux/halo-cli halo-linux 2>/dev/null || true
-          rmdir halo-linux 2>/dev/null || true
-          mv halo-macos/halo-cli halo-macos 2>/dev/null || true
-          rmdir halo-macos 2>/dev/null || true
-          mv halo-macos-arm/halo-cli halo-macos-arm 2>/dev/null || true
-          rmdir halo-macos-arm 2>/dev/null || true
-          mv halo-windows.exe/halo-cli.exe halo-windows.exe 2>/dev/null || true
-          mv halo-windows.exe/halo-cli halo-windows.exe 2>/dev/null || true
-          rmdir halo-windows.exe 2>/dev/null || true
+          find . -type f -exec mv -f {} . \;
+          find . -type d -empty -delete
 
       - name: Publish to npm
         working-directory: apps/halo-cli
