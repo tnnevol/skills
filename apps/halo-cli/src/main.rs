@@ -1,8 +1,6 @@
-mod actions;
-mod client;
-mod env;
-mod markdown;
-mod utils;
+use halo_cli::actions;
+use halo_cli::client::Client;
+use halo_cli::env;
 
 use clap::{Parser, Subcommand};
 
@@ -49,7 +47,7 @@ fn main() {
                     std::process::exit(1);
                 }
             };
-            let client = client::Client::new(cfg.base_url, cfg.pat);
+            let client = Client::new(cfg.base_url, cfg.pat);
             actions::action_list(&client, args)
         }
         Commands::Get(args) => {
@@ -60,7 +58,7 @@ fn main() {
                     std::process::exit(1);
                 }
             };
-            let client = client::Client::new(cfg.base_url, cfg.pat);
+            let client = Client::new(cfg.base_url, cfg.pat);
             actions::action_get(&client, args)
         }
         Commands::Create(args) => {
@@ -71,7 +69,7 @@ fn main() {
                     std::process::exit(1);
                 }
             };
-            let client = client::Client::new(cfg.base_url, cfg.pat);
+            let client = Client::new(cfg.base_url, cfg.pat);
             actions::action_create(&client, args)
         }
         Commands::Update(args) => {
@@ -82,7 +80,7 @@ fn main() {
                     std::process::exit(1);
                 }
             };
-            let client = client::Client::new(cfg.base_url, cfg.pat);
+            let client = Client::new(cfg.base_url, cfg.pat);
             actions::action_update(&client, args)
         }
         Commands::Delete(args) => {
@@ -93,7 +91,7 @@ fn main() {
                     std::process::exit(1);
                 }
             };
-            let client = client::Client::new(cfg.base_url, cfg.pat);
+            let client = Client::new(cfg.base_url, cfg.pat);
             actions::action_delete(&client, args)
         }
         Commands::Publish(args) => {
@@ -104,7 +102,7 @@ fn main() {
                     std::process::exit(1);
                 }
             };
-            let client = client::Client::new(cfg.base_url, cfg.pat);
+            let client = Client::new(cfg.base_url, cfg.pat);
             actions::action_publish(&client, args)
         }
         Commands::Unpublish(args) => {
@@ -115,7 +113,7 @@ fn main() {
                     std::process::exit(1);
                 }
             };
-            let client = client::Client::new(cfg.base_url, cfg.pat);
+            let client = Client::new(cfg.base_url, cfg.pat);
             actions::action_unpublish(&client, args)
         }
     };
