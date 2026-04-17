@@ -8,7 +8,7 @@
 
 **示例：**
 ```
-/auto-save config
+/autosave config
 ```
 
 **响应：** 返回整体配置数据（JSON 格式）
@@ -25,7 +25,7 @@
 
 **示例：**
 ```
-/auto-save update-config --field some_key --value some_value
+/autosave update-config --field some_key --value some_value
 ```
 
 **响应：** 更新成功/失败的状态信息

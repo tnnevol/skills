@@ -2,7 +2,7 @@
 
 'use strict';
 
-// Environment variable loader for auto-save skill
+// Environment variable loader for autosave skill
 // Reads from skill directory .env or project root .env if env vars not set
 
 const fs = require('fs');

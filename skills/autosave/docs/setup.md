@@ -1,11 +1,11 @@
-# auto-save Setup
+# autosave Setup
 
 ## Installation
 
-To install the auto-save skill:
+To install the autosave skill:
 
 ```bash
-npx skills add tnnevol/skills --skill auto-save -g -y
+npx skills add tnnevol/skills --skill autosave -g -y
 ```
 
 ## Configuration

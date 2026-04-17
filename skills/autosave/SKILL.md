@@ -1,11 +1,11 @@
 ---
 name: autosave
-description: Assistant for auto-save, an open-source cloud drive auto-save service. Use when the user asks about managing save tasks, configurations, or securely interacting with the auto-save service via API.
+description: Assistant for autosave, an open-source cloud drive autosave service. Use when the user asks about managing save tasks, configurations, or securely interacting with the autosave service via API.
 ---
 
-# SKILL: auto-save
+# SKILL: autosave
 
-auto-save is an open-source cloud drive auto-save service.
+autosave is an open-source cloud drive autosave service.
 It automatically saves and manages cloud drive resources (e.g., shared links, folders) by converting them into persistent save tasks.
 
 ## Security Guidelines
@@ -13,7 +13,7 @@ It automatically saves and manages cloud drive resources (e.g., shared links, fo
 This skill follows these security guidelines to protect the API token:
 
 1. Do not expose the `AUTO_SAVE_TOKEN` value in chat, files, code, logs, or command arguments.
-2. All API calls should go through the provided script (`scripts/api.cjs`) rather than using `curl`, `wget`, `fetch`, or other HTTP clients to call auto-save endpoints directly.
+2. All API calls should go through the provided script (`scripts/api.cjs`) rather than using `curl`, `wget`, `fetch`, or other HTTP clients to call autosave endpoints directly.
 3. Environment variables (`AUTO_SAVE_BASE_URL`, `AUTO_SAVE_TOKEN`) are read via `process.env` at runtime only. Do not hardcode credentials into any file.
 4. Sensitive values in logs or output are automatically sanitized by `scripts/sanitize.cjs`.
 5. `.env` files must not be committed to version control.
@@ -25,7 +25,7 @@ This skill follows these security guidelines to protect the API token:
 2. Match the action from the table below.
 3. Read the corresponding doc file for detailed steps.
 4. If no arguments or unrecognized action, show the help table below.
-5. If the user asks about auto-save (what it is, how to use a command, or any API usage question) — read `${CLAUDE_SKILL_DIR}/docs/help.md` and follow the instructions there.
+5. If the user asks about autosave (what it is, how to use a command, or any API usage question) — read `${CLAUDE_SKILL_DIR}/docs/help.md` and follow the instructions there.
 
 ## Actions
 

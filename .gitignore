@@ -10,19 +10,9 @@ logs
 node_modules
 temp
 .env
-
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# Temporary folders
-tmp
-
-# Build artifacts (binaries will be distributed via npm package separately)
-bin
+-e 
+target/
+node_modules/
+bin/
+.env
+*.tgz
