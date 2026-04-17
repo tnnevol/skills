@@ -10,9 +10,7 @@ logs
 node_modules
 temp
 .env
--e 
+-e
 target/
 node_modules/
 bin/
-.env
-*.tgz
