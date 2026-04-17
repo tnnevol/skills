@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            bin: halo-linux
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            bin: halo-macos
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            bin: halo-macos-arm
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bin: halo-windows.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Build
+        working-directory: apps/halo-cli
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.bin }}
+          path: apps/halo-cli/target/${{ matrix.target }}/release/${{ matrix.bin == 'halo-windows.exe' && 'halo-cli.exe' || 'halo-cli' }}
+          if-no-files-found: error
+
+  publish:
+    name: Publish to npm
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: apps/halo-cli/bin/
+
+      - name: Rename artifacts
+        working-directory: apps/halo-cli/bin/
+        run: |
+          # Linux
+          mv halo-linux/halo-cli halo-linux 2>/dev/null || true
+          rmdir halo-linux 2>/dev/null || true
+          # macOS Intel
+          mv halo-macos/halo-cli halo-macos 2>/dev/null || true
+          rmdir halo-macos 2>/dev/null || true
+          # macOS ARM
+          mv halo-macos-arm/halo-cli halo-macos-arm 2>/dev/null || true
+          rmdir halo-macos-arm 2>/dev/null || true
+          # Windows
+          mv halo-windows.exe/halo-cli.exe halo-windows.exe 2>/dev/null || true
+          mv halo-windows.exe/halo-cli halo-windows.exe 2>/dev/null || true
+          rmdir halo-windows.exe 2>/dev/null || true
+
+      - name: Publish to npm
+        working-directory: apps/halo-cli
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

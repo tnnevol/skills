@@ -3,15 +3,17 @@ const { spawn } = require('child_process');
 const path = require('path');
 
 const platform = process.platform;
-const binMap = {
-  linux: 'halo-linux',
-  darwin: 'halo-macos',
-  win32: 'halo-windows.exe'
-};
+const arch = process.arch;
 
-const binName = binMap[platform];
-if (!binName) {
-  console.error(`Unsupported platform: ${platform}`);
+let binName;
+if (platform === 'linux') {
+  binName = 'halo-linux';
+} else if (platform === 'darwin') {
+  binName = arch === 'arm64' ? 'halo-macos-arm' : 'halo-macos';
+} else if (platform === 'win32') {
+  binName = 'halo-windows.exe';
+} else {
+  console.error(`Unsupported platform: ${platform} (${arch})`);
   process.exit(1);
 }
 

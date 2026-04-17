@@ -6,7 +6,14 @@
     "halo-cli": "./index.js"
   },
   "scripts": {
-    "build": "cargo build --release",
+    "build": "make build-all",
+    "build:linux": "make linux",
+    "build:macos": "make macos",
+    "build:windows": "make windows",
+    "build:all": "make build-all",
+    "build:targets": "make install-targets",
+    "clean": "make clean",
+    "verify": "make verify",
     "bump": "bumpp",
     "bump:patch": "bumpp patch -y",
     "bump:minor": "bumpp minor -y",
