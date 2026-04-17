@@ -16,7 +16,8 @@
     "bump": "bumpp",
     "bump:patch": "bumpp patch -y",
     "bump:minor": "bumpp minor -y",
-    "bump:major": "bumpp major -y"
+    "bump:major": "bumpp major -y",
+    "postinstall": "chmod +x bin/* 2>/dev/null || true"
   },
   "files": [
     "index.js",

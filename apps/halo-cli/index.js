@@ -22,17 +22,35 @@ else {
   process.exit(1)
 }
 
-const binPath = path.join(__dirname, 'bin', binName)
-
-// Ensure binary has execute permission (npm install may strip it)
-if (platform !== 'win32') {
-  try {
-    fs.chmodSync(binPath, 0o755)
+function resolveBinPath(binPath) {
+  // If it's a directory (old workflow artifact structure), look inside
+  if (fs.statSync(binPath).isDirectory()) {
+    const entries = fs.readdirSync(binPath)
+    for (const entry of entries) {
+      if (entry === binName || entry.endsWith('.exe') || !entry.includes('.')) {
+        return path.join(binPath, entry)
+      }
+    }
   }
-  catch {}
+  return binPath
 }
 
-const child = spawn(binPath, process.argv.slice(2), {
+function ensureExecutable(binPath) {
+  if (platform !== 'win32') {
+    try {
+      const resolved = resolveBinPath(binPath)
+      fs.chmodSync(resolved, 0o755)
+      return resolved
+    }
+    catch {}
+  }
+  return binPath
+}
+
+const binPath = path.join(__dirname, 'bin', binName)
+const resolvedPath = ensureExecutable(binPath)
+
+const child = spawn(resolvedPath, process.argv.slice(2), {
   stdio: 'inherit',
 })
 
