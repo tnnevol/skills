@@ -3,7 +3,7 @@
 ## Usage
 
 ```
-/auto-save detail <shareurl>
+/autosave detail <shareurl>
 ```
 
 ## Parameters
@@ -38,15 +38,15 @@
 To browse subdirectories:
 
 ```
-/auto-save detail <shareurl>#/list/share/{fid} --stoken <stoken>
+/autosave detail <shareurl>#/list/share/{fid} --stoken <stoken>
 ```
 
 ## Examples
 
 ```
-/auto-save detail https://pan.quark.cn/s/xxxxxx
-/auto-save detail https://pan.quark.cn/s/xxxxxx --savepath /movies/
-/auto-save detail https://pan.quark.cn/s/xxxxxx#/list/share/123456 --stoken abcdef
+/autosave detail https://pan.quark.cn/s/xxxxxx
+/autosave detail https://pan.quark.cn/s/xxxxxx --savepath /movies/
+/autosave detail https://pan.quark.cn/s/xxxxxx#/list/share/123456 --stoken abcdef
 ```
 
 ## Error Handling

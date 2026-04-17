@@ -15,8 +15,8 @@
 
 **示例：**
 ```
-/auto-save add-task --name "xxx" --shareurl "https://pan.quark.cn/s/xxx" --savepath "/xxx"
-/auto-save add-task --name "xxx" --shareurl "https://pan.quark.cn/s/xxx" --savepath "/xxx" --pattern "(.*)\\.(mp4|mkv)"
+/autosave add-task --name "xxx" --shareurl "https://pan.quark.cn/s/xxx" --savepath "/xxx"
+/autosave add-task --name "xxx" --shareurl "https://pan.quark.cn/s/xxx" --savepath "/xxx" --pattern "(.*)\\.(mp4|mkv)"
 ```
 
 **成功响应：**
@@ -54,10 +54,10 @@
 
 **示例：**
 ```
-/auto-save search --query "test"
-/auto-save search --query "团战" --depth 2
-/auto-save search --query "xxx" --tree          # 获取目录结构
-/auto-save search --query "xxx" --tree --max-depth 2
+/autosave search --query "test"
+/autosave search --query "团战" --depth 2
+/autosave search --query "xxx" --tree          # 获取目录结构
+/autosave search --query "xxx" --tree --max-depth 2
 ```
 
 **响应示例：**

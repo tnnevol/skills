@@ -2,7 +2,7 @@
 
 'use strict';
 
-// auto-save API unified caller
+// autosave API unified caller
 // Usage: node api.cjs <action> [args...]
 
 const http = require('http');

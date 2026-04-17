@@ -10,12 +10,12 @@
 
 1. **运行全部任务** — 不传参数
    ```
-   /auto-save run-now
+   /autosave run-now
    ```
 
 2. **运行单个任务（旧格式，向后兼容）** — 传 tasklist
    ```
-   /auto-save run-now --tasklist name
+   /autosave run-now --tasklist name
    ```
    Body:
    ```json
@@ -32,8 +32,8 @@
 
 3. **运行单个任务（新格式，推荐）** — 指定完整任务信息
    ```
-   /auto-save run-now --taskname=xxx --shareurl=https://pan.quark.cn/s/xxx --savepath=/media/path
-   /auto-save run-now --taskname=xxx --shareurl=https://pan.quark.cn/s/xxx --savepath=/media/path --pattern="(.*)\\.(mp4|mkv)" --replace="\\1"
+   /autosave run-now --taskname=xxx --shareurl=https://pan.quark.cn/s/xxx --savepath=/media/path
+   /autosave run-now --taskname=xxx --shareurl=https://pan.quark.cn/s/xxx --savepath=/media/path --pattern="(.*)\\.(mp4|mkv)" --replace="\\1"
    ```
    
    **参数说明：**
@@ -60,7 +60,7 @@
 
 4. **Cookie 和通知测试** — 传 quark_test
    ```
-   /auto-save run-now --quark-test
+   /autosave run-now --quark-test
    ```
    Body:
    ```json
