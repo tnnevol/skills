@@ -1,5 +1,7 @@
-name: Release
+name: Release Halo CLI
 
+# 触发条件：push tag 时自动执行（如 git tag v2.0.0 && git push origin v2.0.0）
+# 用于自动编译四平台二进制并发布 @tnnevol/halo-cli 到 npm
 on:
   push:
     tags:
