@@ -24,7 +24,7 @@ ding is a skill for quickly locating and contacting other Agents (demo1, demo2, 
 
 3. **Compose Session Key** — Derive from current session info:
    ```
-   agent:<agentId>:<channel>:group:<当前群ID>:<当前发送者ID>
+   agent:<agentId>:<channel>:group:<当前群ID>
    ```
 
 4. **Attempt Contact** — Use `sessions_send` to the target session:
