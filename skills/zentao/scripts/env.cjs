@@ -1,50 +1,84 @@
+#!/usr/bin/env node
+
 /**
- * 环境变量加载 & 校验
- * 从环境变量或 .env 文件读取禅道配置
+ * 禅道环境变量加载与校验
+ * 
+ * 加载优先级：
+ *   1. 进程环境变量（最高）
+ *   2. skill 目录下的 .env 文件
+ * 
+ * 必须变量：CHANDAO_URL、CHANDAO_ACCOUNT、CHANDAO_PASSWORD
  */
-const fs = require("fs");
-const path = require("path");
 
-function loadEnv() {
-  const env = {};
+const fs = require('fs');
+const path = require('path');
 
-  // 优先使用环境变量
-  env.CHANDAO_URL = process.env.CHANDAO_URL;
-  env.CHANDAO_ACCOUNT = process.env.CHANDAO_ACCOUNT;
-  env.CHANDAO_PASSWORD = process.env.CHANDAO_PASSWORD;
+// .env 文件缓存（进程生命周期只读一次）
+let cachedEnvFile = null;
 
-  // 如果环境变量没有，尝试从 .env 文件读取
-  if (!env.CHANDAO_URL || !env.CHANDAO_ACCOUNT || !env.CHANDAO_PASSWORD) {
-    const envPath = path.join(__dirname, "..", ".env");
-    if (fs.existsSync(envPath)) {
-      const lines = fs.readFileSync(envPath, "utf8").split("\n");
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith("#")) continue;
-        const [key, ...valueParts] = trimmed.split("=");
-        const value = valueParts.join("=").trim().replace(/^["']|["']$/g, "");
-        if (key) env[key] = value;
-      }
-    }
+/**
+ * 从 skill 目录读取 .env 文件（结果缓存）
+ */
+function loadEnvFile() {
+  if (cachedEnvFile !== null) return cachedEnvFile;
+
+  const envPath = path.join(__dirname, '../.env');
+  if (!fs.existsSync(envPath)) {
+    cachedEnvFile = {};
+    return cachedEnvFile;
   }
 
-  // 校验必填字段
-  const missing = [];
-  if (!env.CHANDAO_URL) missing.push("CHANDAO_URL");
-  if (!env.CHANDAO_ACCOUNT) missing.push("CHANDAO_ACCOUNT");
-  if (!env.CHANDAO_PASSWORD) missing.push("CHANDAO_PASSWORD");
-
-  if (missing.length > 0) {
-    return {
-      error: true,
-      message: `[CONFIG_MISSING] 缺少环境变量: ${missing.join(", ")}\n请设置环境变量或创建 .env 文件`,
-    };
+  const config = {};
+  const content = fs.readFileSync(envPath, 'utf8');
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIndex = trimmed.indexOf('=');
+    if (eqIndex === -1) continue;
+    const key = trimmed.slice(0, eqIndex).trim();
+    const value = trimmed.slice(eqIndex + 1).trim().replace(/^["']|["']$/g, '');
+    config[key] = value;
   }
-
-  // 规范化 URL（去掉尾部斜杠）
-  env.CHANDAO_URL = env.CHANDAO_URL.replace(/\/+$/, "");
-
-  return { ...env, error: false };
+  cachedEnvFile = config;
+  return cachedEnvFile;
 }
 
-module.exports = { loadEnv };
+/**
+ * 获取配置
+ * @param {string} key - 环境变量名
+ * @returns {string|undefined}
+ */
+function getConfig(key) {
+  // 进程环境变量优先，其次 .env 文件
+  const envFileConfig = loadEnvFile();
+  return process.env[key] || envFileConfig[key];
+}
+
+/**
+ * 获取并校验必须的环境变量
+ * 缺失任一变量时直接退出
+ */
+function loadRequired() {
+  const url = getConfig('CHANDAO_URL');
+  const account = getConfig('CHANDAO_ACCOUNT');
+  const password = getConfig('CHANDAO_PASSWORD');
+
+  const missing = [];
+  if (!url) missing.push('CHANDAO_URL');
+  if (!account) missing.push('CHANDAO_ACCOUNT');
+  if (!password) missing.push('CHANDAO_PASSWORD');
+
+  if (missing.length > 0) {
+    console.error(`[CONFIG_MISSING] 缺少必须的环境变量: ${missing.join(', ')}`);
+    console.error('请设置环境变量或在 .env 文件中配置');
+    process.exit(1);
+  }
+
+  return {
+    baseUrl: url.replace(/\/+$/, ''),  // 去除末尾斜杠
+    account,
+    password,
+  };
+}
+
+module.exports = { getConfig, loadRequired, loadEnvFile };

@@ -1,116 +1,144 @@
+#!/usr/bin/env node
+
 /**
- * auth.cjs — Token 获取、缓存、自动刷新
+ * 禅道 Token 认证模块
  * 
  * 核心逻辑：
- * - getToken() → 优先读缓存，无缓存则 POST /api/v2/users/login
- * - Token 缓存到本地文件（跨会话复用）
- * - 401 时自动清除缓存并重新登录
+ *   - getToken() 优先读缓存，无缓存则 POST /api/v2/users/login
+ *   - 内存缓存单会话复用，减少重复登录
+ *   - 401 自动刷新（重新登录）
+ * 
+ * 登录接口：
+ *   POST {CHANDAO_URL}/api/v2/users/login
+ *   Body: { account, password }
+ *   Header: token: xxx（非 Bearer 格式）
  */
-const fs = require("fs");
-const path = require("path");
-const { loadEnv } = require("./env.cjs");
 
-const TOKEN_CACHE_FILE = path.join(__dirname, ".token_cache.json");
-const TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 小时默认有效期
+const http = require('http');
+const https = require('https');
+const { loadRequired } = require('./env.cjs');
 
-function loadTokenCache() {
-  try {
-    if (fs.existsSync(TOKEN_CACHE_FILE)) {
-      const raw = fs.readFileSync(TOKEN_CACHE_FILE, "utf8");
-      return JSON.parse(raw);
+// 内存缓存
+let cachedToken = null;
+let isRefreshing = false;
+let refreshQueue = [];
+
+/**
+ * 执行 HTTP 请求（底层）
+ */
+function httpRaw(urlString, options = {}) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(urlString);
+    const lib = url.protocol === 'https:' ? https : http;
+
+    const reqOptions = {
+      hostname: url.hostname,
+      port: url.port,
+      path: url.pathname + url.search,
+      method: options.method || 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    };
+
+    const req = lib.request(reqOptions, (res) => {
+      let body = '';
+      res.on('data', (chunk) => (body += chunk));
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(body);
+          resolve({ status: res.statusCode, headers: res.headers, data: parsed });
+        } catch {
+          resolve({ status: res.statusCode, headers: res.headers, data: body });
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.setTimeout(15000, () => {
+      req.destroy(new Error('请求超时'));
+    });
+
+    if (options.body) {
+      req.write(typeof options.body === 'string' ? options.body : JSON.stringify(options.body));
     }
-  } catch (e) {
-    // 忽略读取错误
-  }
-  return null;
+    req.end();
+  });
 }
 
-function saveTokenCache(token) {
-  const cache = {
-    token,
-    createdAt: Date.now(),
-  };
-  fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(cache), "utf8");
-}
+/**
+ * 登录获取 Token
+ */
+async function doLogin() {
+  const { baseUrl, account, password } = loadRequired();
+  const loginUrl = `${baseUrl}/api/v2/users/login`;
 
-function clearTokenCache() {
-  try {
-    if (fs.existsSync(TOKEN_CACHE_FILE)) {
-      fs.unlinkSync(TOKEN_CACHE_FILE);
-    }
-  } catch (e) {
-    // 忽略
-  }
-}
-
-function isTokenExpired(cache) {
-  if (!cache) return true;
-  const age = Date.now() - cache.createdAt;
-  return age > TOKEN_TTL_MS;
-}
-
-async function getToken(baseUrl) {
-  // 1. 尝试读缓存
-  const cache = loadTokenCache();
-  if (cache && !isTokenExpired(cache)) {
-    return cache.token;
-  }
-
-  // 2. 缓存过期或不存在，重新登录
-  clearTokenCache();
-  const env = loadEnv();
-  if (env.error) {
-    throw new Error(env.message);
-  }
-
-  const url = `${env.CHANDAO_URL}/api/v2/users/login`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      account: env.CHANDAO_ACCOUNT,
-      password: env.CHANDAO_PASSWORD,
-    }),
+  const res = await httpRaw(loginUrl, {
+    method: 'POST',
+    body: JSON.stringify({ account, password }),
   });
 
-  const data = await res.json();
-  if (data.status !== "success") {
-    throw new Error(`禅道登录失败: ${data.message || "未知错误"}`);
+  if (res.status !== 200 && res.status !== 201) {
+    throw new Error(`登录失败: HTTP ${res.status} — ${JSON.stringify(res.data)}`);
   }
 
-  const token = data.token;
-  saveTokenCache(token);
+  if (res.data && res.data.status === 'fail') {
+    throw new Error(`登录失败: ${res.data.message || JSON.stringify(res.data)}`);
+  }
+
+  const token = res.data && res.data.token;
+  if (!token) {
+    throw new Error(`登录响应中缺少 token: ${JSON.stringify(res.data)}`);
+  }
+
   return token;
 }
 
-// CLI 入口
-if (require.main === module) {
-  const action = process.argv[2];
+/**
+ * 获取 Token（带缓存 + 自动刷新）
+ * @returns {Promise<string>}
+ */
+async function getToken() {
+  // 有缓存直接返回
+  if (cachedToken) return cachedToken;
 
-  if (action === "login") {
-    const env = loadEnv();
-    if (env.error) {
-      console.log(env.message);
-      process.exit(1);
-    }
-    getToken(env.CHANDAO_URL)
-      .then((token) => console.log("✅ Token 获取成功"))
-      .catch((e) => {
-        console.error(`❌ ${e.message}`);
-        process.exit(1);
-      });
-  } else if (action === "clear") {
-    clearTokenCache();
-    console.log("✅ Token 缓存已清除");
-  } else if (action === "status") {
-    const cache = loadTokenCache();
-    if (cache && !isTokenExpired(cache)) {
-      const remaining = Math.round((TOKEN_TTL_MS - (Date.now() - cache.createdAt)) / 60000);
-      console.log(`✅ Token 有效，剩余 ${remaining} 分钟`);
-    } else {
-      console.log("⏳ Token 不存在或已过期");
-    }
+  // 防止并发刷新
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      refreshQueue.push({ resolve, reject });
+    });
+  }
+
+  isRefreshing = true;
+  try {
+    cachedToken = await doLogin();
+    // 唤醒等待队列
+    for (const { resolve } of refreshQueue) resolve(cachedToken);
+    refreshQueue = [];
+    return cachedToken;
+  } catch (err) {
+    for (const { reject } of refreshQueue) reject(err);
+    refreshQueue = [];
+    throw err;
+  } finally {
+    isRefreshing = false;
   }
 }
 
-module.exports = { getToken, clearTokenCache };
+/**
+ * 刷新 Token（清除缓存后重新登录）
+ */
+async function refreshToken() {
+  cachedToken = null;
+  return getToken();
+}
+
+/**
+ * 清除缓存（用于测试或手动登出）
+ */
+function clearCache() {
+  cachedToken = null;
+}
+
+module.exports = { getToken, refreshToken, clearCache, doLogin, httpRaw };
