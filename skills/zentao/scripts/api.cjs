@@ -104,6 +104,10 @@ function handleResponse(res) {
     return { ok: false, error: '接口不存在 (404)', httpStatus: status };
   }
 
+  if (status >= 400 && status < 500) {
+    return { ok: false, error: `客户端错误 (HTTP ${status})`, httpStatus: status };
+  }
+
   // 禅道业务级别错误
   if (data && data.status === 'fail') {
     return { ok: false, error: data.message || JSON.stringify(data), httpStatus: status, detail: data };
