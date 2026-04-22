@@ -10,10 +10,14 @@ const { get, sanitize } = require('../api.cjs');
 
 // ============ 表格输出 ============
 
+/**
+ * 表格输出
+ * @returns {number} 数据行数
+ */
 function table(headers, rows) {
   if (rows.length === 0) {
     console.log('📭 暂无数据');
-    return;
+    return 0;
   }
 
   const widths = headers.map((h, i) =>
@@ -37,6 +41,7 @@ function table(headers, rows) {
         ' |'
     );
   }
+  return rows.length;
 }
 
 function pad(str, len) {
@@ -103,8 +108,7 @@ async function listUsers(params = {}) {
   });
 
   const sanitized = sanitize({ users: result.data }).users;
-
-  table(
+  const count = table(
     ['账号', '姓名', '角色', '部门', '手机'],
     sanitized.map((u) => [
       u.account || '-',
@@ -118,7 +122,7 @@ async function listUsers(params = {}) {
   if (result.hasMore) {
     console.log(`\n💡 还有更多，使用 --page=${params.page + 1} 查看下一页`);
   }
-  console.log(`\n共 ${result.data.length} 条 (第 ${params.page || 1} 页)`);
+  console.log(`\n共 ${count} 条 (第 ${params.page || 1} 页)`);
 }
 
 async function getUser(id) {
@@ -149,7 +153,7 @@ async function listProducts(params = {}) {
     orderBy: params.orderBy || 'id_asc',
   });
 
-  table(
+  const count = table(
     ['ID', '名称', '类型', '负责人', '状态'],
     result.data.map((p) => [
       String(p.id || '-'),
@@ -163,7 +167,7 @@ async function listProducts(params = {}) {
   if (result.hasMore) {
     console.log(`\n💡 还有更多，使用 --page=${params.page + 1} 查看下一页`);
   }
-  console.log(`\n共 ${result.data.length} 条 (第 ${params.page || 1} 页)`);
+  console.log(`\n共 ${count} 条 (第 ${params.page || 1} 页)`);
 }
 
 async function getProduct(id) {
@@ -194,7 +198,7 @@ async function listProjects(params = {}) {
     orderBy: params.orderBy || 'id_asc',
   });
 
-  table(
+  const count = table(
     ['ID', '名称', '模式', '起止时间', '状态'],
     result.data.map((p) => [
       String(p.id || '-'),
@@ -208,7 +212,7 @@ async function listProjects(params = {}) {
   if (result.hasMore) {
     console.log(`\n💡 还有更多，使用 --page=${params.page + 1} 查看下一页`);
   }
-  console.log(`\n共 ${result.data.length} 条 (第 ${params.page || 1} 页)`);
+  console.log(`\n共 ${count} 条 (第 ${params.page || 1} 页)`);
 }
 
 async function getProject(id) {
