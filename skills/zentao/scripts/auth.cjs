@@ -4,12 +4,12 @@
  * 禅道 Token 认证模块
  * 
  * 核心逻辑：
- *   - getToken() 优先读缓存，无缓存则 POST /api/v2/users/login
+ *   - getToken() 优先读缓存，无缓存则 POST /api.php/v2/users/login
  *   - 内存缓存单会话复用，减少重复登录
  *   - 401 自动刷新（重新登录）
  * 
  * 登录接口：
- *   POST {CHANDAO_URL}/api/v2/users/login
+ *   POST {CHANDAO_URL}/api.php/v2/users/login
  *   Body: { account, password }
  *   Header: token: xxx（非 Bearer 格式）
  */
@@ -72,7 +72,7 @@ function httpRaw(urlString, options = {}) {
  */
 async function doLogin() {
   const { baseUrl, account, password } = loadRequired();
-  const loginUrl = `${baseUrl}/api/v2/users/login`;
+  const loginUrl = `${baseUrl}/api.php/v2/users/login`;
 
   const res = await httpRaw(loginUrl, {
     method: 'POST',
