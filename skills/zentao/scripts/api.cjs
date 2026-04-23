@@ -30,7 +30,7 @@ async function request(method, endpoint, body, query) {
 
   // 拼接路径：确保 endpoint 以 / 开头，baseUrl 已去尾斜杠
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
-  const apiPath = `/api/v2${cleanEndpoint}`;
+  const apiPath = `/api.php/v2${cleanEndpoint}`;
 
   // 构建查询参数
   const params = new URLSearchParams();
@@ -74,19 +74,17 @@ async function get(endpoint, query = {}) {
 }
 
 /**
- * POST 请求
+ * POST 请求 — P0 阶段拦截写操作
  */
 async function post(endpoint, body, query = {}) {
-  const res = await request('POST', endpoint, body, query);
-  return handleResponse(res);
+  throw new Error('[P0_WRITE_BLOCKED] P0 阶段暂不支持写操作');
 }
 
 /**
- * PUT 请求
+ * PUT 请求 — P0 阶段拦截写操作
  */
 async function put(endpoint, body, query = {}) {
-  const res = await request('PUT', endpoint, body, query);
-  return handleResponse(res);
+  throw new Error('[P0_WRITE_BLOCKED] P0 阶段暂不支持写操作');
 }
 
 /**
@@ -141,9 +139,17 @@ function parseCliArgs(args) {
       const [key, ...valueParts] = arg.slice(2).split('=');
       const value = valueParts.length ? valueParts.join('=') : true;
       if (key === 'limit' || key === 'recPerPage') {
-        result.query.recPerPage = parseInt(value, 10);
+        const n = parseInt(value, 10);
+        if (isNaN(n) || n < 1 || n > 1000) {
+          throw new Error(`[INVALID_PARAM] limit 范围必须为 1~1000，当前值: ${value}`);
+        }
+        result.query.recPerPage = n;
       } else if (key === 'page' || key === 'pageID') {
-        result.query.pageID = parseInt(value, 10);
+        const n = parseInt(value, 10);
+        if (isNaN(n) || n < 1) {
+          throw new Error(`[INVALID_PARAM] page 必须 ≥ 1，当前值: ${value}`);
+        }
+        result.query.pageID = n;
       } else {
         result.query[key] = value;
       }
@@ -177,11 +183,21 @@ async function main() {
 
     let res;
     if (method === 'POST') {
-      const parsedBody = body ? (body.startsWith('{') ? JSON.parse(body) : body) : null;
-      res = await post(endpoint, parsedBody, query);
+      try {
+        const parsedBody = body ? (body.startsWith('{') ? JSON.parse(body) : body) : null;
+        res = await post(endpoint, parsedBody, query);
+      } catch (err) {
+        console.error(`[ERROR] ${err.message}`);
+        process.exit(1);
+      }
     } else if (method === 'PUT') {
-      const parsedBody = body ? (body.startsWith('{') ? JSON.parse(body) : body) : null;
-      res = await put(endpoint, parsedBody, query);
+      try {
+        const parsedBody = body ? (body.startsWith('{') ? JSON.parse(body) : body) : null;
+        res = await put(endpoint, parsedBody, query);
+      } catch (err) {
+        console.error(`[ERROR] ${err.message}`);
+        process.exit(1);
+      }
     } else {
       res = await get(endpoint, query);
     }
