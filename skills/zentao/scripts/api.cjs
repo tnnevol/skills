@@ -113,6 +113,12 @@ function handleResponse(res) {
     return { ok: false, error: data.message || JSON.stringify(data), httpStatus: status, detail: data };
   }
 
+  // 200 但空 body 或无数据
+  if (data === null || data === undefined || data === '' ||
+      (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 0)) {
+    return { ok: false, error: `空响应 (HTTP ${status})`, httpStatus: status };
+  }
+
   // 成功
   return { ok: true, data: data, httpStatus: status };
 }

@@ -79,13 +79,30 @@ async function queryList(endpoint, params = {}) {
     throw new Error(res.error);
   }
 
-  // 禅道 v2 统一返回结构：{ status: 'success', result: [...] }
-  const result = res.data && res.data.result ? res.data.result : [];
+  // 禅道 v2 返回结构：{ status: 'success', users: [...] } 或 { status: 'success', products: [...] } 等
+  // 取 data 中第一个数组字段（按 endpoint 推断字段名）
+  let data = null;
+  if (res.data && typeof res.data === 'object') {
+    // 优先按 endpoint 名推断（/users → users, /products → products, /projects → projects）
+    const field = endpoint.replace(/^\//, '');
+    if (Array.isArray(res.data[field])) {
+      data = res.data[field];
+    } else {
+      // 兜底：遍历找第一个数组字段
+      for (const key of Object.keys(res.data)) {
+        if (Array.isArray(res.data[key])) {
+          data = res.data[key];
+          break;
+        }
+      }
+    }
+  }
+  const result = Array.isArray(data) ? data : [];
   return {
-    data: Array.isArray(result) ? result : [],
+    data: result,
     page,
     limit,
-    hasMore: Array.isArray(result) && result.length >= limit,
+    hasMore: result.length >= limit,
   };
 }
 
