@@ -1,5 +1,5 @@
 ---
-name: chandao
+name: zentao
 description: Assistant for 禅道 (ZenTao) project management system via RESTful API v2. Use when the user asks about 禅道, lists/creates/updates projects, products, users, tasks, bugs, or manages project workflows via natural language commands.
 ---
 
@@ -67,7 +67,7 @@ export CHANDAO_PASSWORD=your-password
 ## 目录结构
 
 ```
-chandao/
+zentao/
 ├── SKILL.md                    # 本文件：主入口 + 命令定义
 ├── scripts/
 │   ├── api.cjs                 # HTTP 请求封装

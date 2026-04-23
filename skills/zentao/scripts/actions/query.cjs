@@ -8,35 +8,55 @@
  */
 const { get, sanitize } = require('../api.cjs');
 
+// 最大字段长度（超过此长度截断）
+const MAX_FIELD_LEN = 20;
+
+function truncate(str) {
+  if (!str) return '';
+  const s = String(str);
+  return s.length > MAX_FIELD_LEN ? s.slice(0, MAX_FIELD_LEN) + '...' : s;
+}
+
 // ============ 表格输出 ============
 
+/**
+ * 表格输出
+ * @returns {number} 数据行数
+ */
 function table(headers, rows) {
   if (rows.length === 0) {
     console.log('📭 暂无数据');
-    return;
+    return 0;
   }
 
-  const widths = headers.map((h, i) =>
+  // 截断超长字段后计算列宽
+  const truncatedRows = rows.map((r) =>
+    r.map((c) => truncate(c))
+  );
+  const truncatedHeaders = headers.map((h) => truncate(h));
+
+  const widths = truncatedHeaders.map((h, i) =>
     Math.max(
-      String(h).length,
-      ...rows.map((r) => String(r[i] ?? '').length)
+      h.length,
+      ...truncatedRows.map((r) => String(r[i] ?? '').length)
     )
   );
 
   const headerLine =
-    '| ' + headers.map((h, i) => pad(h, widths[i])).join(' | ') + ' |';
+    '| ' + truncatedHeaders.map((h, i) => pad(h, widths[i])).join(' | ') + ' |';
   const separator =
     '|' + widths.map((w) => '-'.repeat(w + 2)).join('|') + '|';
 
   console.log(headerLine);
   console.log(separator);
-  for (const row of rows) {
+  for (const row of truncatedRows) {
     console.log(
       '| ' +
-        headers.map((h, i) => pad(String(row[i] ?? ''), widths[i])).join(' | ') +
+        truncatedHeaders.map((h, i) => pad(String(row[i] ?? ''), widths[i])).join(' | ') +
         ' |'
     );
   }
+  return rows.length;
 }
 
 function pad(str, len) {
@@ -50,7 +70,7 @@ function card(title, fields) {
   console.log('━'.repeat(40));
   for (const [label, value] of fields) {
     if (value !== undefined && value !== null && value !== '') {
-      console.log(`  ${label}: ${value}`);
+      console.log(`  ${label}: ${truncate(value)}`);
     }
   }
   console.log('━'.repeat(40));
@@ -122,11 +142,10 @@ async function listUsers(params = {}) {
     orderBy: params.orderBy || 'id_asc',
   });
 
-  const sanitized = sanitize({ users: result.data }).users;
-
-  table(
+  const rows = sanitize({ users: result.data }).users;
+  const count = table(
     ['账号', '姓名', '角色', '部门', '手机'],
-    sanitized.map((u) => [
+    rows.map((u) => [
       u.account || '-',
       u.realname || u.nickname || '-',
       u.role || '-',
@@ -138,7 +157,7 @@ async function listUsers(params = {}) {
   if (result.hasMore) {
     console.log(`\n💡 还有更多，使用 --page=${params.page + 1} 查看下一页`);
   }
-  console.log(`\n共 ${result.data.length} 条 (第 ${params.page || 1} 页)`);
+  console.log(`\n共 ${count} 条 (第 ${params.page || 1} 页)`);
 }
 
 async function getUser(id) {
@@ -169,7 +188,7 @@ async function listProducts(params = {}) {
     orderBy: params.orderBy || 'id_asc',
   });
 
-  table(
+  const count = table(
     ['ID', '名称', '类型', '负责人', '状态'],
     result.data.map((p) => [
       String(p.id || '-'),
@@ -183,7 +202,7 @@ async function listProducts(params = {}) {
   if (result.hasMore) {
     console.log(`\n💡 还有更多，使用 --page=${params.page + 1} 查看下一页`);
   }
-  console.log(`\n共 ${result.data.length} 条 (第 ${params.page || 1} 页)`);
+  console.log(`\n共 ${count} 条 (第 ${params.page || 1} 页)`);
 }
 
 async function getProduct(id) {
@@ -214,7 +233,7 @@ async function listProjects(params = {}) {
     orderBy: params.orderBy || 'id_asc',
   });
 
-  table(
+  const count = table(
     ['ID', '名称', '模式', '起止时间', '状态'],
     result.data.map((p) => [
       String(p.id || '-'),
@@ -228,7 +247,7 @@ async function listProjects(params = {}) {
   if (result.hasMore) {
     console.log(`\n💡 还有更多，使用 --page=${params.page + 1} 查看下一页`);
   }
-  console.log(`\n共 ${result.data.length} 条 (第 ${params.page || 1} 页)`);
+  console.log(`\n共 ${count} 条 (第 ${params.page || 1} 页)`);
 }
 
 async function getProject(id) {
@@ -265,8 +284,22 @@ if (require.main === module) {
   function parseParams(args) {
     const params = {};
     for (const a of args) {
-      if (a.startsWith('--page=')) params.page = parseInt(a.split('=')[1]);
-      if (a.startsWith('--limit=')) params.limit = parseInt(a.split('=')[1]);
+      if (a.startsWith('--page=')) {
+        const v = parseInt(a.split('=')[1], 10);
+        if (!isNaN(v) && v >= 1) {
+          params.page = v;
+        } else if (!isNaN(v)) {
+          console.warn(`⚠️ --page=${v} 无效，已重置为默认值 1（page 必须 ≥ 1）`);
+        }
+      }
+      if (a.startsWith('--limit=')) {
+        const v = parseInt(a.split('=')[1], 10);
+        if (!isNaN(v) && v >= 1 && v <= 1000) {
+          params.limit = v;
+        } else if (!isNaN(v)) {
+          console.warn(`⚠️ --limit=${v} 无效，已重置为默认值 20（limit 范围 1~1000）`);
+        }
+      }
       if (a.startsWith('--browseType='))
         params.browseType = a.split('=')[1];
     }
