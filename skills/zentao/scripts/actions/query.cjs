@@ -284,6 +284,8 @@ if (require.main === module) {
   function parseParams(args) {
     const params = {};
     for (const a of args) {
+      // 忽略非 -- 开头的参数（如详情命令的 id）
+      if (!a.startsWith('--')) continue;
       if (a.startsWith('--page=')) {
         const v = parseInt(a.split('=')[1], 10);
         if (!isNaN(v) && v >= 1) {
@@ -307,7 +309,7 @@ if (require.main === module) {
   }
 
   async function run() {
-    const params = parseParams(process.argv.slice(4));
+    const params = parseParams(process.argv.slice(3));
     switch (action) {
       case 'users':
         await listUsers(params);
