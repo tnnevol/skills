@@ -288,8 +288,22 @@ if (require.main === module) {
   function parseParams(args) {
     const params = {};
     for (const a of args) {
-      if (a.startsWith('--page=')) params.page = parseInt(a.split('=')[1]);
-      if (a.startsWith('--limit=')) params.limit = parseInt(a.split('=')[1]);
+      if (a.startsWith('--page=')) {
+        const v = parseInt(a.split('=')[1], 10);
+        if (!isNaN(v) && v >= 1) {
+          params.page = v;
+        } else if (!isNaN(v)) {
+          console.warn(`⚠️ --page=${v} 无效，已重置为默认值 1（page 必须 ≥ 1）`);
+        }
+      }
+      if (a.startsWith('--limit=')) {
+        const v = parseInt(a.split('=')[1], 10);
+        if (!isNaN(v) && v >= 1 && v <= 1000) {
+          params.limit = v;
+        } else if (!isNaN(v)) {
+          console.warn(`⚠️ --limit=${v} 无效，已重置为默认值 20（limit 范围 1~1000）`);
+        }
+      }
       if (a.startsWith('--browseType='))
         params.browseType = a.split('=')[1];
     }
