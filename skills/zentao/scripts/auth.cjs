@@ -72,7 +72,7 @@ function httpRaw(urlString, options = {}) {
  */
 async function doLogin() {
   const { baseUrl, account, password } = loadRequired();
-  const loginUrl = `${baseUrl}/api/v2/users/login`;
+  const loginUrl = `${baseUrl}/api.php/v2/users/login`;
 
   const res = await httpRaw(loginUrl, {
     method: 'POST',

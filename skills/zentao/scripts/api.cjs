@@ -30,7 +30,7 @@ async function request(method, endpoint, body, query) {
 
   // 拼接路径：确保 endpoint 以 / 开头，baseUrl 已去尾斜杠
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
-  const apiPath = `/api/v2${cleanEndpoint}`;
+  const apiPath = `/api.php/v2${cleanEndpoint}`;
 
   // 构建查询参数
   const params = new URLSearchParams();
