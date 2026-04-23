@@ -8,6 +8,15 @@
  */
 const { get, sanitize } = require('../api.cjs');
 
+// 最大字段长度（超过此长度截断）
+const MAX_FIELD_LEN = 20;
+
+function truncate(str) {
+  if (!str) return '';
+  const s = String(str);
+  return s.length > MAX_FIELD_LEN ? s.slice(0, MAX_FIELD_LEN) + '...' : s;
+}
+
 // ============ 表格输出 ============
 
 /**
@@ -20,24 +29,30 @@ function table(headers, rows) {
     return 0;
   }
 
-  const widths = headers.map((h, i) =>
+  // 截断超长字段后计算列宽
+  const truncatedRows = rows.map((r) =>
+    r.map((c) => truncate(c))
+  );
+  const truncatedHeaders = headers.map((h) => truncate(h));
+
+  const widths = truncatedHeaders.map((h, i) =>
     Math.max(
-      String(h).length,
-      ...rows.map((r) => String(r[i] ?? '').length)
+      h.length,
+      ...truncatedRows.map((r) => String(r[i] ?? '').length)
     )
   );
 
   const headerLine =
-    '| ' + headers.map((h, i) => pad(h, widths[i])).join(' | ') + ' |';
+    '| ' + truncatedHeaders.map((h, i) => pad(h, widths[i])).join(' | ') + ' |';
   const separator =
     '|' + widths.map((w) => '-'.repeat(w + 2)).join('|') + '|';
 
   console.log(headerLine);
   console.log(separator);
-  for (const row of rows) {
+  for (const row of truncatedRows) {
     console.log(
       '| ' +
-        headers.map((h, i) => pad(String(row[i] ?? ''), widths[i])).join(' | ') +
+        truncatedHeaders.map((h, i) => pad(String(row[i] ?? ''), widths[i])).join(' | ') +
         ' |'
     );
   }
@@ -55,7 +70,7 @@ function card(title, fields) {
   console.log('━'.repeat(40));
   for (const [label, value] of fields) {
     if (value !== undefined && value !== null && value !== '') {
-      console.log(`  ${label}: ${value}`);
+      console.log(`  ${label}: ${truncate(value)}`);
     }
   }
   console.log('━'.repeat(40));
@@ -102,7 +117,23 @@ async function queryDetail(endpoint, id) {
   if (!res.ok) {
     throw new Error(res.error);
   }
-  return res.data && res.data.result ? res.data.result : res.data;
+
+  const data = res.data;
+  // 优先取 result（禅道 v2 标准结构）
+  if (data && data.result) return data.result;
+
+  // 有些详情接口直接返回模块字段，如 { status, user: {...} }
+  // 去掉 status/msg 等通用字段，取第一个对象值
+  if (data && typeof data === 'object') {
+    const skipKeys = new Set(['status', 'msg', 'requestID']);
+    for (const [key, val] of Object.entries(data)) {
+      if (!skipKeys.has(key) && typeof val === 'object' && val !== null) {
+        return val;
+      }
+    }
+  }
+
+  return data;
 }
 
 // ============ 用户模块 ============
