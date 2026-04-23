@@ -58,6 +58,20 @@ A: Yes. Before deletion, the skill will show the memo content and ask for confir
 **Q: How do I install or update this skill?**
 A: This skill is located at `~/.openclaw/project-codes/skills/memos/`. Update the files directly or use the skill management system.
 
+**Q: How do I add a comment to a memo?**
+A: Use `/memos comments <memo_id> "评论内容"`. The comment's visibility defaults to inheriting from the parent memo. You can override with `--visibility=PUBLIC|PRIVATE|PROTECTED`.
+
+**Q: How does comment visibility work?**
+A: Comments have independent visibility from their parent memo. By default, a comment inherits the parent memo's visibility level. You can explicitly set a different level with `--visibility`. For example, a PRIVATE memo can have a PUBLIC comment if explicitly specified.
+
+**Q: What natural language triggers work for comments?**
+A: The agent recognizes phrases like:
+- "去/在 XXX 笔记下评论"
+- "给 memo-XXX 写条评论"
+- "在 XXX 下面留言"
+- "看看 XXX 的评论"
+- "XXX 有人评论吗"
+
 ---
 
 ## Type 2: Memos API usage questions

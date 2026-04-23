@@ -62,7 +62,7 @@ This skill follows these security guidelines to protect credentials:
 | `delete` | `/memos delete <memo_id> [--force]` | 删除笔记（可强制删除） |
 | `pin` | `/memos pin <memo_id>` | 切换置顶/取消置顶 |
 | `tags` | `/memos tags` | 列出所有标签 |
-| `comments` | `/memos comments <memo_id> ["评论内容"]` | 查看/添加评论 |
+| `comments` | `/memos comments <memo_id> ["评论内容"] [--visibility=PUBLIC|PRIVATE|PROTECTED]` | 查看/添加评论（可见性默认继承父笔记） |
 | `whoami` | `/memos whoami` | 显示当前用户信息 |
 | `user-stats` | `/memos user-stats` | 显示用户统计 |
 | `share` | `/memos share <memo_id> [--list] [--revoke=ID]` | 创建/撤销分享链接 |
