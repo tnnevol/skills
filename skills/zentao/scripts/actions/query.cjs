@@ -61,7 +61,7 @@ function card(title, fields) {
   console.log('━'.repeat(40));
 }
 
-// ============ 列表查询（固定取 data.result） ============
+// ============ 列表查询（动态取对应字段） ============
 
 async function queryList(endpoint, params = {}) {
   const page = params.page || 1;
@@ -79,13 +79,21 @@ async function queryList(endpoint, params = {}) {
     throw new Error(res.error);
   }
 
-  // 禅道 v2 统一返回结构：{ status: 'success', result: [...] }
-  const result = res.data && res.data.result ? res.data.result : [];
+  // 禅道 v2 result 是对象，按模块名存数组：
+  // { users: [...], pageID: 1, ... } 或 { products: [...], pageID: 1, ... }
+  const resultObj = res.data && res.data.result ? res.data.result : {};
+
+  // 优先按 endpoint 名匹配（如 /users → result.users）
+  const moduleName = endpoint.replace(/^\//, '');
+  let items = Array.isArray(resultObj[moduleName])
+    ? resultObj[moduleName]
+    : Object.values(resultObj).find(Array.isArray) || [];
+
   return {
-    data: Array.isArray(result) ? result : [],
+    data: items,
     page,
     limit,
-    hasMore: Array.isArray(result) && result.length >= limit,
+    hasMore: items.length >= limit,
   };
 }
 
@@ -107,10 +115,10 @@ async function listUsers(params = {}) {
     orderBy: params.orderBy || 'id_asc',
   });
 
-  const sanitized = sanitize({ users: result.data }).users;
+  const rows = sanitize({ users: result.data }).users;
   const count = table(
     ['账号', '姓名', '角色', '部门', '手机'],
-    sanitized.map((u) => [
+    rows.map((u) => [
       u.account || '-',
       u.realname || u.nickname || '-',
       u.role || '-',
