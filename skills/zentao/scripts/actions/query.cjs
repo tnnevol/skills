@@ -56,7 +56,7 @@ function card(title, fields) {
   console.log('━'.repeat(40));
 }
 
-// ============ 列表查询（固定取 data.result） ============
+// ============ 列表查询（动态取对应模块字段） ============
 
 async function queryList(endpoint, params = {}) {
   const page = params.page || 1;
@@ -74,13 +74,22 @@ async function queryList(endpoint, params = {}) {
     throw new Error(res.error);
   }
 
-  // 禅道 v2 统一返回结构：{ status: 'success', result: [...] }
-  const result = res.data && res.data.result ? res.data.result : [];
+  // 禅道 v2 列表返回结构：{ status: 'success', <module>: [...], pager: {...} }
+  // 例如 /users → { users: [...] }, /products → { products: [...] }
+  const resultObj = res.data || {};
+
+  // 优先取 endpoint 对应的模块名（去掉前导 /）
+  const moduleName = endpoint.replace(/^\//, ''); // e.g. 'users'
+  let items = Array.isArray(resultObj[moduleName])
+    ? resultObj[moduleName]
+    : Array.isArray(resultObj.result) ? resultObj.result
+    : Object.values(resultObj).find(Array.isArray) || [];
+
   return {
-    data: Array.isArray(result) ? result : [],
+    data: Array.isArray(items) ? items : [],
     page,
     limit,
-    hasMore: Array.isArray(result) && result.length >= limit,
+    hasMore: Array.isArray(items) && items.length >= limit,
   };
 }
 
@@ -89,7 +98,18 @@ async function queryDetail(endpoint, id) {
   if (!res.ok) {
     throw new Error(res.error);
   }
-  return res.data && res.data.result ? res.data.result : res.data;
+
+  // 禅道 v2 详情返回结构：{ status: 'success', <module>: {...} }
+  // 例如 /users/1 → { user: {...} }, /products/1 → { product: {...} }
+  const resultObj = res.data || {};
+  if (resultObj.result) return resultObj.result;
+
+  // 去掉前导 / 和复数 s，得到单数模块名（users → user, products → product）
+  const moduleName = endpoint.replace(/^\//, '').replace(/s$/, '');
+  if (resultObj[moduleName]) return resultObj[moduleName];
+
+  // 兜底：找第一个对象值
+  return Object.values(resultObj).find(v => typeof v === 'object' && !Array.isArray(v)) || resultObj;
 }
 
 // ============ 用户模块 ============
