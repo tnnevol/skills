@@ -16,7 +16,7 @@
 
 const http = require('http');
 const https = require('https');
-const { loadRequired } = require('./env.cjs');
+const { loadRequired, API_PATH_PREFIX, getTimeout } = require('./env.cjs');
 
 // 内存缓存
 let cachedToken = null;
@@ -56,7 +56,7 @@ function httpRaw(urlString, options = {}) {
     });
 
     req.on('error', reject);
-    req.setTimeout(15000, () => {
+    req.setTimeout(getTimeout(), () => {
       req.destroy(new Error('请求超时'));
     });
 
@@ -72,7 +72,7 @@ function httpRaw(urlString, options = {}) {
  */
 async function doLogin() {
   const { baseUrl, account, password } = loadRequired();
-  const loginUrl = `${baseUrl}/api.php/v2/users/login`;
+  const loginUrl = `${baseUrl}${API_PATH_PREFIX}/users/login`;
 
   const res = await httpRaw(loginUrl, {
     method: 'POST',
