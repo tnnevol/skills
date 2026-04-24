@@ -8,15 +8,6 @@
  */
 const { get, sanitize } = require('../api.cjs');
 
-// 最大字段长度（超过此长度截断）
-const MAX_FIELD_LEN = 20;
-
-function truncate(str) {
-  if (!str) return '';
-  const s = String(str);
-  return s.length > MAX_FIELD_LEN ? s.slice(0, MAX_FIELD_LEN) + '...' : s;
-}
-
 // ============ 表格输出 ============
 
 /**
@@ -29,30 +20,24 @@ function table(headers, rows) {
     return 0;
   }
 
-  // 截断超长字段后计算列宽
-  const truncatedRows = rows.map((r) =>
-    r.map((c) => truncate(c))
-  );
-  const truncatedHeaders = headers.map((h) => truncate(h));
-
-  const widths = truncatedHeaders.map((h, i) =>
+  const widths = headers.map((h, i) =>
     Math.max(
-      h.length,
-      ...truncatedRows.map((r) => String(r[i] ?? '').length)
+      String(h).length,
+      ...rows.map((r) => String(r[i] ?? '').length)
     )
   );
 
   const headerLine =
-    '| ' + truncatedHeaders.map((h, i) => pad(h, widths[i])).join(' | ') + ' |';
+    '| ' + headers.map((h, i) => pad(h, widths[i])).join(' | ') + ' |';
   const separator =
     '|' + widths.map((w) => '-'.repeat(w + 2)).join('|') + '|';
 
   console.log(headerLine);
   console.log(separator);
-  for (const row of truncatedRows) {
+  for (const row of rows) {
     console.log(
       '| ' +
-        truncatedHeaders.map((h, i) => pad(String(row[i] ?? ''), widths[i])).join(' | ') +
+        headers.map((h, i) => pad(String(row[i] ?? ''), widths[i])).join(' | ') +
         ' |'
     );
   }
@@ -70,13 +55,13 @@ function card(title, fields) {
   console.log('━'.repeat(40));
   for (const [label, value] of fields) {
     if (value !== undefined && value !== null && value !== '') {
-      console.log(`  ${label}: ${truncate(value)}`);
+      console.log(`  ${label}: ${value}`);
     }
   }
   console.log('━'.repeat(40));
 }
 
-// ============ 列表查询（动态取对应模块字段） ============
+// ============ 列表查询（固定取 data.result） ============
 
 async function queryList(endpoint, params = {}) {
   const page = params.page || 1;
@@ -94,22 +79,30 @@ async function queryList(endpoint, params = {}) {
     throw new Error(res.error);
   }
 
-  // 禅道 v2 列表返回结构：{ status: 'success', <module>: [...], pager: {...} }
-  // 例如 /users → { users: [...] }, /products → { products: [...] }
-  const resultObj = res.data || {};
-
-  // 优先取 endpoint 对应的模块名（去掉前导 /）
-  const moduleName = endpoint.replace(/^\//, ''); // e.g. 'users'
-  let items = Array.isArray(resultObj[moduleName])
-    ? resultObj[moduleName]
-    : Array.isArray(resultObj.result) ? resultObj.result
-    : Object.values(resultObj).find(Array.isArray) || [];
-
+  // 禅道 v2 返回结构：{ status: 'success', users: [...] } 或 { status: 'success', products: [...] } 等
+  // 取 data 中第一个数组字段（按 endpoint 推断字段名）
+  let data = null;
+  if (res.data && typeof res.data === 'object') {
+    // 优先按 endpoint 名推断（/users → users, /products → products, /projects → projects）
+    const field = endpoint.replace(/^\//, '');
+    if (Array.isArray(res.data[field])) {
+      data = res.data[field];
+    } else {
+      // 兜底：遍历找第一个数组字段
+      for (const key of Object.keys(res.data)) {
+        if (Array.isArray(res.data[key])) {
+          data = res.data[key];
+          break;
+        }
+      }
+    }
+  }
+  const result = Array.isArray(data) ? data : [];
   return {
-    data: Array.isArray(items) ? items : [],
+    data: result,
     page,
     limit,
-    hasMore: Array.isArray(items) && items.length >= limit,
+    hasMore: result.length >= limit,
   };
 }
 
@@ -118,18 +111,7 @@ async function queryDetail(endpoint, id) {
   if (!res.ok) {
     throw new Error(res.error);
   }
-
-  // 禅道 v2 详情返回结构：{ status: 'success', <module>: {...} }
-  // 例如 /users/1 → { user: {...} }, /products/1 → { product: {...} }
-  const resultObj = res.data || {};
-  if (resultObj.result) return resultObj.result;
-
-  // 去掉前导 / 和复数 s，得到单数模块名（users → user, products → product）
-  const moduleName = endpoint.replace(/^\//, '').replace(/s$/, '');
-  if (resultObj[moduleName]) return resultObj[moduleName];
-
-  // 兜底：找第一个对象值
-  return Object.values(resultObj).find(v => typeof v === 'object' && !Array.isArray(v)) || resultObj;
+  return res.data && res.data.result ? res.data.result : res.data;
 }
 
 // ============ 用户模块 ============
@@ -142,10 +124,10 @@ async function listUsers(params = {}) {
     orderBy: params.orderBy || 'id_asc',
   });
 
-  const rows = sanitize({ users: result.data }).users;
+  const sanitized = sanitize({ users: result.data }).users;
   const count = table(
     ['账号', '姓名', '角色', '部门', '手机'],
-    rows.map((u) => [
+    sanitized.map((u) => [
       u.account || '-',
       u.realname || u.nickname || '-',
       u.role || '-',
@@ -284,24 +266,8 @@ if (require.main === module) {
   function parseParams(args) {
     const params = {};
     for (const a of args) {
-      // 忽略非 -- 开头的参数（如详情命令的 id）
-      if (!a.startsWith('--')) continue;
-      if (a.startsWith('--page=')) {
-        const v = parseInt(a.split('=')[1], 10);
-        if (!isNaN(v) && v >= 1) {
-          params.page = v;
-        } else if (!isNaN(v)) {
-          console.warn(`⚠️ --page=${v} 无效，已重置为默认值 1（page 必须 ≥ 1）`);
-        }
-      }
-      if (a.startsWith('--limit=')) {
-        const v = parseInt(a.split('=')[1], 10);
-        if (!isNaN(v) && v >= 1 && v <= 1000) {
-          params.limit = v;
-        } else if (!isNaN(v)) {
-          console.warn(`⚠️ --limit=${v} 无效，已重置为默认值 20（limit 范围 1~1000）`);
-        }
-      }
+      if (a.startsWith('--page=')) params.page = parseInt(a.split('=')[1]);
+      if (a.startsWith('--limit=')) params.limit = parseInt(a.split('=')[1]);
       if (a.startsWith('--browseType='))
         params.browseType = a.split('=')[1];
     }
@@ -309,7 +275,7 @@ if (require.main === module) {
   }
 
   async function run() {
-    const params = parseParams(process.argv.slice(3));
+    const params = parseParams(process.argv.slice(4));
     switch (action) {
       case 'users':
         await listUsers(params);
