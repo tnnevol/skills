@@ -74,19 +74,17 @@ async function get(endpoint, query = {}) {
 }
 
 /**
- * POST 请求
+ * POST 请求 — P0 阶段拦截写操作
  */
 async function post(endpoint, body, query = {}) {
-  const res = await request('POST', endpoint, body, query);
-  return handleResponse(res);
+  throw new Error('[P0_WRITE_BLOCKED] P0 阶段暂不支持写操作');
 }
 
 /**
- * PUT 请求
+ * PUT 请求 — P0 阶段拦截写操作
  */
 async function put(endpoint, body, query = {}) {
-  const res = await request('PUT', endpoint, body, query);
-  return handleResponse(res);
+  throw new Error('[P0_WRITE_BLOCKED] P0 阶段暂不支持写操作');
 }
 
 /**
