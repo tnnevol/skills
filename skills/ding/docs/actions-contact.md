@@ -31,10 +31,10 @@
 ### 3. Compose Session Key
 
 ```
-agent:<agentId>:<channel>:group:<当前群ID>:<当前发送者ID>
+agent:<agentId>:<channel>:group:<当前群ID>
 ```
 
-- The current group ID and sender ID are obtained from the inbound metadata.
+- The current group ID is obtained from the inbound metadata.
 
 ### 4. Self-Contact Prevention
 

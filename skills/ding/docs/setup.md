@@ -18,8 +18,8 @@ Configuration is read from the OpenClaw main configuration (`openclaw.json`):
 To detect the current configuration:
 
 ```bash
-# Get gateway config
-openclaw gateway config get
+# Get agents configuration
+openclaw config get agents.list
 ```
 
 Or read the configuration directly at runtime.
