@@ -9,7 +9,7 @@
  *   - query.cjs（用户列表/详情查询）
  */
 
-const { post, put, del, sanitize } = require('../api.cjs');
+const { post, put, del } = require('../api.cjs');
 const { validate, required, length, email, account, enum: enumVal, id } = require('../validate.cjs');
 const { getUser } = require('./query.cjs');
 
@@ -45,8 +45,7 @@ async function createUser(params) {
 
   const res = await post('/users', body, {}, { dryRun: params.dryRun });
   if (!res.ok) {
-    // 账号/邮箱冲突友好提示
-    if (res.httpStatus === 409 || (res.detail && res.detail.message && (res.detail.message.includes('account') || res.detail.message.includes('email')))) {
+    if (res.httpStatus === 409) {
       throw new Error(`[创建失败] 账号或邮箱已存在: ${res.error}`);
     }
     throw new Error(`[创建失败] ${res.error}`);

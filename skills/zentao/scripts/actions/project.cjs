@@ -9,7 +9,7 @@
  *   - query.cjs（项目列表/详情查询）
  */
 
-const { post, put, del, sanitize } = require('../api.cjs');
+const { post, put, del, get } = require('../api.cjs');
 const { validate, required, length, id, date, enum: enumVal } = require('../validate.cjs');
 const { getProject } = require('./query.cjs');
 
@@ -101,7 +101,7 @@ async function updateProject(projectId, params) {
   const res = await put(`/projects/${projectId}`, updateFields, {}, { dryRun: params.dryRun });
   if (!res.ok) {
     // 已关闭不可修改
-    if (res.httpStatus === 400 || (res.detail && res.detail.message && res.detail.message.includes('closed'))) {
+    if (res.httpStatus === 400) {
       throw new Error('[更新失败] 已关闭的项目不可修改');
     }
     throw new Error(`[更新失败] ${res.error}`);
@@ -182,7 +182,6 @@ async function closeProject(projectId, params) {
 async function getProjectTeam(projectId, params) {
   id(projectId, '项目 ID');
 
-  const { get } = require('../api.cjs');
   const res = await get(`/projects/${projectId}/teams`, {
     recPerPage: params.limit || 20,
     pageID: params.page || 1,
