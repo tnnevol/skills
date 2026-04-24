@@ -27,9 +27,10 @@ ding is a skill for quickly locating and contacting other Agents (demo1, demo2, 
    agent:<agentId>:<channel>:group:<当前群ID>
    ```
 
-4. **Attempt Contact** — Use `sessions_send` to the target session:
+4. **Attempt Contact** — Use `sessions_send` to the target session with `timeoutSeconds: 60`:
    - Success → return result
-   - Failure → prompt "需要在钉钉群中 @<Agent名称>"
+   - Timeout (60s) → 立即停止，回报："<Agent名称> 响应超时"
+   - Failure → 立即停止，回报："发送失败"
 
 ## Security Guidelines
 
