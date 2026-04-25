@@ -8,10 +8,19 @@
  *   2. skill 目录下的 .env 文件
  * 
  * 必须变量：CHANDAO_URL、CHANDAO_ACCOUNT、CHANDAO_PASSWORD
+ * 可选变量：CHANDAO_TIMEOUT（请求超时，默认 30000ms）
  */
 
 const fs = require('fs');
 const path = require('path');
+
+// ========== 常量定义 ==========
+
+/** API 路径前缀（v2 RESTful） */
+const API_PATH_PREFIX = '/api.php/v2';
+
+/** 默认请求超时（ms），可通过 CHANDAO_TIMEOUT 环境变量覆盖 */
+const DEFAULT_TIMEOUT = 30000;
 
 // .env 文件缓存（进程生命周期只读一次）
 let cachedEnvFile = null;
@@ -81,4 +90,17 @@ function loadRequired() {
   };
 }
 
-module.exports = { getConfig, loadRequired, loadEnvFile };
+/**
+ * 获取请求超时时间（环境变量可覆盖）
+ * @returns {number}
+ */
+function getTimeout() {
+  const envTimeout = getConfig('CHANDAO_TIMEOUT');
+  if (envTimeout) {
+    const n = parseInt(envTimeout, 10);
+    if (!isNaN(n) && n > 0) return n;
+  }
+  return DEFAULT_TIMEOUT;
+}
+
+module.exports = { getConfig, loadRequired, loadEnvFile, API_PATH_PREFIX, DEFAULT_TIMEOUT, getTimeout };

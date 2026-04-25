@@ -12,10 +12,10 @@ function sanitize(data) {
   // 字符串脱敏
   if (typeof data === 'string') {
     return data
-      .replace(/(password|passwd|pwd)\s*[:=]\s*['"]?[^'"\s]+['"]?/gi, '$1: "[REDACTED]"')
-      .replace(/token\s*[:=]\s*['"]?[a-zA-Z0-9]+['"]?/gi, 'token: "[REDACTED]"')
-      .replace(/CHANDAO_PASSWORD\s*[:=]\s*['"]?[^'"\s]+['"]?/gi, 'CHANDAO_PASSWORD: "[REDACTED]"')
-      .replace(/CHANDAO_ACCOUNT\s*[:=]\s*['"]?[^'"\s]+['"]?/gi, 'CHANDAO_ACCOUNT: "[REDACTED]"');
+      .replace(/(password|passwd|pwd)\s*[:=]\s*['"]?[^'"\s]+['"]?/gi, '$1: "***"')
+      .replace(/token\s*[:=]\s*['"]?[a-zA-Z0-9._-]+['"]?/gi, 'token: "***"')
+      .replace(/CHANDAO_PASSWORD\s*[:=]\s*['"]?[^'"\s]+['"]?/gi, 'CHANDAO_PASSWORD: "***"')
+      .replace(/CHANDAO_ACCOUNT\s*[:=]\s*['"]?[^'"\s]+['"]?/gi, 'CHANDAO_ACCOUNT: "***"');
   }
 
   // 对象/数组递归脱敏
@@ -29,7 +29,7 @@ function sanitize(data) {
       const sensitiveKeys = ['password', 'pwd', 'pass', 'token', 'secret', 'key', 'auth', 'authorization', 'cookie'];
 
       if (sensitiveKeys.some((sk) => lowerKey.includes(sk))) {
-        result[key] = '[REDACTED]';
+        result[key] = '***';
       } else if (lowerKey === 'mobile' && typeof data[key] === 'string' && data[key].length >= 7) {
         // 手机号打码
         result[key] = data[key].slice(0, 3) + '****' + data[key].slice(-4);

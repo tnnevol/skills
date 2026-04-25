@@ -14,64 +14,14 @@
  *   Header: token: xxx（非 Bearer 格式）
  */
 
-const fs = require('fs');
-const path = require('path');
 const http = require('http');
 const https = require('https');
-const { loadRequired } = require('./env.cjs');
-
-// Token 持久化缓存路径
-const TOKEN_CACHE_PATH = path.join(__dirname, '../.token-cache.json');
+const { loadRequired, API_PATH_PREFIX, getTimeout } = require('./env.cjs');
 
 // 内存缓存
 let cachedToken = null;
 let isRefreshing = false;
 let refreshQueue = [];
-
-/**
- * 读取文件缓存的 Token
- * @returns {{ token: string, expireAt: number } | null}
- */
-function readTokenCache() {
-  try {
-    if (!fs.existsSync(TOKEN_CACHE_PATH)) return null;
-    const raw = fs.readFileSync(TOKEN_CACHE_PATH, 'utf8');
-    const parsed = JSON.parse(raw);
-    if (parsed.token && parsed.expireAt && Date.now() < parsed.expireAt) {
-      return parsed;
-    }
-    // 过期则删除
-    fs.unlinkSync(TOKEN_CACHE_PATH);
-  } catch {
-    // 缓存文件损坏，忽略
-  }
-  return null;
-}
-
-/**
- * 写入文件缓存的 Token（默认 24 小时过期）
- */
-function writeTokenCache(token, ttlMs = 24 * 60 * 60 * 1000) {
-  try {
-    const data = { token, expireAt: Date.now() + ttlMs };
-    fs.writeFileSync(TOKEN_CACHE_PATH, JSON.stringify(data), 'utf8');
-  } catch {
-    // 写入失败不影响主流程
-  }
-}
-
-/**
- * 清除文件缓存
- */
-function clearTokenCache() {
-  try {
-    if (fs.existsSync(TOKEN_CACHE_PATH)) {
-      fs.unlinkSync(TOKEN_CACHE_PATH);
-    }
-  } catch {
-    // 忽略
-  }
-}
 
 /**
  * 执行 HTTP 请求（底层）
@@ -106,7 +56,7 @@ function httpRaw(urlString, options = {}) {
     });
 
     req.on('error', reject);
-    req.setTimeout(30000, () => {
+    req.setTimeout(getTimeout(), () => {
       req.destroy(new Error('请求超时'));
     });
 
@@ -122,7 +72,7 @@ function httpRaw(urlString, options = {}) {
  */
 async function doLogin() {
   const { baseUrl, account, password } = loadRequired();
-  const loginUrl = `${baseUrl}/api/v2/users/login`;
+  const loginUrl = `${baseUrl}${API_PATH_PREFIX}/users/login`;
 
   const res = await httpRaw(loginUrl, {
     method: 'POST',
@@ -146,19 +96,12 @@ async function doLogin() {
 }
 
 /**
- * 获取 Token（内存缓存 → 文件缓存 → 登录）
+ * 获取 Token（带缓存 + 自动刷新）
  * @returns {Promise<string>}
  */
 async function getToken() {
-  // 内存缓存优先
+  // 有缓存直接返回
   if (cachedToken) return cachedToken;
-
-  // 尝试文件缓存
-  const fileCache = readTokenCache();
-  if (fileCache) {
-    cachedToken = fileCache.token;
-    return cachedToken;
-  }
 
   // 防止并发刷新
   if (isRefreshing) {
@@ -170,8 +113,6 @@ async function getToken() {
   isRefreshing = true;
   try {
     cachedToken = await doLogin();
-    // 写入文件缓存（跨会话持久化）
-    writeTokenCache(cachedToken);
     // 唤醒等待队列
     for (const { resolve } of refreshQueue) resolve(cachedToken);
     refreshQueue = [];
@@ -190,7 +131,6 @@ async function getToken() {
  */
 async function refreshToken() {
   cachedToken = null;
-  clearTokenCache();
   return getToken();
 }
 
@@ -199,7 +139,6 @@ async function refreshToken() {
  */
 function clearCache() {
   cachedToken = null;
-  clearTokenCache();
 }
 
-module.exports = { getToken, refreshToken, clearCache, doLogin, httpRaw, readTokenCache, writeTokenCache, clearTokenCache };
+module.exports = { getToken, refreshToken, clearCache, doLogin, httpRaw };
