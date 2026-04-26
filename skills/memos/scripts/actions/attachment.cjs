@@ -48,7 +48,7 @@ async function actionAttachments(callAPI, BASE_URL, argList) {
     const size = formatBytes(att.size || att.externalLink?.length);
     const type = att.type || att.mimeType || "未知";
     const url = att.externalLink
-      ? `${BASE_URL}${att.externalLink}`
+      ? att.externalLink
       : `(无外部链接)`;
 
     console.log(`\n📄 ${name}`);
