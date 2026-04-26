@@ -18,6 +18,9 @@
  *   user-stats                       - 显示用户统计
  *   share <笔记ID> [--list] [--revoke=ID] - 分享管理
  *   attachments <笔记ID>             - 列出附件
+ *   upload-attachment <文件路径>     - 上传附件 [--memo=ID] [--filename=xxx]
+ *   delete-attachment <附件ID>       - 删除附件
+ *   batch-delete-attachment <ID...>  - 批量删除附件
  */
 
 const { BASE_URL, ACCESS_TOKEN } = require("./env.cjs");
@@ -42,7 +45,7 @@ const action = args[0];
 
 if (!action) {
   console.error("用法: api.cjs <操作> [参数...]");
-  console.error("可用操作: list, create, get, update, delete, pin, tags, comments, whoami, user-stats, share, attachments, reactions, react, unreact, relations, relate, unrelate");
+  console.error("可用操作: list, create, get, update, delete, pin, tags, comments, whoami, user-stats, share, attachments, upload-attachment, delete-attachment, batch-delete-attachment, reactions, react, unreact, relations, relate, unrelate");
   process.exit(1);
 }
 
@@ -60,6 +63,9 @@ const actionMap = {
   "user-stats": () => user.actionUserStats(api),
   share: (a) => share.actionShare(api, BASE_URL, ACCESS_TOKEN, a),
   attachments: (a) => attachment.actionAttachments(api, BASE_URL, a),
+  "upload-attachment": (a) => attachment.actionAttachmentUpload(api, a),
+  "delete-attachment": (a) => attachment.actionAttachmentDelete(api, a),
+  "batch-delete-attachment": (a) => attachment.actionAttachmentBatchDelete(api, a),
   reactions: (a) => reaction.actionReactions(api, a),
   react: (a) => reaction.actionReact(api, a),
   unreact: (a) => reaction.actionUnreact(api, a),
@@ -72,7 +78,7 @@ const actionFn = actionMap[action];
 
 if (!actionFn) {
   console.error(`未知操作: ${action}`);
-  console.error("可用操作: list, create, get, update, delete, pin, tags, comments, whoami, user-stats, share, attachments, reactions, react, unreact, relations, relate, unrelate");
+  console.error("可用操作: list, create, get, update, delete, pin, tags, comments, whoami, user-stats, share, attachments, upload-attachment, delete-attachment, batch-delete-attachment, reactions, react, unreact, relations, relate, unrelate");
   process.exit(1);
 }
 

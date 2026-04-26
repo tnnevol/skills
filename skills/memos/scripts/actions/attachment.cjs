@@ -167,7 +167,7 @@ async function actionAttachmentUpload(callAPI, argList) {
   const name = data.name || "unknown";
   const size = formatBytes(data.size);
   const externalLink = data.externalLink
-    ? `${process.env.MEMOS_BASE_URL}${data.externalLink}`
+    ? data.externalLink
     : "(无链接)";
 
   console.log(`\n✅ 附件上传成功`);
