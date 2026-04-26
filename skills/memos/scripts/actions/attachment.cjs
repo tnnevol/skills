@@ -115,7 +115,7 @@ function detectMimeType(filePath) {
  * 上传附件
  * 用法: api.cjs upload-attachment <文件路径> [--memo=ID] [--filename=xxx] [--type=MIME]
  */
-async function actionAttachmentUpload(callAPI, argList) {
+async function actionAttachmentUpload(callAPI, BASE_URL, argList) {
   const { flags, positional } = parseFlags(argList);
   const filePath = positional[0];
 
@@ -231,7 +231,7 @@ async function actionAttachmentDelete(callAPI, argList) {
   await callAPI("DELETE", `/api/v1/${name}`);
 
   console.log(`\n✅ 已删除附件: ${name}`);
-  console.log(`   链接: ${process.env.MEMOS_BASE_URL}/${name}`);
+  console.log(`   链接: ${BASE_URL}/${name}`);
 }
 
 // --- batch-delete-attachment ---
@@ -261,7 +261,7 @@ async function actionAttachmentBatchDelete(callAPI, argList) {
   await callAPI("POST", "/api/v1/attachments:batchDelete", JSON.stringify(body));
 
   console.log(`\n✅ 已批量删除 ${names.length} 个附件`);
-  console.log(`   链接: ${names.map(name => `${process.env.MEMOS_BASE_URL}/${name}`).join(', ')}`);
+  console.log(`   链接: ${names.map(name => `${BASE_URL}/${name}`).join(', ')}`);
 }
 
 module.exports = {

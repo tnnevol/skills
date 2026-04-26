@@ -134,6 +134,12 @@ async function fetchAllMemos(callAPI, maxPages = 50) {
   return allMemos;
 }
 
+function normalizeAttachmentId(id) {
+  if (!id) return "";
+  if (id.startsWith("attachments/")) return id;
+  return `attachments/${id}`;
+}
+
 module.exports = {
   normalizeMemoId,
   stripMemoPrefix,
@@ -145,4 +151,5 @@ module.exports = {
   callAPI,
   getCurrentUserId,
   fetchAllMemos,
+  normalizeAttachmentId,
 };
