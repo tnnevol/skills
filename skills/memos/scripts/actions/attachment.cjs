@@ -174,6 +174,8 @@ async function actionAttachmentUpload(callAPI, argList) {
   console.log(`   名称: ${name}`);
   console.log(`   大小: ${size}`);
   console.log(`   链接: ${externalLink}`);
+  console.log(`\n   💡 永久路径: 使用此链接嵌入笔记，通过 Memos 认证后永久有效`);
+  console.log(`      Markdown 格式: \`![描述](${externalLink})\``);
 }
 
 // --- delete-attachment ---

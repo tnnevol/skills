@@ -43,6 +43,9 @@ This skill follows these security guidelines to protect credentials:
 | `user-stats` | 显示用户统计 | `docs/actions-user.md` |
 | `share` | 创建/撤销/列出分享链接 | `docs/actions-share.md` |
 | `attachments` | 列出笔记附件 | `docs/actions-attachment.md` |
+| `upload-attachment` | 上传附件（支持关联笔记） | `docs/actions-attachment.md` |
+| `delete-attachment` | 删除附件 | `docs/actions-attachment.md` |
+| `batch-delete-attachment` | 批量删除附件 | `docs/actions-attachment.md` |
 | `reactions` | 查看表情回应 | `docs/actions-reaction.md` |
 | `react` | 添加/切换表情 | `docs/actions-reaction.md` |
 | `unreact` | 取消表情 | `docs/actions-reaction.md` |
@@ -67,6 +70,9 @@ This skill follows these security guidelines to protect credentials:
 | `user-stats` | `/memos user-stats` | 显示用户统计 |
 | `share` | `/memos share <memo_id> [--list] [--revoke=ID]` | 创建/撤销分享链接 |
 | `attachments` | `/memos attachments <memo_id>` | 列出笔记附件 |
+| `upload-attachment` | `/memos upload-attachment <文件路径> [--memo=ID] [--filename=xxx] [--type=MIME]` | 上传附件（可关联笔记） |
+| `delete-attachment` | `/memos delete-attachment <附件ID>` | 删除附件 |
+| `batch-delete-attachment` | `/memos batch-delete-attachment <ID1> <ID2> ...` | 批量删除附件 |
 | `reactions` | `/memos reactions <memo_id>` | 查看表情回应 |
 | `react` | `/memos react <memo_id> <表情>` | 添加/切换表情 |
 | `unreact` | `/memos unreact <memo_id> <表情>` | 取消表情 |
