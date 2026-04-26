@@ -272,7 +272,9 @@ if (require.main === module) {
       if (a.startsWith('--')) {
         const [key, ...valueParts] = a.slice(2).split('=');
         const value = valueParts.length ? valueParts.join('=') : true;
-        params[key] = value;
+        // 转 camelCase：dry-run → dryRun
+        const camelKey = key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+        params[camelKey] = value;
       }
     }
     return params;

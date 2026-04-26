@@ -23,7 +23,8 @@ function required(value, fieldName) {
  * 长度校验
  */
 function length(value, fieldName, min, max) {
-  required(value, fieldName);
+  // 可选字段：值为空时跳过校验
+  if (value === undefined || value === null || value === '') return value;
   const str = String(value);
   if (min && str.length < min) {
     throw new Error(`[校验失败] ${fieldName} 长度不能少于 ${min} 个字符`);

@@ -190,6 +190,12 @@ function handleResponse(res) {
   }
 
   if (status >= 400 && status < 500) {
+    if (status === 401) {
+      return { ok: false, error: '认证失败，Token 无效或过期 (401)', httpStatus: status };
+    }
+    if (status === 403) {
+      return { ok: false, error: '权限不足，当前账号无此操作权限 (403)', httpStatus: status };
+    }
     return { ok: false, error: `客户端错误 (HTTP ${status})`, httpStatus: status };
   }
 
