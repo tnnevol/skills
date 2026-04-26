@@ -170,7 +170,7 @@ async function actionAttachmentUpload(callAPI, argList) {
     ? data.externalLink
     : "(无链接)";
 
-  // 构建永久路径（需要 Memos 认证才能访问）
+  // 构建永久路径（笔记内容中使用的路径）
   // API 返回的 name 格式: attachments/xxx
   const permanentPath = externalLink !== "(无链接)"
     ? `${BASE_URL}/file/attachments/${name}/${filename}`
@@ -179,12 +179,11 @@ async function actionAttachmentUpload(callAPI, argList) {
   console.log(`\n✅ 附件上传成功`);
   console.log(`   名称: ${name}`);
   console.log(`   大小: ${size}`);
-  console.log(`   预签名URL: ${externalLink}`);
   if (permanentPath) {
     console.log(`   永久路径: ${permanentPath}`);
-    console.log(`   (永久路径需 Memos 认证，预签名URL 5天后过期)`);
+    console.log(`   💡 Markdown: \`![描述](${permanentPath})\``);
   }
-  console.log(`\n   💡 Markdown 图片格式: \`![描述](${externalLink})\``);
+  console.log(`   预签名URL: ${externalLink} (辅助验证，不嵌入笔记)`);
 }
 
 // --- delete-attachment ---

@@ -65,11 +65,11 @@ $RUNTIME "$API_SCRIPT" upload-attachment /tmp/xxx --filename="my-diagram.png" --
 - 自动检测 MIME 类型（基于文件扩展名）
 
 **返回信息：**
-- 附件名称、大小、预签名 URL、永久路径
-- **预签名 URL**: API 返回的 `externalLink`，有效期 5 天（R2 存储）
-- **永久路径**: `$MEMOS_BASE_URL/file/attachments/{attachment_name}/{filename}`，通过 Memos 认证后永久有效
+- 附件名称、大小、**永久路径**（笔记内容中使用）、预签名 URL（辅助验证）
+- **永久路径**: `$MEMOS_BASE_URL/file/attachments/{attachment_name}/{filename}` — **笔记内容中使用的路径**
+- **预签名 URL**: API 返回的 `externalLink`，5 天有效（仅辅助验证，不应嵌入笔记）
 
-> ⚠️ **注意**：预签名 URL 5 天后过期。如需长期有效，使用永久路径格式（需要 Memos 认证）。
+> ✅ **永久路径是笔记内容中的标准用法**，笔记在 Memos 内渲染时自动生效。
 
 **显示格式：**
 
@@ -90,31 +90,24 @@ $RUNTIME "$API_SCRIPT" upload-attachment /tmp/xxx --filename="my-diagram.png" --
 当需要创建带图片的笔记时，使用以下步骤：
 
 ```bash
-# 步骤 1: 上传图片，获取链接
+# 步骤 1: 上传图片，获取永久路径（用于嵌入笔记）
 $RUNTIME "$API_SCRIPT" upload-attachment /path/to/img.jpg --memo=abc123
-# → 返回两个链接：
-#    预签名URL: https://r2.cloudflarestorage.com/... (5天有效)
-#    永久路径: https://memos.example.com/file/attachments/attachments/XyZ123/img.jpg (需认证)
+# → 返回：
+#    永久路径: https://memos.example.com/file/attachments/attachments/XyZ123/img.jpg
+#    预签名URL: https://r2.cloudflarestorage.com/... (辅助验证，不嵌入笔记)
 
-# 步骤 2: 创建笔记，嵌入图片的 Markdown 引用
+# 步骤 2: 创建笔记，使用永久路径嵌入 Markdown 图片引用
 $RUNTIME "$API_SCRIPT" create "这是带图笔记：
 
-![描述](预签名URL)
+![描述](https://memos.example.com/file/attachments/attachments/XyZ123/img.jpg)
 
 正文内容..."
 ```
 
-**两种 URL 方案**：
-
-| 方案 | 优点 | 缺点 | 适用场景 |
-|------|------|------|----------|
-| 预签名 URL | 直接访问，无需认证 | 5 天后过期 | 短期使用、分享 |
-| 永久路径 | 永久有效 | 需 Memos 认证 | 笔记内部引用、Agent 自动读取 |
-
-**重要**：
-- 路径中必须同时包含 `attachment_name` 和 `filename`
-- 永久路径适合 Agent 内部使用（自动携带认证）
-- 对外分享建议使用预签名 URL
+**⚠️ 重要**：
+- **笔记内容中必须使用永久路径** (`$MEMOS_BASE_URL/file/attachments/{name}/{filename}`)
+- 永久路径在 Memos 内渲染时自动生效（笔记自带认证上下文）
+- 预签名 URL 仅辅助验证，5 天后过期，**不要**嵌入笔记
 
 ---
 
