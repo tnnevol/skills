@@ -226,7 +226,9 @@ if (require.main === module) {
   }
 
   async function run() {
-    const params = parseParams(process.argv.slice(4));
+    // create-user 没有 id 参数，从 index 3 开始；其他命令从 index 4 开始
+    const sliceStart = action === 'create-user' ? 3 : 4;
+    const params = parseParams(process.argv.slice(sliceStart));
 
     switch (action) {
       case 'create-user':
