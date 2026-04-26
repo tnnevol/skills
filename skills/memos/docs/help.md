@@ -72,6 +72,18 @@ A: The agent recognizes phrases like:
 - "看看 XXX 的评论"
 - "XXX 有人评论吗"
 
+**Q: How do I upload attachments/images?**
+A: Use `/memos upload-attachment <file_path> [--memo=ID]`. After upload, it returns a permanent path that can be used to create图文 notes.
+
+**Q: How do I create notes with images?**
+A: 1) Upload the image first to get the permanent path; 2) Create the note using Markdown format `![description](permanent_path)` to embed the image.
+
+**Q: How do I delete attachments?**
+A: Use `/memos delete-attachment <attachment_ID>` to delete a single attachment, or use `/memos batch-delete-attachment <ID1> <ID2>...` to delete multiple attachments.
+
+**Q: What's the difference between permanent paths and presigned URLs?**
+A: Permanent paths are used in note content and automatically work when viewing in Memos (they work with the user's authentication context); presigned URLs are temporary (5 days) and should not be embedded in notes.
+
 ---
 
 ## Type 2: Memos API usage questions

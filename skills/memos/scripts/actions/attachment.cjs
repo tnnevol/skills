@@ -192,7 +192,7 @@ async function actionAttachmentUpload(callAPI, BASE_URL, argList) {
  * 删除附件
  * 用法: api.cjs delete-attachment <附件ID>
  */
-async function actionAttachmentDelete(callAPI, argList) {
+async function actionAttachmentDelete(callAPI, BASE_URL, argList) {
   const { positional } = parseFlags(argList);
   const rawId = positional[0];
 
@@ -240,7 +240,7 @@ async function actionAttachmentDelete(callAPI, argList) {
  * 批量删除附件
  * 用法: api.cjs batch-delete-attachment <附件ID1> <附件ID2> ...
  */
-async function actionAttachmentBatchDelete(callAPI, argList) {
+async function actionAttachmentBatchDelete(callAPI, BASE_URL, argList) {
   const { positional } = parseFlags(argList);
 
   if (positional.length === 0) {
