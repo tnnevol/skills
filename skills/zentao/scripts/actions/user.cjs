@@ -224,7 +224,11 @@ if (require.main === module) {
   }
 
   async function run() {
-    const params = parseParams(process.argv.slice(4));
+    let sliceStart = 4; // 默认有 id 的命令
+    if (action === 'create-user') {
+      sliceStart = 3; // create-user 没有 id，参数从 index 3 开始
+    }
+    const params = parseParams(process.argv.slice(sliceStart));
 
     switch (action) {
       case 'create-user':
