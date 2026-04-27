@@ -1,9 +1,9 @@
 ---
-name: zentao
+name: chandao
 description: Assistant for 禅道 (ZenTao) project management system via RESTful API v2. Use when the user asks about 禅道, lists/creates/updates projects, products, users, tasks, bugs, or manages project workflow via natural language commands.
 ---
 
-# SKILL: zentao (禅道)
+# SKILL: chandao (禅道)
 
 让 AI Agent 通过自然语言操作禅道系统，实现项目查询与管理。基于禅道官方 RESTful API v2。
 
@@ -72,7 +72,7 @@ node scripts/actions/query.cjs project 3
 ## 目录结构
 
 ```
-zentao/
+chandao/
 ├── SKILL.md                    # 本文件：主入口 + 命令定义
 ├── .env.example                # 环境变量示例
 ├── GENERATION.md               # 生成元信息
@@ -106,11 +106,11 @@ zentao/
 
 | Action | Usage | Description |
 |--------|-------|-------------|
-| `create-bug` | `/zentao create-bug --product=ID --title=xxx` | 创建缺陷 |
-| `create-task` | `/zentao create-task --execution=ID --name=xxx` | 创建任务 |
-| `create-story` | `/zentao create-story --product=ID --title=xxx` | 创建需求 |
-| `resolve-bug` | `/zentao resolve-bug <id> --resolution=fixed` | 解决缺陷 |
-| `finish-task` | `/zentao finish-task <id>` | 完成任务 |
-| `bugs` | `/zentao bugs [--product=ID] [--status=unresolved]` | 列出缺陷 |
-| `tasks` | `/zentao tasks [--execution=ID] [--assignedTo=user]` | 列出任务 |
-| `stories` | `/zentao stories [--product=ID] [--status=open]` | 列出需求 |
+| `create-bug` | `/chandao create-bug --product=ID --title=xxx` | 创建缺陷 |
+| `create-task` | `/chandao create-task --execution=ID --name=xxx` | 创建任务 |
+| `create-story` | `/chandao create-story --product=ID --title=xxx` | 创建需求 |
+| `resolve-bug` | `/chandao resolve-bug <id> --resolution=fixed` | 解决缺陷 |
+| `finish-task` | `/chandao finish-task <id>` | 完成任务 |
+| `bugs` | `/chandao bugs [--product=ID] [--status=unresolved]` | 列出缺陷 |
+| `tasks` | `/chandao tasks [--execution=ID] [--assignedTo=user]` | 列出任务 |
+| `stories` | `/chandao stories [--product=ID] [--status=open]` | 列出需求 |
