@@ -75,4 +75,5 @@ export const manual = [
   'memos',
   'ding-agent',
   'autosave',
+  'chandao',
 ]
