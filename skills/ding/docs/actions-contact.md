@@ -12,6 +12,7 @@
 |-----------|------|----------|---------|-------------|
 | `<Agent名称>` | string | Yes | - | 目标 Agent 名称 |
 | `<消息内容>` | string | Yes | - | 消息内容 |
+| `timeoutSeconds` | number | No | `60` | 等待目标会话响应的超时时间（秒） |
 
 ## Execution Flow
 
@@ -43,9 +44,13 @@ agent:<agentId>:<channel>:group:<当前群ID>
 
 ### 5. Send Message
 
-- Use `sessions_send` to the target session.
+- Use `sessions_send` to the target session:
+  - `sessionKey`: composed session key from step 3
+  - `message`: the user's message content
+  - `timeoutSeconds`: **60**（防止长时间阻塞，超时立即停止并回报）
 - **Success** → Return the Agent's reply.
-- **Failure** → Prompt "需要在钉钉群中 @<Agent名称>".
+- **Timeout** → 立即停止，回报："<Agent名称> 响应超时"。
+- **Failure** → 立即停止，回报："发送失败"。
 
 ## Examples
 
@@ -61,4 +66,5 @@ agent:<agentId>:<channel>:group:<当前群ID>
 | Agent not found | "未找到名为 'xxx' 的 Agent，可用：demo1、demo2..." |
 | No binding found | "该 Agent 未绑定钉钉" |
 | **Self-contact** | "你正在尝试联系自己，请确认目标 Agent 名称。" |
-| `sessions_send` fails | "需要在钉钉群中 @demo1 才能联系" |
+| `sessions_send` **timeout** (60s) | "<Agent名称> 响应超时，立即停止" |
+| `sessions_send` fails | "发送失败，立即停止" |

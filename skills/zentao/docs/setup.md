@@ -1,60 +1,74 @@
-# 禅道 Skill — 安装配置指南
+# Setup
 
-## 1. 环境变量
+## Configuration
 
-需要配置 3 个环境变量：
+Configuration is loaded in the following priority order (higher overrides lower):
+
+1. **Environment variables** (highest priority, recommended)
+2. **Skill directory `.env`** (next to SKILL.md)
+
+Required variables:
 
 ```bash
 export CHANDAO_URL=https://your-chandao.com
-export CHANDAO_ACCOUNT=your-account
+export CHANDAO_ACCOUNT=admin
 export CHANDAO_PASSWORD=your-password
 ```
 
-**推荐方式**：在 shell 配置文件（`.bashrc` / `.zshrc`）中设置。
+Alternatively, create a `.env` file in the skill directory (make sure it's in `.gitignore`).
 
-**替代方式**：在 skill 目录创建 `.env` 文件（确保已加入 `.gitignore`）：
+## Mental Model
 
-```env
-CHANDAO_URL=https://your-chandao.com
-CHANDAO_ACCOUNT=admin
-CHANDAO_PASSWORD=your-password
-```
+This skill uses several JavaScript modules with different responsibilities:
 
-## 2. 认证说明
+- `scripts/env.cjs` — 环境变量加载与校验（CHANDAO_URL / CHANDAO_ACCOUNT / CHANDAO_PASSWORD）
+- `scripts/auth.cjs` — Token 获取、内存缓存、401 自动刷新
+- `scripts/api.cjs` — HTTP 请求统一封装（GET/POST/PUT）、自动注入 Token、分页、错误处理
+- `scripts/sanitize.cjs` — 输出脱敏（密码/手机号/邮箱）
 
-Token 由系统自动管理，用户无需手动操作：
+## Authentication
 
-- **首次请求** — 自动用账号密码登录，获取 Token
-- **Token 缓存** — 保存到本地文件，跨会话复用
-- **自动刷新** — Token 过期后自动重新登录，用户无感知
+禅道 v2 RESTful API 使用 Token 认证：
 
-## 3. 验证安装
+1. 首次请求自动 POST `/api/v2/users/login` 获取 Token
+2. Token 缓存在内存中，后续请求复用
+3. 遇到 401 自动重新登录，用户无感知
+4. Token 通过请求头 `token: xxx` 传递（**非** Bearer 格式）
+
+## Runtime Detection
+
+The skill uses plain JavaScript with no external dependencies (only Node.js built-in `http`/`https`/`fs`).
 
 ```bash
-# 检查认证
-cd skills/chandao/scripts
-node auth.cjs status
-
-# 测试登录
-node auth.cjs login
-
-# 测试查询
-node actions/query.cjs users
-node actions/query.cjs products
-node actions/query.cjs projects
+API_SCRIPT="${CLAUDE_SKILL_DIR}/scripts/api.cjs"
+node "$API_SCRIPT" <action> [args...]
 ```
 
-## 4. 安全注意事项
+### API Actions
 
-- **不要提交** `.env` 文件到版本库
-- **不要暴露** Token 值
-- **脱敏输出** — 密码、手机号、邮箱自动打码
+| Action | CLI | Method | Endpoint |
+|--------|-----|--------|----------|
+| 获取用户列表 | `get /users` | GET | `/api/v2/users` |
+| 获取用户详情 | `get /users/:id` | GET | `/api/v2/users/:id` |
+| 获取产品列表 | `get /products` | GET | `/api/v2/products` |
+| 获取产品详情 | `get /products/:id` | GET | `/api/v2/products/:id` |
+| 获取项目列表 | `get /projects` | GET | `/api/v2/projects` |
+| 获取项目详情 | `get /projects/:id` | GET | `/api/v2/projects/:id` |
 
-## 5. 常见问题
+### Pagination
 
-| 问题 | 解决 |
-|------|------|
-| `CONFIG_MISSING` | 检查环境变量是否设置正确 |
-| 登录失败 | 确认账号密码是否正确 |
-| Token 过期 | 系统自动刷新，无需手动操作 |
-| 无数据 | 确认账号有对应模块的查看权限 |
+- `recPerPage` — 每页数量（默认 20，最大 1000）
+- `pageID` — 页码（从 1 开始）
+
+```bash
+node scripts/api.cjs get /users --limit=50
+node scripts/api.cjs get /projects --page=2 --limit=10
+```
+
+## Error Handling
+
+- `[CONFIG_MISSING]` — 缺少必须的环境变量，需设置 CHANDAO_URL / CHANDAO_ACCOUNT / CHANDAO_PASSWORD
+- `[ERROR] 登录失败` — 账号密码错误或禅道实例不可达
+- `[ERROR] 服务器错误 (HTTP 5xx)` — 禅道服务端异常
+- 业务错误（`status=fail`）— 显示禅道返回的具体错误信息
+- 敏感信息（密码、Token、手机号、邮箱）自动脱敏
