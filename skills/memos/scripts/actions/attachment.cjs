@@ -48,7 +48,7 @@ async function actionAttachments(callAPI, BASE_URL, argList) {
     const size = formatBytes(att.size || att.externalLink?.length);
     const type = att.type || att.mimeType || "未知";
     const url = att.externalLink
-      ? `${BASE_URL}${att.externalLink}`
+      ? att.externalLink
       : `(无外部链接)`;
 
     console.log(`\n📄 ${name}`);
@@ -115,7 +115,7 @@ function detectMimeType(filePath) {
  * 上传附件
  * 用法: api.cjs upload-attachment <文件路径> [--memo=ID] [--filename=xxx] [--type=MIME]
  */
-async function actionAttachmentUpload(callAPI, argList) {
+async function actionAttachmentUpload(callAPI, BASE_URL, argList) {
   const { flags, positional } = parseFlags(argList);
   const filePath = positional[0];
 
@@ -167,13 +167,23 @@ async function actionAttachmentUpload(callAPI, argList) {
   const name = data.name || "unknown";
   const size = formatBytes(data.size);
   const externalLink = data.externalLink
-    ? `${process.env.MEMOS_BASE_URL}${data.externalLink}`
+    ? data.externalLink
     : "(无链接)";
+
+  // 构建永久路径（笔记内容中使用的路径）
+  // API 返回的 name 格式: attachments/xxx
+  const permanentPath = externalLink !== "(无链接)"
+    ? `${BASE_URL}/file/attachments/${name}/${filename}`
+    : null;
 
   console.log(`\n✅ 附件上传成功`);
   console.log(`   名称: ${name}`);
   console.log(`   大小: ${size}`);
-  console.log(`   链接: ${externalLink}`);
+  if (permanentPath) {
+    console.log(`   永久路径: ${permanentPath}`);
+    console.log(`   💡 Markdown: \`![描述](${permanentPath})\``);
+  }
+  console.log(`   预签名URL: ${externalLink} (辅助验证，不嵌入笔记)`);
 }
 
 // --- delete-attachment ---
@@ -182,7 +192,7 @@ async function actionAttachmentUpload(callAPI, argList) {
  * 删除附件
  * 用法: api.cjs delete-attachment <附件ID>
  */
-async function actionAttachmentDelete(callAPI, argList) {
+async function actionAttachmentDelete(callAPI, BASE_URL, argList) {
   const { positional } = parseFlags(argList);
   const rawId = positional[0];
 
@@ -221,7 +231,7 @@ async function actionAttachmentDelete(callAPI, argList) {
   await callAPI("DELETE", `/api/v1/${name}`);
 
   console.log(`\n✅ 已删除附件: ${name}`);
-  console.log(`   链接: ${process.env.MEMOS_BASE_URL}/${name}`);
+  console.log(`   链接: ${BASE_URL}/${name}`);
 }
 
 // --- batch-delete-attachment ---
@@ -230,7 +240,7 @@ async function actionAttachmentDelete(callAPI, argList) {
  * 批量删除附件
  * 用法: api.cjs batch-delete-attachment <附件ID1> <附件ID2> ...
  */
-async function actionAttachmentBatchDelete(callAPI, argList) {
+async function actionAttachmentBatchDelete(callAPI, BASE_URL, argList) {
   const { positional } = parseFlags(argList);
 
   if (positional.length === 0) {
@@ -251,7 +261,7 @@ async function actionAttachmentBatchDelete(callAPI, argList) {
   await callAPI("POST", "/api/v1/attachments:batchDelete", JSON.stringify(body));
 
   console.log(`\n✅ 已批量删除 ${names.length} 个附件`);
-  console.log(`   链接: ${names.map(name => `${process.env.MEMOS_BASE_URL}/${name}`).join(', ')}`);
+  console.log(`   链接: ${names.map(name => `${BASE_URL}/${name}`).join(', ')}`);
 }
 
 module.exports = {
