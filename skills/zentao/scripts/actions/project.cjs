@@ -281,7 +281,8 @@ if (require.main === module) {
   }
 
   async function run() {
-    const params = parseParams(process.argv.slice(4));
+    const sliceStart = action === 'create-project' ? 3 : 4;
+    const params = parseParams(process.argv.slice(sliceStart));
 
     switch (action) {
       case 'create-project':
