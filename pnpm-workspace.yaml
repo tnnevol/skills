@@ -1,0 +1,10 @@
+shellEmulator: true
+trustPolicy: no-downgrade
+
+packages:
+  - 'apps/*'
+  - 'skills/*'
+
+onlyBuiltDependencies:
+  - esbuild
+  - simple-git-hooks

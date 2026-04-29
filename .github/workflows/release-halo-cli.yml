@@ -1,0 +1,96 @@
+name: Release Halo CLI
+
+# 触发条件：push tag 时自动执行（如 git tag v2.0.0 && git push origin v2.0.0）
+# 用于自动编译四平台二进制并发布 @tnnevol/halo-cli 到 npm
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            bin: halo-linux
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            bin: halo-macos
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            bin: halo-macos-arm
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bin: halo-windows.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+          key: ${{ runner.os }}-cargo-${{ hashFiles('apps/halo-cli/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Build
+        working-directory: apps/halo-cli
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Rename binary
+        working-directory: apps/halo-cli
+        run: cp target/${{ matrix.target }}/release/halo-cli${{ matrix.bin == 'halo-windows.exe' && '.exe' || '' }} ${{ matrix.bin }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.bin }}
+          path: apps/halo-cli/${{ matrix.bin }}
+          if-no-files-found: error
+
+  publish:
+    name: Publish to npm
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+
+      - name: Setup pnpm
+        run: npm i -g pnpm@10.32.1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: apps/halo-cli/bin/
+
+      - name: Flatten artifact directories
+        working-directory: apps/halo-cli/bin/
+        run: |
+          find . -type f -exec mv -f {} . \;
+          find . -type d -empty -delete
+
+      - name: Publish to npm
+        working-directory: apps/halo-cli
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

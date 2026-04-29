@@ -1,0 +1,34 @@
+{
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
+  "scripts": {
+    "lint": "eslint .",
+    "halo:build": "pnpm --filter @tnnevol/halo-cli build",
+    "halo:build:linux": "pnpm --filter @tnnevol/halo-cli build:linux",
+    "halo:build:macos": "pnpm --filter @tnnevol/halo-cli build:macos",
+    "halo:build:windows": "pnpm --filter @tnnevol/halo-cli build:windows",
+    "halo:clean": "pnpm --filter @tnnevol/halo-cli clean",
+    "halo:verify": "pnpm --filter @tnnevol/halo-cli verify",
+    "halo:publish": "pnpm --filter @tnnevol/halo-cli publish",
+    "halo:bump": "pnpm --filter @tnnevol/halo-cli bump",
+    "halo:bump:patch": "pnpm --filter @tnnevol/halo-cli bump:patch",
+    "halo:bump:minor": "pnpm --filter @tnnevol/halo-cli bump:minor",
+    "halo:bump:major": "pnpm --filter @tnnevol/halo-cli bump:major"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^7.7.2",
+    "@clack/prompts": "^1.1.0",
+    "@types/node": "^25.5.0",
+    "eslint": "^10.0.3",
+    "lint-staged": "^16.3.3",
+    "simple-git-hooks": "^2.13.1",
+    "typescript": "^5.9.3"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,ts,mjs,mts}": "eslint --fix"
+  }
+}

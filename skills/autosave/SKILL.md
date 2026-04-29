@@ -1,0 +1,52 @@
+---
+name: autosave
+description: Assistant for autosave, an open-source cloud drive autosave service. Use when the user asks about managing save tasks, configurations, or securely interacting with the autosave service via API.
+---
+
+# SKILL: autosave
+
+autosave is an open-source cloud drive autosave service.
+It automatically saves and manages cloud drive resources (e.g., shared links, folders) by converting them into persistent save tasks.
+
+## Security Guidelines
+
+This skill follows these security guidelines to protect the API token:
+
+1. Do not expose the `AUTO_SAVE_TOKEN` value in chat, files, code, logs, or command arguments.
+2. All API calls should go through the provided script (`scripts/api.cjs`) rather than using `curl`, `wget`, `fetch`, or other HTTP clients to call autosave endpoints directly.
+3. Environment variables (`AUTO_SAVE_BASE_URL`, `AUTO_SAVE_TOKEN`) are read via `process.env` at runtime only. Do not hardcode credentials into any file.
+4. Sensitive values in logs or output are automatically sanitized by `scripts/sanitize.cjs`.
+5. `.env` files must not be committed to version control.
+6. Do not modify the security scripts to disable masking or redirect output.
+
+## How to Execute
+
+1. **First invocation only** — read `${CLAUDE_SKILL_DIR}/docs/setup.md` for configuration, auth, and runtime detection.
+2. Match the action from the table below.
+3. Read the corresponding doc file for detailed steps.
+4. If no arguments or unrecognized action, show the help table below.
+5. If the user asks about autosave (what it is, how to use a command, or any API usage question) — read `${CLAUDE_SKILL_DIR}/docs/help.md` and follow the instructions there.
+
+## Actions
+
+| Action | Description | Details |
+| -------- | ------------- | --------- |
+| `add-task` | Add a new save task | `docs/actions-tasks.md` |
+| `config` | Get the overall configuration | `docs/actions-config.md` |
+| `update-config` | Update the overall configuration | `docs/actions-config.md` |
+| `run-now` | Run the script task immediately | `docs/actions-run.md` |
+| `search` | Search for task suggestions with validity check | `docs/actions-tasks.md` |
+| `detail` | View share details | `docs/actions-detail.md` |
+| `help` | FAQ and help | `docs/help.md` |
+
+### `help` (or no arguments) — Show available actions
+
+| Action | Usage | Description |
+| -------- | ------- | ------------- |
+| `add-task` | `/autosave add-task <share_url> [--name=xxx]` | 添加转存任务 |
+| `config` | `/autosave config` | 获取整体配置 |
+| `update-config` | `/autosave update-config <config_json>` | 更新整体配置 |
+| `run-now` | `/autosave run-now [--taskname=xxx] [--shareurl=xxx] [--savepath=xxx] [--pattern=xxx] [--replace=xxx]` | 立即运行脚本任务 |
+| `search` | `/autosave search <query> [--depth=N] [--tree] [--max-depth=N]` | 搜索任务建议（带有效性检查和可选目录树） |
+| `detail` | `/autosave detail <share_url>` | 查看分享详情 |
+| `help` | `/autosave help <问题>` | 回答相关问题 |
