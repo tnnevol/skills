@@ -43,8 +43,29 @@ async function listTasks(params = {}) {
     throw new Error(`[查询失败] ${res.error}`);
   }
 
-  // 取 result 里的数组
-  const taskList = res.data && res.data.result ? res.data.result : [];
+  // 禅道 v2 API 响应结构兼容：
+  // - { result: { tasks: [...] } } (项目任务列表)
+  // - { result: { data: { data: [...] } } } (嵌套结构)
+  // - { result: [...] } (直接数组)
+  let taskList = [];
+  if (res.data && typeof res.data === 'object') {
+    const result = res.data.result;
+    if (Array.isArray(result)) {
+      taskList = result;
+    } else if (result && typeof result === 'object') {
+      // 取 result 中第一个数组字段
+      for (const key of Object.keys(result)) {
+        if (Array.isArray(result[key])) {
+          taskList = result[key];
+          break;
+        }
+      }
+      // 兜底：如果 result.data.data 是数组
+      if (taskList.length === 0 && result.data && result.data.data && Array.isArray(result.data.data)) {
+        taskList = result.data.data;
+      }
+    }
+  }
   const tasks = Array.isArray(taskList) ? taskList : [];
 
   // 表格输出
@@ -87,8 +108,20 @@ async function getTask(taskId) {
     throw new Error(`[查询失败] ${res.error}`);
   }
 
-  // 动态取任务数据
-  const task = res.data && res.data.result ? res.data.result : res.data;
+  // 动态取任务数据（兼容多种响应结构）
+  let task = null;
+  if (res.data && typeof res.data === 'object') {
+    const result = res.data.result;
+    if (result && typeof result === 'object' && !Array.isArray(result)) {
+      task = result;
+    } else if (res.data && typeof res.data === 'object' && Object.keys(res.data).length > 1) {
+      task = res.data;
+    } else {
+      task = res.data;
+    }
+  } else {
+    task = res.data;
+  }
 
   console.log('');
   console.log(`📋 任务: ${task.name || taskId}`);

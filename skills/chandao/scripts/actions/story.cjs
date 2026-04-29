@@ -95,7 +95,7 @@ async function listStories(params = {}) {
   if (params.priority) query.priority = params.priority;
   if (params.orderBy) query.orderBy = params.orderBy;
 
-  const res = await queryStoriesEndpoint(params, '/stories', query);
+  const res = await get('/stories', query);
   if (!res.ok) throw new Error(res.error);
 
   // 取 data 中第一个数组字段

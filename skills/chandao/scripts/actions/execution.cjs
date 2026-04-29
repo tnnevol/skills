@@ -292,6 +292,114 @@ async function closeExecution(executionId) {
   return res.data;
 }
 
+// ========== CLI 入口 ==========
+
+if (require.main === module) {
+  const action = process.argv[2];
+  const arg1 = process.argv[3];
+
+  function parseParams(args) {
+    const params = {};
+    for (const a of args) {
+      if (a.startsWith('--')) {
+        const [key, ...valueParts] = a.slice(2).split('=');
+        const value = valueParts.length ? valueParts.join('=') : true;
+        const camelKey = key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+        params[camelKey] = value;
+      }
+    }
+    return params;
+  }
+
+  async function run() {
+    // 带 id 的命令：get-execution, update-execution, start-execution, suspend-execution, close-execution, delete-execution
+    const needsId = ['get-execution', 'update-execution', 'start-execution', 'suspend-execution', 'close-execution', 'delete-execution'].includes(action);
+    
+    let params;
+    if (needsId) {
+      params = parseParams(process.argv.slice(4));
+    } else {
+      params = parseParams(process.argv.slice(3));
+    }
+
+    switch (action) {
+      case 'list-execution':
+        await listExecution(params);
+        break;
+      case 'get-execution':
+        if (!arg1) {
+          console.error('用法: execution.cjs get-execution <id>');
+          process.exit(1);
+        }
+        await getExecution(arg1);
+        break;
+      case 'create-execution':
+        await createExecution(params);
+        break;
+      case 'update-execution':
+        if (!arg1) {
+          console.error('用法: execution.cjs update-execution <id> [--name=xxx] [--begin=xxx] ...');
+          process.exit(1);
+        }
+        await updateExecution(arg1, params);
+        break;
+      case 'delete-execution':
+        if (!arg1) {
+          console.error('用法: execution.cjs delete-execution <id>');
+          process.exit(1);
+        }
+        await deleteExecution(arg1, params);
+        break;
+      case 'start-execution':
+        if (!arg1) {
+          console.error('用法: execution.cjs start-execution <id>');
+          process.exit(1);
+        }
+        await startExecution(arg1);
+        break;
+      case 'suspend-execution':
+        if (!arg1) {
+          console.error('用法: execution.cjs suspend-execution <id>');
+          process.exit(1);
+        }
+        await suspendExecution(arg1);
+        break;
+      case 'close-execution':
+        if (!arg1) {
+          console.error('用法: execution.cjs close-execution <id>');
+          process.exit(1);
+        }
+        await closeExecution(arg1);
+        break;
+      default:
+        console.log('用法: execution.cjs <list-execution|get-execution|create-execution|update-execution|delete-execution|start-execution|suspend-execution|close-execution> [id] [options]');
+        console.log('');
+        console.log('命令:');
+        console.log('  list-execution     执行列表');
+        console.log('  get-execution      执行详情');
+        console.log('  create-execution   创建执行');
+        console.log('  update-execution   更新执行');
+        console.log('  delete-execution   删除执行');
+        console.log('  start-execution    启动执行');
+        console.log('  suspend-execution  暂停执行');
+        console.log('  close-execution    关闭执行');
+        console.log('');
+        console.log('选项:');
+        console.log('  --dry-run    模拟执行，不发送真实请求');
+        console.log('  --page=N     分页页码');
+        console.log('  --limit=N    每页数量');
+        console.log('  --project=N  按项目过滤');
+        console.log('  --product=N  按产品过滤');
+        console.log('  --status=X   按状态过滤 (wait/doing/suspended/closed)');
+    }
+  }
+
+  run().catch((e) => {
+    console.error(`❌ ${e.message}`);
+    process.exit(1);
+  });
+}
+
 // ========== 导出 API ==========
 
 module.exports = {
