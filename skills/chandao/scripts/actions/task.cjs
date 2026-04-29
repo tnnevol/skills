@@ -24,6 +24,10 @@ const TASK_STATUSES = ['wait', 'doing', 'done', 'canceled'];
 
 /**
  * list-task — 任务列表查询
+ * 
+ * 策略：先尝试 /tasks 直接查询，失败时通过 /executions/<id>/tasks 回退
+ * 因为禅道 v2 的 /tasks 端点返回空，/projects/ID/tasks 返回 403，
+ * 而 /executions/ID/tasks 是唯一可靠的任务查询途径。
  */
 async function listTasks(params = {}) {
   const page = params.page || 1;
@@ -33,51 +37,65 @@ async function listTasks(params = {}) {
     recPerPage: limit,
     pageID: page,
   };
-  if (params.project) query.project = params.project;
   if (params.execution) query.execution = params.execution;
   if (params.assignedTo) query.assignedTo = params.assignedTo;
   if (params.type) query.type = params.type;
   if (params.status) query.status = params.status;
 
-  // 先尝试直接查询 /tasks
+  // 尝试直接查询 /tasks（如果指定了 project，此端点会 403）
   let res = await get('/tasks', query);
 
-  // 如果返回空结果且没有过滤参数，尝试用 execution 过滤
-  const hasNoFilter = !params.project && !params.execution && !params.assignedTo;
-  const isEmptyResult = !res.ok ||
-    (res.ok && res.data && !res.data.tasks &&
-     (!res.data.result || (typeof res.data.result === 'object' &&
-       !Object.values(res.data.result).some(v => Array.isArray(v) && v.length > 0))));
-
-  if (isEmptyResult && hasNoFilter) {
-    try {
-      // 直接查询 executions 获取第一个执行 ID
-      const execRes = await get('/executions', { recPerPage: 1, pageID: 1 });
+  // 如果查询失败或返回空结果，通过 executions 回退
+  const hasTasks = res.ok && res.data && Array.isArray(res.data.tasks) && res.data.tasks.length > 0;
+  if (!hasTasks) {
+    let executionIds = [];
+    if (params.execution) {
+      executionIds = [params.execution];
+    } else {
+      // 获取所有相关 execution IDs
+      let execQuery = { recPerPage: 100, pageID: 1 };
+      if (params.project) execQuery.project = params.project;
+      const execRes = await get('/executions', execQuery);
       if (execRes.ok) {
         const items = execRes.data.executions || execRes.data.data || [];
-        if (items.length > 0) {
-          const execId = items[0].id;
-          query.execution = execId;
-          res = await get('/tasks', query);
+        executionIds = items.map(e => e.id);
+      }
+    }
+
+    if (executionIds.length > 0) {
+      // 去重收集所有任务
+      const taskMap = new Map();
+      for (const execId of executionIds) {
+        try {
+          const taskRes = await get(`/executions/${execId}/tasks`, { recPerPage: limit, pageID: page });
+          if (taskRes.ok && taskRes.data && Array.isArray(taskRes.data.tasks)) {
+            for (const t of taskRes.data.tasks) {
+              taskMap.set(t.id, t);
+            }
+          }
+        } catch {
+          // 忽略单个 execution 查询失败
         }
       }
-    } catch {
-      // 回退失败，使用原始结果
+      const tasks = Array.from(taskMap.values());
+
+      if (tasks.length === 0) {
+        console.log('📭 暂无任务');
+        return tasks;
+      }
+
+      _printTaskTable(tasks, page);
+      return tasks;
     }
   }
 
+  // 处理直接查询成功的结果
   if (!res.ok) {
     throw new Error(`[查询失败] ${res.error}`);
   }
 
-  // 禅道 v2 API 响应结构兼容：
-  // - { status, tasks: [...], pager } (直接任务列表)
-  // - { result: { tasks: [...] } } (项目任务列表)
-  // - { result: { data: { data: [...] } } } (嵌套结构)
-  // - { result: [...] } (直接数组)
   let taskList = [];
   if (res.data && typeof res.data === 'object') {
-    // 优先检查顶层 tasks 字段
     if (Array.isArray(res.data.tasks)) {
       taskList = res.data.tasks;
     } else {
@@ -85,14 +103,12 @@ async function listTasks(params = {}) {
       if (Array.isArray(result)) {
         taskList = result;
       } else if (result && typeof result === 'object') {
-        // 取 result 中第一个数组字段
         for (const key of Object.keys(result)) {
           if (Array.isArray(result[key])) {
             taskList = result[key];
             break;
           }
         }
-        // 兜底：如果 result.data.data 是数组
         if (taskList.length === 0 && result.data && result.data.data && Array.isArray(result.data.data)) {
           taskList = result.data.data;
         }
@@ -101,12 +117,19 @@ async function listTasks(params = {}) {
   }
   const tasks = Array.isArray(taskList) ? taskList : [];
 
-  // 表格输出
   if (tasks.length === 0) {
     console.log('📭 暂无任务');
     return tasks;
   }
 
+  _printTaskTable(tasks, page);
+  return tasks;
+}
+
+/**
+ * 打印任务表格（内部函数）
+ */
+function _printTaskTable(tasks, page) {
   console.log('');
   console.log('| ID | 名称 | 项目 | 类型 | 指派给 | 状态 | 进度 | 截止日期 |');
   console.log('|----|------|------|------|--------|------|------|----------|');
@@ -124,8 +147,6 @@ async function listTasks(params = {}) {
     console.log(`| ${idStr} | ${nameStr} | ${projectStr} | ${typeStr} | ${assignedStr} | ${statusStr} | ${progressStr} | ${deadlineStr} |`);
   }
   console.log(`\n共 ${tasks.length} 条 (第 ${page} 页)`);
-
-  return tasks;
 }
 
 // ========== 获取任务详情 ==========
