@@ -34,35 +34,68 @@ async function listTasks(params = {}) {
     pageID: page,
   };
   if (params.project) query.project = params.project;
+  if (params.execution) query.execution = params.execution;
   if (params.assignedTo) query.assignedTo = params.assignedTo;
   if (params.type) query.type = params.type;
   if (params.status) query.status = params.status;
 
-  const res = await get('/tasks', query);
+  // 先尝试直接查询 /tasks
+  let res = await get('/tasks', query);
+
+  // 如果返回空结果且没有过滤参数，尝试用 execution 过滤
+  const hasNoFilter = !params.project && !params.execution && !params.assignedTo;
+  const isEmptyResult = !res.ok ||
+    (res.ok && res.data && !res.data.tasks &&
+     (!res.data.result || (typeof res.data.result === 'object' &&
+       !Object.values(res.data.result).some(v => Array.isArray(v) && v.length > 0))));
+
+  if (isEmptyResult && hasNoFilter) {
+    try {
+      // 直接查询 executions 获取第一个执行 ID
+      const execRes = await get('/executions', { recPerPage: 1, pageID: 1 });
+      if (execRes.ok) {
+        const items = execRes.data.executions || execRes.data.data || [];
+        if (items.length > 0) {
+          const execId = items[0].id;
+          query.execution = execId;
+          res = await get('/tasks', query);
+        }
+      }
+    } catch {
+      // 回退失败，使用原始结果
+    }
+  }
+
   if (!res.ok) {
     throw new Error(`[查询失败] ${res.error}`);
   }
 
   // 禅道 v2 API 响应结构兼容：
+  // - { status, tasks: [...], pager } (直接任务列表)
   // - { result: { tasks: [...] } } (项目任务列表)
   // - { result: { data: { data: [...] } } } (嵌套结构)
   // - { result: [...] } (直接数组)
   let taskList = [];
   if (res.data && typeof res.data === 'object') {
-    const result = res.data.result;
-    if (Array.isArray(result)) {
-      taskList = result;
-    } else if (result && typeof result === 'object') {
-      // 取 result 中第一个数组字段
-      for (const key of Object.keys(result)) {
-        if (Array.isArray(result[key])) {
-          taskList = result[key];
-          break;
+    // 优先检查顶层 tasks 字段
+    if (Array.isArray(res.data.tasks)) {
+      taskList = res.data.tasks;
+    } else {
+      const result = res.data.result;
+      if (Array.isArray(result)) {
+        taskList = result;
+      } else if (result && typeof result === 'object') {
+        // 取 result 中第一个数组字段
+        for (const key of Object.keys(result)) {
+          if (Array.isArray(result[key])) {
+            taskList = result[key];
+            break;
+          }
         }
-      }
-      // 兜底：如果 result.data.data 是数组
-      if (taskList.length === 0 && result.data && result.data.data && Array.isArray(result.data.data)) {
-        taskList = result.data.data;
+        // 兜底：如果 result.data.data 是数组
+        if (taskList.length === 0 && result.data && result.data.data && Array.isArray(result.data.data)) {
+          taskList = result.data.data;
+        }
       }
     }
   }

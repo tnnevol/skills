@@ -28,7 +28,7 @@ const EXECUTION_MODELS = ['waterfall', 'agile', 'scrum', 'kanban'];
 
 /**
  * 列出执行
- * GET /api.php/v2/operations
+ * GET /api.php/v2/executions
  */
 async function listExecution(params) {
   const filters = [];
@@ -48,7 +48,7 @@ async function listExecution(params) {
     filters.push(`status=${params.status}`);
   }
 
-  const url = filters.length > 0 ? `/operations?${filters.join('&')}` : '/operations';
+  const url = filters.length > 0 ? `/executions?${filters.join('&')}` : '/executions';
 
   // 支持 limit 和 offset
   const limit = parseInt(params.limit) || 20;
@@ -66,11 +66,10 @@ async function listExecution(params) {
     throw new Error(`[列表查询失败] ${res.error}`);
   }
 
-  // 格式化输出
-  const total = res.data.data?.total || res.data.data?.length || 0;
+  // 格式化输出 — 禅道 v2 API 响应: { status, executions: [...], pager }
+  const items = res.data.executions || res.data.data || [];
+  const total = res.data.pager?.recTotal || items.length || 0;
   console.log(`📋 执行列表（共 ${total} 条）:\n`);
-  
-  const items = res.data.data?.data || res.data.data || [];
   items.forEach((exec, index) => {
     const statusText = EXECUTION_STATUSES[exec.status] || exec.status;
     console.log(`📝 ${index + 1}. ${exec.name} (ID: ${exec.id})`);
@@ -90,12 +89,12 @@ async function listExecution(params) {
 
 /**
  * 获取执行详情
- * GET /api.php/v2/operations/<id>
+ * GET /api.php/v2/executions/<id>
  */
 async function getExecution(executionId) {
   id(executionId, '执行 ID');
 
-  const res = await get(`/operations/${executionId}`);
+  const res = await get(`/executions/${executionId}`);
   
   if (!res.ok) {
     throw new Error(`[获取失败] ${res.error}`);
@@ -125,7 +124,7 @@ async function getExecution(executionId) {
 
 /**
  * 创建执行
- * POST /api.php/v2/operations
+ * POST /api.php/v2/executions
  */
 async function createExecution(params) {
   // 参数校验
@@ -156,7 +155,7 @@ async function createExecution(params) {
     owner: params.owner
   };
 
-  const res = await post('/operations', body, {}, { dryRun: params.dryRun });
+  const res = await post('/executions', body, {}, { dryRun: params.dryRun });
   if (!res.ok) {
     throw new Error(`[创建失败] ${res.error}`);
   }
@@ -172,7 +171,7 @@ async function createExecution(params) {
 
 /**
  * 更新执行
- * PUT /api.php/v2/operations/<id>
+ * PUT /api.php/v2/executions/<id>
  */
 async function updateExecution(executionId, params) {
   id(executionId, '执行 ID');
@@ -208,7 +207,7 @@ async function updateExecution(executionId, params) {
     throw new Error('[更新失败] 结束日期不能早于开始日期');
   }
 
-  const res = await put(`/operations/${executionId}`, updateFields);
+  const res = await put(`/executions/${executionId}`, updateFields);
   if (!res.ok) {
     throw new Error(`[更新失败] ${res.error}`);
   }
@@ -221,12 +220,12 @@ async function updateExecution(executionId, params) {
 
 /**
  * 删除执行（归档）
- * DELETE /api.php/v2/operations/<id>
+ * DELETE /api.php/v2/executions/<id>
  */
 async function deleteExecution(executionId, params = {}) {
   id(executionId, '执行 ID');
 
-  const res = await del(`/operations/${executionId}`, {}, { dryRun: params.dryRun });
+  const res = await del(`/executions/${executionId}`, {}, { dryRun: params.dryRun });
   if (!res.ok) {
     throw new Error(`[删除失败] ${res.error}`);
   }
@@ -242,12 +241,12 @@ async function deleteExecution(executionId, params = {}) {
 
 /**
  * 启动执行
- * PUT /api.php/v2/operations/<id>/start
+ * PUT /api.php/v2/executions/<id>/start
  */
 async function startExecution(executionId) {
   id(executionId, '执行 ID');
 
-  const res = await put(`/operations/${executionId}/start`, {});
+  const res = await put(`/executions/${executionId}/start`, {});
   if (!res.ok) {
     throw new Error(`[启动失败] ${res.error}`);
   }
@@ -260,12 +259,12 @@ async function startExecution(executionId) {
 
 /**
  * 暂停执行
- * PUT /api.php/v2/operations/<id>/suspend
+ * PUT /api.php/v2/executions/<id>/suspend
  */
 async function suspendExecution(executionId) {
   id(executionId, '执行 ID');
 
-  const res = await put(`/operations/${executionId}/suspend`, {});
+  const res = await put(`/executions/${executionId}/suspend`, {});
   if (!res.ok) {
     throw new Error(`[暂停失败] ${res.error}`);
   }
@@ -278,12 +277,12 @@ async function suspendExecution(executionId) {
 
 /**
  * 关闭执行
- * PUT /api.php/v2/operations/<id>/close
+ * PUT /api.php/v2/executions/<id>/close
  */
 async function closeExecution(executionId) {
   id(executionId, '执行 ID');
 
-  const res = await put(`/operations/${executionId}/close`, {});
+  const res = await put(`/executions/${executionId}/close`, {});
   if (!res.ok) {
     throw new Error(`[关闭失败] ${res.error}`);
   }
