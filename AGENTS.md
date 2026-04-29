@@ -1,253 +1,69 @@
-# Skills Generator
+# Tnnevol Skills
 
-Generate [Agent Skills](https://agentskills.io/home) from project documentation.
+[Agent Skills](https://agentskills.io/home) 合集，用于 AI 辅助开发。
 
-PLEASE STRICTLY FOLLOW THE BEST PRACTICES FOR SKILL: https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
-
-- Focus on agents capabilities and practical usage patterns.
-- Ignore user-facing guides, introductions, get-started, install guides, etc.
-- Ignore content that LLM agents already confident about in their training data.
-- Make the skill as concise as possible, avoid creating too many references.
-
-## Skill Source Types
-
-There are two types of skill sources. The project lists are defined in `meta.ts`:
-
-### Type 1: Generated Skills (`sources/`)
-
-For OSS projects **without existing skills**. We clone the repo as a submodule and generate skills from their documentation.
-
-- **Projects:** Vue, Nuxt, Vite, UnoCSS
-- **Workflow:** Read docs → Understand → Generate skills
-- **Source:** `sources/{project}/docs/`
-
-### Type 2: Synced Skills (`vendor/`)
-
-For projects that **already maintain their own skills**. We clone their repo as a submodule and sync specified skills to ours.
-
-- **Projects:** Slidev, VueUse
-- **Workflow:** Pull updates → Copy specified skills (with optional renaming)
-- **Source:** `vendor/{project}/skills/{skill-name}/`
-- **Config:** Each vendor specifies which skills to sync and their output names in `meta.ts`
-
-### Type 3: Hand-written Skills
-
-For skills that are written by Tnnevol with his preferences, experience, tastes and best practices.
-
-You don't need to do anything about them unless being asked.
-
-## Repository Structure
+## 项目结构
 
 ```
 .
-├── meta.ts                     # Project metadata (repos & URLs)
-├── instructions/               # Instructions for generating skills
-│   └── {project}.md            # Instructions for generating skills for {project}
-│
-├── sources/                    # Type 1: OSS repos (generate from docs)
-│   └── {project}/
-│       └── docs/               # Read documentation from here
-│
-├── vendor/                     # Type 2: Projects with existing skills (sync only)
-│   └── {project}/
-│       └── skills/
-│           └── {skill-name}/   # Individual skills to sync
-│
-└── skills/                     # Output directory (generated or synced)
-    └── {output-name}/
-        ├── SKILL.md           # Index of all skills
-        ├── GENERATION.md       # Tracking metadata (for generated skills)
-        ├── SYNC.md             # Tracking metadata (for synced skills)
-        └── references/
-            └── *.md            # Individual skill files
+├── skills/                     # 技能目录
+│   └── {skill-name}/
+│       ├── SKILL.md           # 技能索引和元数据
+│       ├── docs/              # 技能文档（可选）
+│       ├── references/        # 技能参考文件（可选）
+│       └── scripts/           # 技能配套脚本（可选）
+├── apps/                      # 应用目录（如 halo-cli）
+├── package.json
+└── eslint.config.js
 ```
 
-**Important:** For Type 1 (generated), the `skills/{project}/` name must match `sources/{project}/`. For Type 2 (synced), the output name is configured in `meta.ts` and may differ from the source skill name.
+## 技能规范
 
-## Workflows
-
-### For Generated Skills (Type 1)
-
-#### Adding a New Project
-
-1. **Add entry to `meta.ts`** in the `submodules` object:
-   ```ts
-   export const submodules = {
-     // ... existing entries
-     'new-project': 'https://github.com/org/repo',
-   }
-   ```
-
-2. **Run sync script** to clone the submodule:
-   ```bash
-   nr start init -y
-   ```
-   This will clone the repository to `sources/{project}/`
-
-3. **Follow the generation guide** below to create the skills
-
-#### General Instructions for Generation
-
-- Focus on agents capabilities and practical usage patterns. For user-facing guides, introductions, get-started, or common knowledge that LLM agents already know, you can skip those content.
-- Categorize each references into `core`, `features`, `best-practices`, `advanced`, etc categories, and prefix the reference file name with the category. For each feature field, feel free to create more categories if needed to better organize the content.
-
-#### Creating New Skills
-
-- **Read** source docs from `sources/{project}/docs/`
-- **Read** the instructions in `instructions/{project}.md` for specific generation instructions if exists
-- **Understand** the documentation thoroughly
-- **Create** skill files in `skills/{project}/references/`
-- **Create** `SKILL.md` index listing all skills
-- **Create** `GENERATION.md` with the source git SHA
-
-#### Updating Generated Skills
-
-1. **Check** git diff since the SHA recorded in `GENERATION.md`:
-   ```bash
-   cd sources/{project}
-   git diff {old-sha}..HEAD -- docs/
-   ```
-2. **Update** affected skill files based on changes
-3. **Update** `SKILL.md` with the new version of the tool/project and skills table.
-4. **Update** `GENERATION.md` with new SHA
-
-### For Synced Skills (Type 2)
-
-#### Initial Sync
-
-1. **Copy** specified skills from `vendor/{project}/skills/{skill-name}/` to `skills/{output-name}/`
-2. **Create** `SYNC.md` with the vendor git SHA
-
-#### Updating Synced Skills
-
-1. **Check** git diff since the SHA recorded in `SYNC.md`:
-   ```bash
-   cd vendor/{project}
-   git diff {old-sha}..HEAD -- skills/{skill-name}/
-   ```
-2. **Copy** changed files from `vendor/{project}/skills/{skill-name}/` to `skills/{output-name}/`
-3. **Update** `SYNC.md` with new SHA
-
-**Note:** Do NOT modify synced skills manually. Changes should be contributed upstream to the vendor project.
-
-## File Formats
+每个技能必须包含以下文件：
 
 ### `SKILL.md`
 
-Index file listing all skills with brief descriptions. Name should be in `kebab-case`.
-
-The version should be the date of the last sync.
-
-Also record the version of the tool/project when the skills were generated.
+技能索引文件，包含 frontmatter 元数据和技能概览。
 
 ```markdown
 ---
-name: {name}
-description: {description}
+name: {skill-name}
+description: {简短描述}
 metadata:
   author: Tnnevol
-  version: "2026.1.1"
-  source: Generated from {source-url}, scripts located at https://github.com/tnnevol/skills
+  version: "YYYY.MM.DD"
 ---
 
-> The skill is based on {project} v{version}, generated at {date}.
-
-// Some concise summary/context/introduction of the project
-
-## Core References
-
-| Topic | Description | Reference |
-|-------|-------------|-----------|
-| Markdown Syntax | Slide separators, frontmatter, notes, code blocks | [core-syntax](references/core-syntax.md) |
-| Animations | v-click, v-clicks, motion, transitions | [core-animations](references/core-animations.md) |
-| Headmatter | Deck-wide configuration options | [core-headmatter](references/core-headmatter.md) |
-
-## Features
-
-### Feature a
-
-| Topic | Description | Reference |
-|-------|-------------|-----------|
-| Feature A Editor | Description of feature a | [feature-a](references/feature-a-foo.md) |
-| Feature A Preview | Description of feature b | [feature-b](references/feature-a-bar.md) |
-
-### Feature b
-
-| Topic | Description | Reference |
-|-------|-------------|-----------|
-| Feature B | Description of feature b | [feature-b](references/feature-b-bar.md) |
-
-// ...
-```
-
-### `GENERATION.md`
-
-Tracking metadata for generated skills (Type 1):
-
-```markdown
-# Generation Info
-
-- **Source:** `sources/{project}`
-- **Git SHA:** `abc123def456...`
-- **Generated:** 2024-01-15
-```
-
-### `SYNC.md`
-
-Tracking metadata for synced skills (Type 2):
-
-```markdown
-# Sync Info
-
-- **Source:** `vendor/{project}/skills/{skill-name}`
-- **Git SHA:** `abc123def456...`
-- **Synced:** 2024-01-15
-```
-
-### `references/*.md`
-
-Individual skill files. One concept per file.
-
-At the end of the file, include the reference links to the source documentation.
-
-```markdown
----
-name: {name}
-description: {description}
----
-
-# {Concept Name}
+# {Skill Name}
 
 Brief description of what this skill covers.
 
-## Usage
+## Core References
 
-Code examples and practical patterns.
-
-## Key Points
-
-- Important detail 1
-- Important detail 2
-
-<!--
-Source references:
-- {source-url}
-- {source-url}
-- {source-url}
--->
+| Topic   | Description | Reference                  |
+| ------- | ----------- | -------------------------- |
+| Topic A | Description | [topic-a](docs/topic-a.md) |
 ```
 
-## Writing Guidelines
+### `references/`
 
-When generating skills (Type 1 only):
+技能文档目录或参考文件，存放具体的技能说明和使用指南。
 
-1. **Rewrite for agents** - Don't copy docs verbatim; synthesize for LLM consumption
-2. **Be practical** - Focus on usage patterns and code examples
-3. **Be concise** - Remove fluff, keep essential information
-4. **One concept per file** - Split large topics into separate skill files
-5. **Include code** - Always provide working code examples
-6. **Explain why** - Not just how to use, but when and why
+### `scripts/`
 
-## Supported Projects
+技能配套脚本，用于与外部 API 交互等操作。
 
-See `meta.ts` for the canonical list of projects and their repository URLs.
+## 添加新技能
+
+1. 在 `skills/` 下创建技能目录（kebab-case 命名）
+2. 创建 `SKILL.md` 索引文件，包含 frontmatter 和概览
+3. 在 `references/` 中添加具体的技能文档
+4. 如有需要，在 `scripts/` 中添加配套脚本
+5. 在 `README.md` 的技能列表中更新
+
+## 编写指南
+
+1. **面向 Agent** - 内容应为 AI 辅助开发场景提供实用信息
+2. **简洁实用** - 聚焦使用模式和代码示例，去除冗余
+3. **结构清晰** - 使用 SKILL.md 作为索引，按主题组织参考文件
+4. **代码优先** - 提供可运行的代码示例
