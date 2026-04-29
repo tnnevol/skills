@@ -90,6 +90,39 @@ $RUNTIME "$API_SCRIPT" comments abc123 "" --operation=delete --comment-id=commen
 
 **所有 Agent 需统一遵守此规则，保证行为一致性。**
 
+## ⚠️ 重要：Shell 转义问题与脚本调用法
+
+当评论内容包含 Markdown 反引号 (\`)、双引号 (") 或特殊字符时，直接通过命令行传参会被 Shell 截断或解析错误。
+
+**错误示例 (内容会被 Shell 吃掉):**
+```bash
+node api.cjs comments abc123 "请检查 `story.cjs` 的引用" # ❌ 反引号会执行或被删
+```
+
+**正确做法 (使用脚本绕过 Shell):**
+对于复杂评论内容（如自动化任务回复、代码反馈），请创建临时脚本文件：
+
+```javascript
+// /tmp/add_comment.cjs
+process.chdir('/opt/data/skills/memos');
+const { BASE_URL, ACCESS_TOKEN } = require('/opt/data/skills/memos/scripts/env.cjs');
+
+(async function() {
+  const content = "包含 `代码块` 和 **Markdown** 的复杂评论内容...";
+  const res = await fetch(BASE_URL + '/api/v1/memos/memos/abc123/comments', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + ACCESS_TOKEN
+    },
+    body: JSON.stringify({ content, visibility: 'PROTECTED' })
+  });
+  const data = await res.json();
+  console.log('✅ 评论已添加:', data.name);
+})();
+```
+然后运行: `node /tmp/add_comment.cjs`
+
 ## 高级用法
 
 ### 1. 添加评论到现有 Memo
