@@ -93,6 +93,13 @@ async function request(method, endpoint, body, query, options = {}, retries = 2)
     const newQuery = { ...query };
     delete newQuery.project;
     query = newQuery;
+  } else if (endpoint === '/stories' && query && query.product) {
+    // /api.php/v2/stories?product=ID → /api.php/v2/products/ID/stories
+    const productId = query.product;
+    adjustedEndpoint = `/products/${productId}/stories`;
+    const newQuery = { ...query };
+    delete newQuery.product;
+    query = newQuery;
   } else if (endpoint === '/tasks' && query && query.project) {
     // /api.php/v2/tasks?project=ID → /api.php/v2/projects/ID/tasks
     const projectId = query.project;
@@ -100,6 +107,13 @@ async function request(method, endpoint, body, query, options = {}, retries = 2)
     // 从查询参数中移除 project，因为它已成为 URL 路径的一部分
     const newQuery = { ...query };
     delete newQuery.project;
+    query = newQuery;
+  } else if (endpoint === '/tasks' && query && query.execution) {
+    // /api.php/v2/tasks?execution=ID → /api.php/v2/executions/ID/tasks
+    const executionId = query.execution;
+    adjustedEndpoint = `/executions/${executionId}/tasks`;
+    const newQuery = { ...query };
+    delete newQuery.execution;
     query = newQuery;
   }
 
