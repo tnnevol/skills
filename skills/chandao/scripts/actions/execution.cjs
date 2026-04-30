@@ -320,12 +320,15 @@ async function linkProducts(executionId, params) {
     throw new Error('[关联失败] 产品 ID 必须为正整数');
   }
 
-  const res = await put(`/executions/${executionId}`, { products: productIds });
+  const res = await put(`/executions/${executionId}`, { products: productIds }, {}, { dryRun: params.dryRun });
   if (!res.ok) {
     throw new Error(`[关联失败] ${res.error}`);
   }
 
   console.log(`✅ 执行 ${executionId} 已关联产品: ${productIds.join(', ')}`);
+  if (params.dryRun) {
+    console.log('🔍 [DRY-RUN] 未发送真实请求');
+  }
   return res.data;
 }
 
