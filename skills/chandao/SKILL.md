@@ -26,6 +26,8 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
    - 项目管理 → `scripts/actions/project.cjs`
    - 需求管理 → `scripts/actions/story.cjs`
    - 任务管理 → `scripts/actions/task.cjs`
+   - Bug 管理 → `scripts/actions/bug.cjs`
+   - 执行/迭代管理 → `scripts/actions/execution.cjs`
 5. 如果用户询问禅道使用帮助 — 读 `docs/help.md`。
 
 ## 命令表
@@ -112,6 +114,21 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
 | `/chandao suspend-execution <id>` | 暂停执行 | 成功/失败信息 |
 | `/chandao close-execution <id>` | 关闭执行 | 成功/失败信息 |
 
+### Bug 管理命令（8 个）
+
+由 `scripts/actions/bug.cjs` 实现，支持 Bug 的完整生命周期（创建→解决→关闭→激活）。
+
+| 命令 | 描述 | 输出格式 |
+|------|------|----------|
+| `/chandao list-bug [--product=<id>] [--status=<unresolved|resolved|closed>] [--pri=<1-4>]` | 列出 Bug | 表格：ID\|标题\|严重度\|优先级\|状态\|指派给 |
+| `/chandao get-bug <id>` | Bug 详情 | 卡片（含严重度/优先级/重现步骤/影响版本） |
+| `/chandao create-bug --product=<id> --title=<title> --openedBuild=trunk\|<buildID>` | 创建 Bug | 成功/失败信息 |
+| `/chandao resolve-bug <id> --resolution=<fixed\|bydesign\|external\|postponed\|willnotfix\|duplicate\|notrepro> --resolvedBuild=trunk\|<buildID>` | 解决 Bug | 成功/失败信息 |
+| `/chandao close-bug <id>` | 关闭 Bug | 成功/失败信息 |
+| `/chandao activate-bug <id>` | 激活 Bug | 成功/失败信息 |
+| `/chandao update-bug <id> [--title=<title>] [--pri=<1-4>] [--severity=<1-4>]` | 编辑 Bug | 成功/失败信息 |
+| `/chandao delete-bug <id>` | 删除 Bug | 成功/失败信息 |
+
 ### CLI 用法
 
 ```bash
@@ -179,6 +196,16 @@ node scripts/actions/query.cjs project 3
 - "暂停执行" / "暂停迭代" → `suspend-execution`
 - "关闭执行" / "关闭迭代" → `close-execution`
 
+**Bug 管理：**
+- "Bug 列表" / "列出 Bug" / "查 Bug" → `list-bug`
+- "Bug 详情" / "查看 Bug" → `get-bug`
+- "创建 Bug" / "新建 Bug" / "报 Bug" → `create-bug`
+- "解决 Bug" → `resolve-bug`
+- "关闭 Bug" → `close-bug`
+- "激活 Bug" / "重新打开 Bug" → `activate-bug`
+- "编辑 Bug" / "修改 Bug" → `update-bug`
+- "删除 Bug" → `delete-bug`
+
 ### 脱敏规则
 
 - 密码、Token → `***`
@@ -204,7 +231,8 @@ chandao/
 │       ├── project.cjs         # 项目管理命令实现
 │       ├── story.cjs           # 需求管理命令实现
 │       ├── task.cjs            # 任务管理命令实现
-│       └── execution.cjs       # 执行/迭代管理命令实现
+│       ├── execution.cjs       # 执行/迭代管理命令实现
+│       └── bug.cjs             # Bug 管理命令实现
 ├── docs/
 │   ├── setup.md                # 安装配置指南
 │   ├── help.md                 # 禅道使用帮助
