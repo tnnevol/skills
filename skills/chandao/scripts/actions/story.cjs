@@ -115,6 +115,19 @@ async function listStories(params = {}) {
   }
   const result = Array.isArray(data) ? data : [];
 
+  // 无过滤条件且无数据时，提供友好提示
+  if (result.length === 0 && !params.product && !params.project && !params.status && !params.assignedTo) {
+    console.log('📭 暂无需求数据');
+    console.log('💡 建议：使用 --product=N 指定产品过滤，例如 --product=1');
+    console.log('💡 可用过滤参数：--product / --project / --status / --assignedTo / --priority / --epic');
+    return 0;
+  }
+
+  if (result.length === 0) {
+    console.log('📭 暂无匹配的需求数据');
+    return 0;
+  }
+
   const count = table(
     ['ID', '标题', '产品', '优先级', '状态', '指派给', '创建人'],
     result.map((s) => [
@@ -138,10 +151,64 @@ async function listStories(params = {}) {
 
 async function getStory(storyId) {
   id(storyId, '需求ID');
-  const res = await get(`/stories/${storyId}`);
-  if (!res.ok) throw new Error(res.error);
+  let res = await get(`/stories/${storyId}`);
 
-  const story = res.data && res.data.result ? res.data.result : res.data;
+  // 如果直接请求返回的数据结构不完整，尝试通过产品路径获取
+  let story = null;
+  if (res.ok && res.data) {
+    // 尝试多种可能的数据结构
+    if (res.data.result && typeof res.data.result === 'object' && res.data.result.id) {
+      story = res.data.result;
+    } else if (res.data.story && typeof res.data.story === 'object' && res.data.story.id) {
+      story = res.data.story;
+    } else if (res.data.id) {
+      // 可能直接就是故事对象
+      story = res.data;
+    }
+  }
+
+  // 如果直接获取失败或数据不完整，尝试通过产品列表路径
+  if (!story || !story.title) {
+    // 先获取产品列表，然后尝试从每个产品获取故事详情
+    const productsRes = await get('/products', { recPerPage: 50 });
+    if (productsRes.ok && productsRes.data) {
+      let products = [];
+      if (productsRes.data.products && Array.isArray(productsRes.data.products)) {
+        products = productsRes.data.products;
+      } else if (Array.isArray(productsRes.data)) {
+        products = productsRes.data;
+      } else {
+        for (const key of Object.keys(productsRes.data)) {
+          if (Array.isArray(productsRes.data[key])) {
+            products = productsRes.data[key];
+            break;
+          }
+        }
+      }
+
+      for (const p of products) {
+        const pid = p.id;
+        const storyRes = await get(`/products/${pid}/stories/${storyId}`);
+        if (storyRes.ok && storyRes.data) {
+          if (storyRes.data.result && storyRes.data.result.id) {
+            story = storyRes.data.result;
+            break;
+          } else if (storyRes.data.story && storyRes.data.story.id) {
+            story = storyRes.data.story;
+            break;
+          } else if (storyRes.data.id) {
+            story = storyRes.data;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  if (!story) {
+    throw new Error(`[查询失败] 未找到需求 #${storyId}，或当前账号无权限访问`);
+  }
+
   const s = sanitize(story);
 
   const statusText = {
@@ -153,19 +220,28 @@ async function getStory(storyId) {
 
   const priText = { 1: '紧急', 2: '高', 3: '中', 4: '低' };
 
-  card(`需求: ${s.title || storyId}`, [
+  // 尝试从不同字段获取产品名称
+  const productName = s.productName || (s.product && typeof s.product === 'object' ? s.product.name : s.product) || '-';
+
+  card(`需求: ${s.title || s.name || storyId}`, [
     ['ID', s.id],
-    ['标题', s.title],
-    ['产品', s.productName || s.product],
-    ['优先级', priText[s.pri] || s.pri],
-    ['状态', statusText[s.status] || s.status],
-    ['描述', s.spec ? s.spec.slice(0, 200) : '-'],
-    ['指派给', s.assignedTo],
-    ['创建人', s.createdBy],
-    ['创建时间', s.createdDate],
-    ['预计工时', s.estimate],
-    ['实际工时', s.consumed],
-    ['评审结果', s.reviewResult],
+    ['标题', s.title || s.name],
+    ['产品', productName],
+    ['模块', s.moduleName || s.module || '-'],
+    ['优先级', priText[s.pri] || s.pri || '-'],
+    ['状态', statusText[s.status] || s.status || '-'],
+    ['来源', s.source || '-'],
+    ['类型', s.type || '-'],
+    ['阶段', s.stage || '-'],
+    ['描述', s.spec || s.description || '-'],
+    ['指派给', s.assignedTo || s.assignedToName || '-'],
+    ['创建人', s.createdBy || s.openedBy || '-'],
+    ['创建时间', s.createdDate || s.openedDate || '-'],
+    ['预计工时', s.estimate || '-'],
+    ['实际工时', s.consumed || '-'],
+    ['评审结果', s.reviewResult || '-'],
+    ['关键词', s.keyword || '-'],
+    ['URI', s.uri || '-'],
   ]);
 }
 
