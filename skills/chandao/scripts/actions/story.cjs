@@ -113,6 +113,20 @@ async function listStories(params = {}) {
       }
     }
   }
+  
+  // 如果直接查询为空且指定了 project，尝试回退查询
+  if ((!data || data.length === 0) && params.project) {
+    const fallbackRes = await get(`/projects/${params.project}/stories`, { recPerPage: limit, pageID: page });
+    if (fallbackRes.ok && fallbackRes.data) {
+      for (const key of Object.keys(fallbackRes.data)) {
+        if (Array.isArray(fallbackRes.data[key])) {
+          data = fallbackRes.data[key];
+          break;
+        }
+      }
+    }
+  }
+
   const result = Array.isArray(data) ? data : [];
 
   // 无过滤条件且无数据时，提供友好提示
