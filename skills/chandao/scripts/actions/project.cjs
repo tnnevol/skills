@@ -263,6 +263,43 @@ async function removeTeamMember(projectId, params) {
   return res.data;
 }
 
+// ========== 关联产品到项目 ==========
+
+/**
+ * 关联产品到项目
+ * PUT /api.php/v2/projects/<id>
+ * Body: { products: [productID1, productID2, ...] }
+ */
+async function linkProducts(projectId, params) {
+  id(projectId, '项目 ID');
+
+  if (!params.products && !params.product) {
+    throw new Error('[关联失败] 请提供 --products=ID1,ID2 或 --product=ID');
+  }
+
+  let productIds;
+  if (params.products) {
+    productIds = params.products.split(',').map(p => parseInt(p.trim()));
+  } else {
+    productIds = [parseInt(params.product)];
+  }
+
+  if (productIds.some(isNaN) || productIds.some(p => p <= 0)) {
+    throw new Error('[关联失败] 产品 ID 必须为正整数');
+  }
+
+  const res = await put(`/projects/${projectId}`, { products: productIds }, {}, { dryRun: params.dryRun });
+  if (!res.ok) {
+    throw new Error(`[关联失败] ${res.error}`);
+  }
+
+  console.log(`✅ 项目 ${projectId} 已关联产品: ${productIds.join(', ')}`);
+  if (params.dryRun) {
+    console.log('🔍 [DRY-RUN] 未发送真实请求');
+  }
+  return res.data;
+}
+
 // ========== CLI 入口 ==========
 
 if (require.main === module) {
@@ -340,8 +377,15 @@ if (require.main === module) {
         }
         await removeTeamMember(arg1, params);
         break;
+      case 'link-products':
+        if (!arg1) {
+          console.error('用法: project.cjs link-products <id> --products=ID1,ID2');
+          process.exit(1);
+        }
+        await linkProducts(arg1, params);
+        break;
       default:
-        console.log('用法: project.cjs <create-project|update-project|start-project|suspend-project|close-project|team|add-team|remove-team> [id] [options]');
+        console.log('用法: project.cjs <create-project|update-project|start-project|suspend-project|close-project|team|add-team|remove-team|link-products> [id] [options]');
         console.log('');
         console.log('命令:');
         console.log('  create-project   创建项目');
@@ -352,6 +396,7 @@ if (require.main === module) {
         console.log('  team             查看团队');
         console.log('  add-team         添加成员');
         console.log('  remove-team      移除成员');
+        console.log('  link-products    关联产品');
         console.log('');
         console.log('选项:');
         console.log('  --dry-run        模拟执行，不发送真实请求');
@@ -374,4 +419,5 @@ module.exports = {
   getProjectTeam,
   addTeamMember,
   removeTeamMember,
+  linkProducts,
 };

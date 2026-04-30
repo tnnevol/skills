@@ -31,6 +31,7 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
    - 测试管理 → `scripts/actions/testcase.cjs` + `scripts/actions/testtask.cjs`
    - 附件/文件管理 → `scripts/actions/file.cjs`
    - 执行/迭代管理 → `scripts/actions/execution.cjs`
+   - 产品管理 → `scripts/actions/product.cjs`
 5. 如果用户询问禅道使用帮助 — 读 `docs/help.md`。
 
 ## 命令表
@@ -61,7 +62,7 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
 | `/chandao unlock-user <id>` | 解锁用户 | 成功/失败信息 |
 | `/chandao reset-password <id> --password=<new_password>` | 重置用户密码 | 成功/失败信息 |
 
-### 项目管理命令（8 个）
+### 项目管理命令（9 个）
 
 由 `scripts/actions/project.cjs` 实现，包含项目生命周期管理。
 
@@ -75,6 +76,7 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
 | `/chandao team <id>` | 查看项目团队 | 表格：用户\|角色 |
 | `/chandao add-team <id> --user=<account> --role=<role>` | 添加团队成员 | 成功/失败信息 |
 | `/chandao remove-team <id> --user=<account>` | 移除团队成员 | 成功/失败信息 |
+| `/chandao link-products <id> --products=ID1,ID2` | 关联产品到项目 | 成功/失败信息 |
 
 ### 需求管理命令（6 个）
 
@@ -102,7 +104,7 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
 | `/chandao close-task <id>` | 关闭任务 | 成功/失败信息 |
 | `/chandao delete-task <id>` | 删除任务 | 成功/失败信息 |
 
-### 执行/迭代管理命令（8 个）
+### 执行/迭代管理命令（9 个）
 
 由 `scripts/actions/execution.cjs` 实现，支持执行/迭代的完整生命周期。
 
@@ -116,6 +118,18 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
 | `/chandao start-execution <id>` | 启动执行 | 成功/失败信息 |
 | `/chandao suspend-execution <id>` | 暂停执行 | 成功/失败信息 |
 | `/chandao close-execution <id>` | 关闭执行 | 成功/失败信息 |
+| `/chandao link-products <id> --products=ID1,ID2` | 关联产品到执行 | 成功/失败信息 |
+
+### 产品管理命令（4 个）
+
+由 `scripts/actions/product.cjs` 实现，支持产品的创建、更新、关闭。
+
+| 命令 | 描述 | 输出格式 |
+|------|------|----------|
+| `/chandao create-product --name=<name> --code=<code> [--type=normal\|branch\|platform]` | 创建产品 | 成功/失败信息 |
+| `/chandao update-product <id> [--name=xxx] [--code=xxx] [--type=xxx] [--desc=xxx] [--owner=xxx]` | 更新产品 | 成功/失败信息 |
+| `/chandao close-product <id> [--closedReason=xxx]` | 关闭产品 | 成功/失败信息 |
+| `/chandao delete-product <id>` | 删除产品 | 成功/失败信息 |
 
 ### Bug 管理命令（8 个）
 
@@ -247,6 +261,13 @@ node scripts/actions/query.cjs project 3
 - "启动执行" / "启动迭代" → `start-execution`
 - "暂停执行" / "暂停迭代" → `suspend-execution`
 - "关闭执行" / "关闭迭代" → `close-execution`
+- "关联产品" / "绑定产品" → `link-products`
+
+**产品管理：**
+- "创建产品" / "新建产品" → `create-product`
+- "更新产品" / "修改产品" → `update-product`
+- "关闭产品" → `close-product`
+- "删除产品" → `delete-product`
 
 **Bug 管理：**
 - "Bug 列表" / "列出 Bug" / "查 Bug" → `list-bug`
@@ -307,6 +328,7 @@ chandao/
 │       ├── story.cjs           # 需求管理命令实现
 │       ├── task.cjs            # 任务管理命令实现
 │       ├── execution.cjs       # 执行/迭代管理命令实现
+│       ├── product.cjs         # 产品管理命令实现
 │       ├── bug.cjs             # Bug 管理命令实现
 │       ├── epic.cjs            # 史诗管理命令实现
 │       ├── testcase.cjs        # 测试用例管理命令实现

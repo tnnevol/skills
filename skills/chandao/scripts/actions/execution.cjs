@@ -295,6 +295,40 @@ async function closeExecution(executionId) {
   return res.data;
 }
 
+// ========== 关联产品到执行 ==========
+
+/**
+ * 关联产品到执行
+ * PUT /api.php/v2/executions/<id>
+ * Body: { products: [productID1, productID2, ...] }
+ */
+async function linkProducts(executionId, params) {
+  id(executionId, '执行 ID');
+
+  if (!params.products && !params.product) {
+    throw new Error('[关联失败] 请提供 --products=ID1,ID2 或 --product=ID');
+  }
+
+  let productIds;
+  if (params.products) {
+    productIds = params.products.split(',').map(p => parseInt(p.trim()));
+  } else {
+    productIds = [parseInt(params.product)];
+  }
+
+  if (productIds.some(isNaN) || productIds.some(p => p <= 0)) {
+    throw new Error('[关联失败] 产品 ID 必须为正整数');
+  }
+
+  const res = await put(`/executions/${executionId}`, { products: productIds });
+  if (!res.ok) {
+    throw new Error(`[关联失败] ${res.error}`);
+  }
+
+  console.log(`✅ 执行 ${executionId} 已关联产品: ${productIds.join(', ')}`);
+  return res.data;
+}
+
 // ========== CLI 入口 ==========
 
 if (require.main === module) {
@@ -374,8 +408,15 @@ if (require.main === module) {
         }
         await closeExecution(arg1);
         break;
+      case 'link-products':
+        if (!arg1) {
+          console.error('用法: execution.cjs link-products <id> --products=ID1,ID2');
+          process.exit(1);
+        }
+        await linkProducts(arg1, params);
+        break;
       default:
-        console.log('用法: execution.cjs <list-execution|get-execution|create-execution|update-execution|delete-execution|start-execution|suspend-execution|close-execution> [id] [options]');
+        console.log('用法: execution.cjs <list-execution|get-execution|create-execution|update-execution|delete-execution|start-execution|suspend-execution|close-execution|link-products> [id] [options]');
         console.log('');
         console.log('命令:');
         console.log('  list-execution     执行列表');
@@ -386,6 +427,7 @@ if (require.main === module) {
         console.log('  start-execution    启动执行');
         console.log('  suspend-execution  暂停执行');
         console.log('  close-execution    关闭执行');
+        console.log('  link-products      关联产品');
         console.log('');
         console.log('选项:');
         console.log('  --dry-run    模拟执行，不发送真实请求');
@@ -413,5 +455,6 @@ module.exports = {
   deleteExecution,
   startExecution,
   suspendExecution,
-  closeExecution
+  closeExecution,
+  linkProducts
 };
