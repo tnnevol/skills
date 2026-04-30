@@ -100,7 +100,7 @@ async function getExecution(executionId) {
     throw new Error(`[获取失败] ${res.error}`);
   }
 
-  const exec = res.data;
+  const exec = res.data.execution;
   const statusText = EXECUTION_STATUSES[exec.status] || exec.status;
 
   console.log(`📋 执行详情: ${exec.name} (ID: ${exec.id})`);
@@ -133,7 +133,7 @@ async function createExecution(params) {
     begin: { required: true, date: true },
     end: { required: true, date: true },
     project: { required: true, id: true },
-    product: { required: true, id: true },
+    product: { id: true },  // 可选：看板模式下执行可不关联产品
     model: { enum: EXECUTION_MODELS },
     desc: { length: { max: 500 } },
     owner: { length: { max: 30 } },
@@ -149,11 +149,12 @@ async function createExecution(params) {
     begin: params.begin,
     end: params.end,
     project: params.project,
-    product: params.product,
     model: params.model || 'waterfall',
     desc: params.desc,
-    owner: params.owner
+    owner: params.owner,
   };
+  // product 可选：看板模式下可不关联
+  if (params.product) body.product = params.product;
 
   const res = await post('/executions', body, {}, { dryRun: params.dryRun });
   if (!res.ok) {

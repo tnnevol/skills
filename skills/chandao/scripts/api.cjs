@@ -177,7 +177,7 @@ async function request(method, endpoint, body, query, options = {}, retries = 2)
  */
 async function get(endpoint, query = {}) {
   const res = await request('GET', endpoint, null, query, {});
-  return handleResponse(res);
+  return handleResponse(res, 'GET');
 }
 
 /**
@@ -191,7 +191,7 @@ async function post(endpoint, body, query = {}, options = {}) {
     appendOperationLog({ method: 'POST', endpoint, body });
   }
   
-  return handleResponse(res);
+  return handleResponse(res, 'POST');
 }
 
 /**
@@ -205,7 +205,7 @@ async function put(endpoint, body, query = {}, options = {}) {
     appendOperationLog({ method: 'PUT', endpoint, body });
   }
   
-  return handleResponse(res);
+  return handleResponse(res, 'PUT');
 }
 
 /**
@@ -215,22 +215,24 @@ async function del(endpoint, query = {}, options = {}) {
   const res = await request('DELETE', endpoint, null, query, options);
   
   // 记录操作日志
-  if (res.ok && !options.dryRun) {
-    appendOperationLog({ method: 'DELETE', endpoint });
-  }
-  
-  return handleResponse(res);
+  return handleResponse(res, 'DELETE');
 }
 
 // ========== 响应处理 ==========
 
 /**
  * 统一响应处理
+ * @param {object} res - HTTP 响应
+ * @param {string} [method='GET'] - HTTP 方法，用于判断写操作空响应处理
  */
-function handleResponse(res) {
-  const { status, data } = res;
+function handleResponse(res, method = 'GET') {
+  const status = res.status;
+  const data = res.data;
 
-  // HTTP 级别错误
+  if (status === 204) {
+    return { ok: true, data: null, httpStatus: 204 };
+  }
+
   if (status >= 500) {
     return { ok: false, error: `服务器错误 (HTTP ${status})`, httpStatus: status };
   }
@@ -254,7 +256,14 @@ function handleResponse(res) {
     return { ok: false, error: data.message || JSON.stringify(data), httpStatus: status, detail: data };
   }
 
-  // 200 但空 body 或无数据
+  // 写操作 (POST/PUT/PATCH): 200 + 空 body 视为成功（禅道写操作惯例）
+  const isWriteMethod = ['POST', 'PUT', 'PATCH'].includes(method);
+  if (isWriteMethod && status === 200 && (data === null || data === undefined || data === '' ||
+      (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 0))) {
+    return { ok: true, data: null, httpStatus: status };
+  }
+
+  // 200 但空 body 或无数据（读操作：视为无数据）
   if (data === null || data === undefined || data === '' ||
       (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 0)) {
     return { ok: false, error: `空响应 (HTTP ${status})`, httpStatus: status };

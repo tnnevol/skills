@@ -111,6 +111,12 @@ async function queryDetail(endpoint, id) {
   if (!res.ok) {
     throw new Error(res.error);
   }
+  // 禅道 v2 详情返回结构：{status: 'success', product: {...}} 或 {status: 'success', project: {...}}
+  // 根据 endpoint 名推断嵌套字段（/products → product, /projects → project, /users → user）
+  const field = endpoint.replace(/^\//, '').replace(/s$/, ''); // 去掉前缀 / 和末尾 s
+  if (res.data && res.data[field]) {
+    return res.data[field];
+  }
   return res.data && res.data.result ? res.data.result : res.data;
 }
 
