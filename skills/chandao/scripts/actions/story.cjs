@@ -93,6 +93,7 @@ async function listStories(params = {}) {
   if (params.status) query.status = params.status;
   if (params.assignedTo) query.assignedTo = params.assignedTo;
   if (params.priority) query.priority = params.priority;
+  if (params.epic) query.parent = params.epic; // 按史诗过滤（parent 字段）
   if (params.orderBy) query.orderBy = params.orderBy;
 
   const res = await get('/stories', query);
@@ -299,6 +300,27 @@ async function reviewStory(storyId, params) {
   }
 }
 
+// ============ 删除需求 ============
+
+async function deleteStory(storyId, params) {
+  id(storyId, '需求ID');
+
+  if (!params.yes && !params.dryRun) {
+    console.log(`⚠️  确认要删除需求 #${storyId} 吗？此操作不可恢复！`);
+    console.log('   使用 --yes 跳过确认');
+    process.exit(1);
+  }
+
+  const res = await del(`/stories/${storyId}`, {}, { dryRun: params.dryRun });
+  if (!res.ok) throw new Error(`[删除失败] ${res.error}`);
+
+  if (params.dryRun) {
+    console.log('✅ Dry-run 通过');
+  } else {
+    console.log(`✅ 需求 #${storyId} 已删除`);
+  }
+}
+
 // ============ CLI 入口 ============
 
 if (require.main === module) {
@@ -324,6 +346,7 @@ if (require.main === module) {
       if (a.startsWith('--category=')) params.category = a.split('=')[1];
       if (a.startsWith('--source=')) params.source = a.split('=')[1];
       if (a.startsWith('--execution=')) params.execution = parseInt(a.split('=')[1]);
+      if (a.startsWith('--epic=')) params.epic = a.split('=')[1];
       if (a === '--dry-run') params.dryRun = true;
       if (a === '--yes') params.yes = true;
     }
@@ -380,9 +403,16 @@ if (require.main === module) {
         }
         await reviewStory(arg1, params);
         break;
+      case 'delete-story':
+        if (!arg1) {
+          console.error('用法: story.cjs delete-story <id>');
+          process.exit(1);
+        }
+        await deleteStory(arg1, params);
+        break;
       default:
         console.log(
-          '用法: story.cjs <list-story|get-story|create-story|update-story|close-story|review-story> [id] [选项]'
+          '用法: story.cjs <list-story|get-story|create-story|update-story|close-story|review-story|delete-story> [id] [选项]'
         );
     }
   }
@@ -400,4 +430,5 @@ module.exports = {
   updateStory,
   closeStory,
   reviewStory,
+  deleteStory,
 };

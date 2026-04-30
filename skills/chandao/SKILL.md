@@ -27,6 +27,7 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
    - 需求管理 → `scripts/actions/story.cjs`
    - 任务管理 → `scripts/actions/task.cjs`
    - Bug 管理 → `scripts/actions/bug.cjs`
+   - 史诗/故事管理 → `scripts/actions/epic.cjs` + `scripts/actions/story.cjs`
    - 执行/迭代管理 → `scripts/actions/execution.cjs`
 5. 如果用户询问禅道使用帮助 — 读 `docs/help.md`。
 
@@ -129,6 +130,25 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
 | `/chandao update-bug <id> [--title=<title>] [--pri=<1-4>] [--severity=<1-4>]` | 编辑 Bug | 成功/失败信息 |
 | `/chandao delete-bug <id>` | 删除 Bug | 成功/失败信息 |
 
+### 史诗/故事管理命令（12 个）
+
+史诗和故事同属需求层级：史诗 → 故事 → 需求。由 `scripts/actions/epic.cjs` 和 `scripts/actions/story.cjs` 实现。
+
+| 命令 | 描述 | 输出格式 |
+|------|------|----------|
+| `/chandao list-epic [--product=<id>]` | 列出史诗 | 表格：ID\|标题\|产品\|优先级\|状态 |
+| `/chandao get-epic <id>` | 史诗详情 | 卡片 |
+| `/chandao create-epic --product=<id> --title=<title>` | 创建史诗 | 成功/失败信息 |
+| `/chandao update-epic <id> [--title=xxx] [--desc=xxx]` | 更新史诗 | 成功/失败信息 |
+| `/chandao delete-epic <id>` | 删除史诗 | 成功/失败信息 |
+| `/chandao list-story [--product=<id>] [--epic=<id>] [--status=<status>]` | 列出需求 | 表格：ID\|标题\|产品\|优先级\|状态\|指派给 |
+| `/chandao get-story <id>` | 需求详情 | 卡片 |
+| `/chandao create-story --product=<id> --title=<title>` | 创建需求 | 成功/失败信息 |
+| `/chandao update-story <id> [--title=xxx] [--spec=xxx]` | 更新需求 | 成功/失败信息 |
+| `/chandao close-story <id>` | 关闭需求 | 成功/失败信息 |
+| `/chandao review-story <id> --result=<pass\|reject>` | 评审需求 | 成功/失败信息 |
+| `/chandao delete-story <id>` | 删除需求 | 成功/失败信息 |
+
 ### CLI 用法
 
 ```bash
@@ -206,6 +226,14 @@ node scripts/actions/query.cjs project 3
 - "编辑 Bug" / "修改 Bug" → `update-bug`
 - "删除 Bug" → `delete-bug`
 
+**史诗/故事管理：**
+- "史诗列表" / "列出史诗" → `list-epic`
+- "史诗详情" → `get-epic`
+- "创建史诗" → `create-epic`
+- "删除史诗" → `delete-epic`
+- "删除需求" → `delete-story`
+- "需求列表" 加 `--epic=N` → 按史诗过滤
+
 ### 脱敏规则
 
 - 密码、Token → `***`
@@ -232,7 +260,8 @@ chandao/
 │       ├── story.cjs           # 需求管理命令实现
 │       ├── task.cjs            # 任务管理命令实现
 │       ├── execution.cjs       # 执行/迭代管理命令实现
-│       └── bug.cjs             # Bug 管理命令实现
+│       ├── bug.cjs             # Bug 管理命令实现
+│       └── epic.cjs            # 史诗管理命令实现
 ├── docs/
 │   ├── setup.md                # 安装配置指南
 │   ├── help.md                 # 禅道使用帮助
