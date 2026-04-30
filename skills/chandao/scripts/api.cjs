@@ -263,10 +263,10 @@ function handleResponse(res, method = 'GET') {
     return { ok: true, data: null, httpStatus: status };
   }
 
-  // 200 但空 body 或无数据（读操作：视为无数据）
+  // 200 但空 body 或无数据（读操作：返回 ok=true 但 data 为空，让调用方自行处理友好提示）
   if (data === null || data === undefined || data === '' ||
       (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 0)) {
-    return { ok: false, error: `空响应 (HTTP ${status})`, httpStatus: status };
+    return { ok: true, data: null, httpStatus: status };
   }
 
   // 成功
