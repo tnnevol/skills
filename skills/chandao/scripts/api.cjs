@@ -159,7 +159,11 @@ async function request(method, endpoint, body, query, options = {}, retries = 2)
   }
 
   // 401 自动刷新 Token 并重试
-  if (res.status === 401 || (res.data && res.data.status === 'fail' && res.data.message && res.data.message.includes('token'))) {
+  // 防御 message 为对象导致 .includes 报错
+  const msg = res.data?.message;
+  const isTokenError = typeof msg === 'string' && msg.includes('token')
+    || (typeof msg === 'object' && JSON.stringify(msg).includes('token'));
+  if (res.status === 401 || (res.data && res.data.status === 'fail' && isTokenError)) {
     await refreshToken();
     const newToken = await getToken();
     res = await httpRaw(url, {

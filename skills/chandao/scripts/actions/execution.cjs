@@ -153,8 +153,11 @@ async function createExecution(params) {
     desc: params.desc,
     owner: params.owner,
   };
-  // product 可选：看板模式下可不关联
-  if (params.product) body.product = params.product;
+  // product 可选：看板模式下执行可不关联，若关联则加入 products 数组防止 403
+  if (params.product) {
+    body.product = params.product;
+    body.products = [parseInt(params.product)];
+  }
 
   const res = await post('/executions', body, {}, { dryRun: params.dryRun });
   if (!res.ok) {

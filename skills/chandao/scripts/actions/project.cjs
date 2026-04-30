@@ -156,12 +156,15 @@ async function suspendProject(projectId, params) {
 
 /**
  * 关闭项目
- * PUT /api.php/v2/projects/<id> status=closed
+ * PUT /api.php/v2/projects/<id>/close
  */
 async function closeProject(projectId, params) {
   id(projectId, '项目 ID');
 
-  const res = await put(`/projects/${projectId}`, { status: 'closed' }, {}, { dryRun: params.dryRun });
+  const closedReason = params.closedReason || 'done';
+  const realEnd = params.realEnd || new Date().toISOString().split('T')[0];
+
+  const res = await put(`/projects/${projectId}/close`, { closedReason, realEnd }, {}, { dryRun: params.dryRun });
   if (!res.ok) {
     throw new Error(`[关闭失败] ${res.error}`);
   }
