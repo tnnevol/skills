@@ -28,6 +28,7 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
    - 任务管理 → `scripts/actions/task.cjs`
    - Bug 管理 → `scripts/actions/bug.cjs`
    - 史诗/故事管理 → `scripts/actions/epic.cjs` + `scripts/actions/story.cjs`
+   - 测试管理 → `scripts/actions/testcase.cjs` + `scripts/actions/testtask.cjs`
    - 执行/迭代管理 → `scripts/actions/execution.cjs`
 5. 如果用户询问禅道使用帮助 — 读 `docs/help.md`。
 
@@ -149,6 +150,25 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
 | `/chandao review-story <id> --result=<pass\|reject>` | 评审需求 | 成功/失败信息 |
 | `/chandao delete-story <id>` | 删除需求 | 成功/失败信息 |
 
+### 测试管理命令（12 个）
+
+由 `scripts/actions/testcase.cjs`（测试用例）和 `scripts/actions/testtask.cjs`（测试任务 + 结果）实现。
+
+| 命令 | 描述 | 输出格式 |
+|------|------|----------|
+| `/chandao list-testcase [--product=<id>] [--type=feature\|interface\|performance\|security\|other]` | 列出测试用例 | 表格：ID\|标题\|类型\|优先级\|状态 |
+| `/chandao get-testcase <id>` | 测试用例详情 | 卡片（含前置条件/步骤/预期结果） |
+| `/chandao create-testcase --product=<id> --title=<title> --type=<type>` | 创建测试用例 | 成功/失败信息 |
+| `/chandao update-testcase <id> [--title=xxx] [--type=xxx]` | 更新测试用例 | 成功/失败信息 |
+| `/chandao delete-testcase <id>` | 删除测试用例 | 成功/失败信息 |
+| `/chandao list-testtask [--product=<id>] [--build=<id>]` | 列出测试任务 | 表格：ID\|名称\|产品\|状态\|创建人 |
+| `/chandao get-testtask <id>` | 测试任务详情 | 卡片 |
+| `/chandao create-testtask --product=<id> --name=<name>` | 创建测试任务 | 成功/失败信息 |
+| `/chandao update-testtask <id> [--name=xxx] [--build=xxx]` | 更新测试任务 | 成功/失败信息 |
+| `/chandao delete-testtask <id>` | 删除测试任务 | 成功/失败信息 |
+| `/chandao run-testtask <id>` | 执行测试任务 | 成功/失败信息 |
+| `/chandao submit-testresult --testtask=<id> --testcase=<id> --result=<pass\|fail\|blocked>` | 提交测试结果 | 成功/失败信息 |
+
 ### CLI 用法
 
 ```bash
@@ -234,6 +254,15 @@ node scripts/actions/query.cjs project 3
 - "删除需求" → `delete-story`
 - "需求列表" 加 `--epic=N` → 按史诗过滤
 
+**测试管理：**
+- "测试用例列表" / "列出测试用例" → `list-testcase`
+- "测试用例详情" → `get-testcase`
+- "创建测试用例" → `create-testcase`
+- "测试任务列表" → `list-testtask`
+- "创建测试任务" → `create-testtask`
+- "执行测试任务" → `run-testtask`
+- "提交测试结果" / "测试通过/失败" → `submit-testresult`
+
 ### 脱敏规则
 
 - 密码、Token → `***`
@@ -261,7 +290,9 @@ chandao/
 │       ├── task.cjs            # 任务管理命令实现
 │       ├── execution.cjs       # 执行/迭代管理命令实现
 │       ├── bug.cjs             # Bug 管理命令实现
-│       └── epic.cjs            # 史诗管理命令实现
+│       ├── epic.cjs            # 史诗管理命令实现
+│       ├── testcase.cjs        # 测试用例管理命令实现
+│       └── testtask.cjs        # 测试任务+结果管理命令实现
 ├── docs/
 │   ├── setup.md                # 安装配置指南
 │   ├── help.md                 # 禅道使用帮助
