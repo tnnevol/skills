@@ -29,6 +29,7 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
    - Bug 管理 → `scripts/actions/bug.cjs`
    - 史诗/故事管理 → `scripts/actions/epic.cjs` + `scripts/actions/story.cjs`
    - 测试管理 → `scripts/actions/testcase.cjs` + `scripts/actions/testtask.cjs`
+   - 附件/文件管理 → `scripts/actions/file.cjs`
    - 执行/迭代管理 → `scripts/actions/execution.cjs`
 5. 如果用户询问禅道使用帮助 — 读 `docs/help.md`。
 
@@ -169,6 +170,17 @@ description: Assistant for 禅道 (ZenTao) project management system via RESTful
 | `/chandao run-testtask <id>` | 执行测试任务 | 成功/失败信息 |
 | `/chandao submit-testresult --testtask=<id> --testcase=<id> --result=<pass\|fail\|blocked>` | 提交测试结果 | 成功/失败信息 |
 
+### 附件/文件管理命令（4 个）
+
+由 `scripts/actions/file.cjs` 实现。
+
+| 命令 | 描述 | 输出格式 |
+|------|------|----------|
+| `/chandao upload-file --file=<path> --objectType=<type> --objectID=<id>` | 上传附件 | 成功/失败信息 |
+| `/chandao list-files --objectType=<type> --objectID=<id>` | 附件列表 | 表格：ID\|文件名\|大小\|上传人\|时间 |
+| `/chandao download-file <id> [--output=path]` | 下载附件 | 成功/失败信息 |
+| `/chandao delete-file <id>` | 删除附件 | 成功/失败信息 |
+
 ### CLI 用法
 
 ```bash
@@ -263,6 +275,12 @@ node scripts/actions/query.cjs project 3
 - "执行测试任务" → `run-testtask`
 - "提交测试结果" / "测试通过/失败" → `submit-testresult`
 
+**附件/文件管理：**
+- "上传附件" → `upload-file`
+- "查看附件" / "附件列表" → `list-files`
+- "下载附件" → `download-file`
+- "删除附件" → `delete-file`
+
 ### 脱敏规则
 
 - 密码、Token → `***`
@@ -292,7 +310,8 @@ chandao/
 │       ├── bug.cjs             # Bug 管理命令实现
 │       ├── epic.cjs            # 史诗管理命令实现
 │       ├── testcase.cjs        # 测试用例管理命令实现
-│       └── testtask.cjs        # 测试任务+结果管理命令实现
+│       ├── testtask.cjs        # 测试任务+结果管理命令实现
+│       └── file.cjs            # 附件/文件管理命令实现
 ├── docs/
 │   ├── setup.md                # 安装配置指南
 │   ├── help.md                 # 禅道使用帮助
