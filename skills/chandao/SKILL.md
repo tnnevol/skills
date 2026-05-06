@@ -320,6 +320,7 @@ chandao/
 │   ├── api.cjs                 # HTTP 请求封装（GET/POST/PUT）
 │   ├── sanitize.cjs            # 敏感信息脱敏
 │   ├── validate.cjs            # 参数校验工具（必填/长度/日期/邮箱等）
+│   ├── md2html.cjs             # Markdown → HTML 转换器（用于需求描述/测试步骤）
 │   └── actions/
 │       ├── query.cjs           # P0 查询命令实现
 │       ├── user.cjs            # 用户管理命令实现

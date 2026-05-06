@@ -8,6 +8,7 @@
 
 const { get, post, put, del } = require('../api.cjs');
 const { validate, required, length, id, range, enum: enumVal } = require('../validate.cjs');
+const { md2html } = require('../md2html.cjs');
 
 const CASE_TYPES = ['feature', 'interface', 'performance', 'security', 'other'];
 const CASE_PRIORITIES = [1, 2, 3, 4];
@@ -109,9 +110,9 @@ async function createTestcase(params) {
   if (params.type) body.type = params.type;
   if (params.pri) body.pri = Number(params.pri);
   if (params.module) body.module = Number(params.module);
-  if (params.steps) body.steps = params.steps;
-  if (params.expect) body.expect = params.expect;
-  if (params.precondition) body.precondition = params.precondition;
+  if (params.steps) body.steps = md2html(params.steps);
+  if (params.expect) body.expect = md2html(params.expect);
+  if (params.precondition) body.precondition = md2html(params.precondition);
   if (params.project) body.project = Number(params.project);
 
   const res = await post('/testcases', body, {}, { dryRun: params.dryRun });
@@ -132,8 +133,8 @@ async function updateTestcase(caseId, params) {
   if (params.title) { length(params.title, '标题', 2, 200); updateFields.title = params.title; }
   if (params.type) updateFields.type = params.type;
   if (params.pri) { range(params.pri, '优先级', 1, 4); updateFields.pri = Number(params.pri); }
-  if (params.steps) updateFields.steps = params.steps;
-  if (params.expect) updateFields.expect = params.expect;
+  if (params.steps) updateFields.steps = md2html(params.steps);
+  if (params.expect) updateFields.expect = md2html(params.expect);
 
   if (Object.keys(updateFields).length === 0) {
     throw new Error('[更新失败] 至少提供一个字段: --title / --type / --pri / --steps / --expect');
