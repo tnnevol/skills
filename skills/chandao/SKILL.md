@@ -314,7 +314,6 @@ node scripts/actions/query.cjs project 3
 chandao/
 ├── SKILL.md                    # 本文件：主入口 + 命令定义
 ├── .env.example                # 环境变量示例
-├── GENERATION.md               # 生成元信息
 ├── scripts/
 │   ├── env.cjs                 # 环境变量加载与校验
 │   ├── auth.cjs                # Token 认证管理
