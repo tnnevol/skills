@@ -16,7 +16,6 @@
 
 const { get, post, put, del, sanitize, handleResponse, request } = require('../api.cjs');
 const { validate, required, length, id, range, enum: enumVal, date } = require('../validate.cjs');
-const { md2html } = require('../md2html.cjs');
 // story-api.cjs 的导入已移除，避免与本地实现冲突 (getStory/createStory/updateStory/closeStory/reviewStory)
 const readline = require('readline');
 
@@ -216,7 +215,7 @@ async function createStory(params) {
     productID: Number(params.product),
     title: params.title,
   };
-  if (params.spec) body.spec = md2html(params.spec);
+  if (params.spec) body.spec = params.spec;
   if (params.priority) body.pri = Number(params.priority);
   if (params.assignedTo) body.assignedTo = params.assignedTo;
   if (params.module) body.module = Number(params.module);
@@ -248,7 +247,7 @@ async function updateStory(storyId, params) {
     length(params.title, '标题', 2, 100);
     updateFields.title = params.title;
   }
-  if (params.spec) updateFields.spec = md2html(params.spec);
+  if (params.spec) updateFields.spec = params.spec;
   if (params.priority) {
     range(params.priority, '优先级', 1, 4);
     updateFields.pri = Number(params.priority);
