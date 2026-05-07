@@ -42,6 +42,9 @@ enum Commands {
     /// Manage file attachments
     #[command(subcommand)]
     File(actions::FileCommands),
+    /// Manage users
+    #[command(subcommand)]
+    User(actions::UserCommands),
     /// Print version
     Version,
 }
@@ -74,6 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::System(args) => actions::handle_system(&client, &auth, args),
         Commands::Product(args) => actions::handle_product(&client, &auth, args),
         Commands::File(args) => actions::handle_file(&client, &auth, args),
+        Commands::User(args) => actions::handle_user(&client, &auth, args),
         _ => unreachable!(),
     };
 
