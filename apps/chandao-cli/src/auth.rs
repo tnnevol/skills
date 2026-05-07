@@ -35,6 +35,10 @@ impl AuthManager {
             .into_json()
             .map_err(|e| format!("JSON 解析失败: {}", e))?;
 
+        if let Some(token) = result.get("token").and_then(|t| t.as_str()) {
+            return Ok(token.to_string());
+        }
+        // Also try data.token format
         if let Some(data) = result.get("data") {
             if let Some(token) = data.get("token").and_then(|t| t.as_str()) {
                 return Ok(token.to_string());

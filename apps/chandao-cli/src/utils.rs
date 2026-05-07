@@ -85,8 +85,9 @@ pub fn print_table(data: &Value, fields: &[&str]) {
             .iter()
             .enumerate()
             .map(|(i, cell)| {
-                let truncated = if cell.len() > col_widths[i] {
-                    format!("{}…", &cell[..col_widths[i].saturating_sub(1)])
+                let truncated = if cell.chars().count() > col_widths[i] {
+                    let truncated_chars: String = cell.chars().take(col_widths[i].saturating_sub(1)).collect();
+                    format!("{}…", truncated_chars)
                 } else {
                     format!("{:width$}", cell, width = col_widths[i])
                 };

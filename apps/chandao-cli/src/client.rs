@@ -133,13 +133,26 @@ impl AuthenticatedClient {
                 return Err(format!("禅道 API 错误: {}", msg));
             }
         }
-        // Extract data field if present
+        // Extract data field if present (format: { status, data: [...] })
         if let Some(data) = body.get("data") {
             if data.is_null() {
                 return Ok(serde_json::json!(null));
             }
             return Ok(data.clone());
         }
+        // Try entity-specific array keys (format: { status, <entity>s: [...] })
+        for key in &["executions", "tasks", "stories", "bugs", "testcases", "users", "products", "projects", "programs", "builds", "releases", "plans", "requirements", "epics", "testtasks", "feedbacks", "files", "systems", "tickets"] {
+            if let Some(items) = body.get(*key) {
+                return Ok(items.clone());
+            }
+        }
+        // Also try single entity keys (format: { status, <entity>: {...} })
+        for key in &["execution", "task", "story", "bug", "testcase", "user", "product", "project", "program", "build", "release", "plan", "requirement", "epic", "testtask", "feedback", "file", "system", "ticket"] {
+            if let Some(item) = body.get(*key) {
+                return Ok(item.clone());
+            }
+        }
+        // Return the full body as a fallback (for simple responses like { status, id })
         Ok(body)
     }
 }

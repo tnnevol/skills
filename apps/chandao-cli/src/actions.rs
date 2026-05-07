@@ -1,6 +1,6 @@
 //! Action handlers for all 禅道 modules.
 //!
-//! Each module (story/task/bug/execution/testcase) has its own subcommand enum
+//! Each module (story/task/bug/execution/testcase/system) has its own subcommand enum
 //! and handler function. All handlers receive an AuthenticatedClient and
 //! dispatch to the appropriate API calls.
 
@@ -332,15 +332,27 @@ pub enum TaskCommands {
     /// Start task (status → doing)
     Start {
         id: i64,
+        /// Hours consumed so far
+        #[arg(long, default_value = "0.0")]
+        consumed: f64,
+        /// Hours remaining
+        #[arg(long, default_value = "0.0")]
+        left: f64,
         #[arg(long)]
         dry_run: bool,
     },
     /// Finish task (status → done)
     Finish {
         id: i64,
-        /// Consumed hours (required by 禅道 to finish)
+        /// Consumed hours (required to finish)
         #[arg(short = 'c', long)]
         consumed: Option<f64>,
+        /// Actual start date (default: today)
+        #[arg(long)]
+        real_started: Option<String>,
+        /// Actual finish date (default: today)
+        #[arg(long)]
+        finished_date: Option<String>,
         #[arg(long)]
         dry_run: bool,
     },
@@ -598,18 +610,18 @@ pub fn handle_execution(
     match cmd {
         ExecutionCommands::List { project, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let mut path = format!(
-                "/executions.json?pageID={}&recPerPage={}",
+                "/executions?pageID={}&recPerPage={}",
                 page, limit
             );
             if let Some(p) = project {
-                path = format!("/projects/{}/executions.json?pageID={}&recPerPage={}", p, page, limit);
+                path = format!("/projects/{}/executions?pageID={}&recPerPage={}", p, page, limit);
             }
             let data = ac.get(&path)?;
             utils::print_table(&data, &["id", "name", "status", "begin", "end", "projectName"]);
             Ok(())
         }),
         ExecutionCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-            let data = ac.get(&format!("/executions/{}.json", id))?;
+            let data = ac.get(&format!("/executions/{}", id))?;
             utils::print_json(&data);
             Ok(())
         }),
@@ -718,16 +730,16 @@ pub fn handle_story(
     match cmd {
         StoryCommands::List { product, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let path = if let Some(p) = product {
-                format!("/products/{}/stories.json?pageID={}&recPerPage={}", p, page, limit)
+                format!("/products/{}/stories?pageID={}&recPerPage={}", p, page, limit)
             } else {
-                format!("/stories.json?pageID={}&recPerPage={}", page, limit)
+                format!("/stories?pageID={}&recPerPage={}", page, limit)
             };
             let data = ac.get(&path)?;
             utils::print_table(&data, &["id", "title", "status", "pri", "productName", "openedDate"]);
             Ok(())
         }),
         StoryCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-            let data = ac.get(&format!("/stories/{}.json", id))?;
+            let data = ac.get(&format!("/stories/{}", id))?;
             utils::print_json(&data);
             Ok(())
         }),
@@ -824,16 +836,16 @@ pub fn handle_task(
     match cmd {
         TaskCommands::List { execution, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let path = if let Some(e) = execution {
-                format!("/executions/{}/tasks.json?pageID={}&recPerPage={}", e, page, limit)
+                format!("/executions/{}/tasks?pageID={}&recPerPage={}", e, page, limit)
             } else {
-                format!("/tasks.json?pageID={}&recPerPage={}", page, limit)
+                format!("/tasks?pageID={}&recPerPage={}", page, limit)
             };
             let data = ac.get(&path)?;
             utils::print_table(&data, &["id", "name", "status", "assignedTo", "pri", "estimate", "consumed"]);
             Ok(())
         }),
         TaskCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-            let data = ac.get(&format!("/tasks/{}.json", id))?;
+            let data = ac.get(&format!("/tasks/{}", id))?;
             utils::print_json(&data);
             Ok(())
         }),
@@ -875,15 +887,15 @@ pub fn handle_task(
                 Ok(())
             })
         }
-        TaskCommands::Start { id, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 开始任务 #{}", id); return Ok(()); }
+        TaskCommands::Start { id, consumed, left, dry_run } => {
+            if *dry_run { println!("🔍 [DRY-RUN] 开始任务 #{} (consumed={}, left={})", id, consumed, left); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                ac.put(&format!("/tasks/{}/start", id), &json!({}))?;
+                ac.put(&format!("/tasks/{}/start", id), &json!({"consumed": consumed, "left": left}))?;
                 println!("✅ 任务 #{} 已开始", id);
                 Ok(())
             })
         }
-        TaskCommands::Finish { id, consumed, dry_run } => {
+        TaskCommands::Finish { id, consumed, real_started, finished_date, dry_run } => {
             if *dry_run {
                 println!("🔍 [DRY-RUN] 完成任务 #{} (consumed={:?}h)", id, consumed);
                 return Ok(());
@@ -891,8 +903,11 @@ pub fn handle_task(
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
                 if let Some(c) = consumed {
-                    body["consumed"] = json!(c);
+                    body["currentConsumed"] = json!(c);
                 }
+                let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+                body["realStarted"] = json!(real_started.as_deref().unwrap_or(&now));
+                body["finishedDate"] = json!(finished_date.as_deref().unwrap_or(&now));
                 ac.put(&format!("/tasks/{}/finish", id), &body)?;
                 println!("✅ 任务 #{} 已完成", id);
                 Ok(())
@@ -948,16 +963,16 @@ pub fn handle_bug(
     match cmd {
         BugCommands::List { product, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let path = if let Some(p) = product {
-                format!("/products/{}/bugs.json?pageID={}&recPerPage={}", p, page, limit)
+                format!("/products/{}/bugs?pageID={}&recPerPage={}", p, page, limit)
             } else {
-                format!("/bugs.json?pageID={}&recPerPage={}", page, limit)
+                format!("/bugs?pageID={}&recPerPage={}", page, limit)
             };
             let data = ac.get(&path)?;
             utils::print_table(&data, &["id", "title", "status", "severity", "pri", "assignedTo"]);
             Ok(())
         }),
         BugCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-            let data = ac.get(&format!("/bugs/{}.json", id))?;
+            let data = ac.get(&format!("/bugs/{}", id))?;
             utils::print_json(&data);
             Ok(())
         }),
@@ -1048,16 +1063,16 @@ pub fn handle_testcase(
     match cmd {
         TestcaseCommands::List { product, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let path = if let Some(p) = product {
-                format!("/products/{}/testcases.json?pageID={}&recPerPage={}", p, page, limit)
+                format!("/products/{}/testcases?pageID={}&recPerPage={}", p, page, limit)
             } else {
-                format!("/testcases.json?pageID={}&recPerPage={}", page, limit)
+                format!("/testcases?pageID={}&recPerPage={}", page, limit)
             };
             let data = ac.get(&path)?;
             utils::print_table(&data, &["id", "title", "status", "pri", "type", "stage"]);
             Ok(())
         }),
         TestcaseCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-            let data = ac.get(&format!("/testcases/{}.json", id))?;
+            let data = ac.get(&format!("/testcases/{}", id))?;
             utils::print_json(&data);
             Ok(())
         }),
@@ -1123,6 +1138,152 @@ pub fn handle_testcase(
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 ac.delete(&format!("/testcases/{}", id))?;
                 println!("✅ 测试用例 #{} 已删除", id);
+                Ok(())
+            })
+        }
+    }
+}
+
+// ── Application System ──
+
+#[derive(Subcommand)]
+pub enum SystemCommands {
+    /// List systems for a product
+    List {
+        /// Product ID
+        #[arg(short, long)]
+        product: i32,
+        /// Page number
+        #[arg(short = 'p', long, default_value = "1")]
+        page: u32,
+        /// Records per page
+        #[arg(short = 'r', long, default_value = "20")]
+        limit: u32,
+    },
+    /// Create a new system
+    Create {
+        /// System name (required)
+        #[arg(long)]
+        name: String,
+        /// System code
+        #[arg(long)]
+        code: Option<String>,
+        /// System key
+        #[arg(long)]
+        key: Option<String>,
+        /// Description
+        #[arg(long)]
+        desc: Option<String>,
+        /// System type
+        #[arg(long)]
+        r#type: Option<String>,
+        /// Dry run
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Update a system
+    Update {
+        /// System ID
+        id: i32,
+        /// System name
+        #[arg(long)]
+        name: Option<String>,
+        /// System key
+        #[arg(long)]
+        key: Option<String>,
+        /// Description
+        #[arg(long)]
+        desc: Option<String>,
+        /// System type
+        #[arg(long)]
+        r#type: Option<String>,
+        /// Dry run
+        #[arg(long)]
+        dry_run: bool,
+    },
+}
+
+pub fn handle_system(
+    client: &Client,
+    auth: &Rc<RefCell<AuthManager>>,
+    cmd: &SystemCommands,
+) -> Result<(), String> {
+    match cmd {
+        SystemCommands::List {
+            product,
+            page,
+            limit,
+        } => {
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let data = ac.get(&format!(
+                    "/products/{}/systems?pageID={}&recPerPage={}",
+                    product, page, limit
+                ))?;
+                utils::print_table(&data, &["id", "name", "code", "type", "desc"]);
+                Ok(())
+            })
+        }
+        SystemCommands::Create {
+            name,
+            code,
+            key,
+            desc,
+            r#type,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 创建系统: name={}", name);
+                return Ok(());
+            }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let mut body = json!({"name": name});
+                if let Some(c) = code {
+                    body["code"] = json!(c);
+                }
+                if let Some(k) = key {
+                    body["key"] = json!(k);
+                }
+                if let Some(d) = desc {
+                    body["desc"] = json!(d);
+                }
+                if let Some(t) = r#type {
+                    body["type"] = json!(t);
+                }
+                let result = ac.post("/systems", &body)?;
+                println!("✅ 系统创建成功");
+                utils::print_json(&result);
+                Ok(())
+            })
+        }
+        SystemCommands::Update {
+            id,
+            name,
+            key,
+            desc,
+            r#type,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 更新系统 #{}", id);
+                return Ok(());
+            }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let mut body = json!({});
+                if let Some(n) = name {
+                    body["name"] = json!(n);
+                }
+                if let Some(k) = key {
+                    body["key"] = json!(k);
+                }
+                if let Some(d) = desc {
+                    body["desc"] = json!(d);
+                }
+                if let Some(t) = r#type {
+                    body["type"] = json!(t);
+                }
+                let result = ac.put(&format!("/systems/{}", id), &body)?;
+                println!("✅ 系统 #{} 更新成功", id);
+                utils::print_json(&result);
                 Ok(())
             })
         }

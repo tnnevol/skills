@@ -33,6 +33,9 @@ enum Commands {
     /// Manage test cases
     #[command(subcommand)]
     Testcase(actions::TestcaseCommands),
+    /// Manage application systems
+    #[command(subcommand)]
+    System(actions::SystemCommands),
     /// Print version
     Version,
 }
@@ -62,6 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Task(args) => actions::handle_task(&client, &auth, args),
         Commands::Bug(args) => actions::handle_bug(&client, &auth, args),
         Commands::Testcase(args) => actions::handle_testcase(&client, &auth, args),
+        Commands::System(args) => actions::handle_system(&client, &auth, args),
         _ => unreachable!(),
     };
 
