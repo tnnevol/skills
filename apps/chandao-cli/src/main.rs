@@ -60,6 +60,9 @@ enum Commands {
     /// Manage product plans
     #[command(subcommand)]
     Productplan(actions::ProductplanCommands),
+    /// Manage requirements (用户需求)
+    #[command(subcommand)]
+    Requirement(actions::RequirementCommands),
     /// Print version
     Version,
 }
@@ -98,6 +101,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Build(args) => actions::handle_build(&client, &auth, args),
         Commands::Release(args) => actions::handle_release(&client, &auth, args),
         Commands::Productplan(args) => actions::handle_productplan(&client, &auth, args),
+        Commands::Requirement(args) => actions::handle_requirement(&client, &auth, args),
         _ => unreachable!(),
     };
 
