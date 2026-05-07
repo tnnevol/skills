@@ -48,6 +48,9 @@ enum Commands {
     /// Manage projects
     #[command(subcommand)]
     Project(actions::ProjectCommands),
+    /// Manage programs (项目集)
+    #[command(subcommand)]
+    Program(actions::ProgramCommands),
     /// Print version
     Version,
 }
@@ -82,6 +85,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::File(args) => actions::handle_file(&client, &auth, args),
         Commands::User(args) => actions::handle_user(&client, &auth, args),
         Commands::Project(args) => actions::handle_project(&client, &auth, args),
+        Commands::Program(args) => actions::handle_program(&client, &auth, args),
         _ => unreachable!(),
     };
 
