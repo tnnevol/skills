@@ -1,74 +1,84 @@
-# Setup
+# Setup — chandao-cli 禅道 CLI
 
-## Configuration
+## 安装
 
-Configuration is loaded in the following priority order (higher overrides lower):
+```bash
+# 全局安装
+npm i -g @tnnevol/chandao-cli
+```
 
-1. **Environment variables** (highest priority, recommended)
-2. **Skill directory `.env`** (next to SKILL.md)
+安装后验证：
 
-Required variables:
+```bash
+chandao-cli version
+```
+
+## 配置
+
+CLI 自动从以下位置加载配置（优先级从高到低）：
+
+1. **环境变量**（最高优先级）
+2. **`~/.config/chandao/.env`**（推荐方式）
+3. **当前目录 `.env`**
+
+### 方式一：环境变量（推荐 CI/临时使用）
 
 ```bash
 export CHANDAO_URL=https://your-chandao.com
-export CHANDAO_ACCOUNT=admin
-export CHANDAO_PASSWORD=your-password
+export CHANDAO_ACCOUNT=your-username
+export CHANDAO_PASSWORD=***
 ```
 
-Alternatively, create a `.env` file in the skill directory (make sure it's in `.gitignore`).
+### 方式二：配置文件（推荐日常使用）
 
-## Mental Model
-
-This skill uses several JavaScript modules with different responsibilities:
-
-- `scripts/env.cjs` — 环境变量加载与校验（CHANDAO_URL / CHANDAO_ACCOUNT / CHANDAO_PASSWORD）
-- `scripts/auth.cjs` — Token 获取、内存缓存、401 自动刷新
-- `scripts/api.cjs` — HTTP 请求统一封装（GET/POST/PUT）、自动注入 Token、分页、错误处理
-- `scripts/sanitize.cjs` — 输出脱敏（密码/手机号/邮箱）
-
-## Authentication
-
-禅道 v2 RESTful API 使用 Token 认证：
-
-1. 首次请求自动 POST `/api/v2/users/login` 获取 Token
-2. Token 缓存在内存中，后续请求复用
-3. 遇到 401 自动重新登录，用户无感知
-4. Token 通过请求头 `token: xxx` 传递（**非** Bearer 格式）
-
-## Runtime Detection
-
-The skill uses plain JavaScript with no external dependencies (only Node.js built-in `http`/`https`/`fs`).
+创建 `~/.config/chandao/.env`：
 
 ```bash
-API_SCRIPT="${CLAUDE_SKILL_DIR}/scripts/api.cjs"
-node "$API_SCRIPT" <action> [args...]
+mkdir -p ~/.config/chandao
 ```
 
-### API Actions
+写入配置：
 
-| Action | CLI | Method | Endpoint |
-|--------|-----|--------|----------|
-| 获取用户列表 | `get /users` | GET | `/api/v2/users` |
-| 获取用户详情 | `get /users/:id` | GET | `/api/v2/users/:id` |
-| 获取产品列表 | `get /products` | GET | `/api/v2/products` |
-| 获取产品详情 | `get /products/:id` | GET | `/api/v2/products/:id` |
-| 获取项目列表 | `get /projects` | GET | `/api/v2/projects` |
-| 获取项目详情 | `get /projects/:id` | GET | `/api/v2/projects/:id` |
+```ini
+CHANDAO_URL=https://your-chandao.com
+CHANDAO_ACCOUNT=your-username
+CHANDAO_PASSWORD=***
+```
 
-### Pagination
-
-- `recPerPage` — 每页数量（默认 20，最大 1000）
-- `pageID` — 页码（从 1 开始）
+**注意：** 配置文件包含敏感信息，请确保文件权限安全：
 
 ```bash
-node scripts/api.cjs get /users --limit=50
-node scripts/api.cjs get /projects --page=2 --limit=10
+chmod 600 ~/.config/chandao/.env
 ```
 
-## Error Handling
+## 认证机制
 
-- `[CONFIG_MISSING]` — 缺少必须的环境变量，需设置 CHANDAO_URL / CHANDAO_ACCOUNT / CHANDAO_PASSWORD
-- `[ERROR] 登录失败` — 账号密码错误或禅道实例不可达
-- `[ERROR] 服务器错误 (HTTP 5xx)` — 禅道服务端异常
-- 业务错误（`status=fail`）— 显示禅道返回的具体错误信息
-- 敏感信息（密码、Token、手机号、邮箱）自动脱敏
+- 首次请求自动 POST `/api/v2/users/login` 获取 Token
+- Token 缓存在内存中，后续请求复用
+- 遇到 401 自动重新登录，用户无感知
+- Token 通过请求头 `token: xxx` 传递（**非** Bearer 格式）
+
+## 验证配置
+
+```bash
+# 查看帮助
+chandao-cli help
+
+# 列出用户（验证连接是否正常）
+chandao-cli user list --limit 3
+```
+
+如果看到用户列表，说明配置正确。如果报错，请检查：
+1. `CHANDAO_URL` 是否正确（不应包含 `/api/v2` 后缀）
+2. 账号密码是否正确
+3. 禅道实例是否可达
+
+## 帮助
+
+所有模块都支持 `--help` 查看详细参数：
+
+```bash
+chandao-cli help
+chandao-cli <module> help
+chandao-cli <module> <action> --help
+```

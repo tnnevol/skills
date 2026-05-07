@@ -1,368 +1,372 @@
 ---
 name: chandao
-description: Assistant for 禅道 (ZenTao) project management system via RESTful API v2. Use when the user asks about 禅道, lists/creates/updates projects, products, users, tasks, bugs, or manages project workflow via natural language commands.
+description: Assistant for 禅道 (ZenTao) project management system via chandao-cli. Use when the user asks about 禅道, lists/creates/updates projects, products, users, tasks, bugs, or manages project workflow via natural language commands.
 ---
 
 # SKILL: chandao (禅道)
 
-让 AI Agent 通过自然语言操作禅道系统，实现项目查询与管理。基于禅道官方 RESTful API v2。
+让 AI Agent 通过自然语言操作禅道系统，实现项目查询与管理。基于 `chandao-cli`（Rust CLI）调用 ZenTao RESTful API v2。
+
+## Quick Start
+
+```bash
+# 检查是否已安装，未安装则提示用户
+which chandao-cli || npm i -g @tnnevol/chandao-cli
+
+# 基本用法
+chandao-cli <module> <action> [--args]
+
+# 帮助
+chandao-cli help
+chandao-cli <module> help
+```
 
 ## Security Guidelines
 
 1. **Never expose** `CHANDAO_ACCOUNT` or `CHANDAO_PASSWORD` in chat, files, code, or logs.
-2. **All API calls** must go through `scripts/api.cjs` — never use `curl`, `wget`, `fetch`, or other HTTP clients directly.
+2. **All API calls** must go through `chandao-cli` — never call the ZenTao API directly.
 3. **Never read** `.env` files or environment variables containing credentials in conversation output.
-4. **Sensitive values** in API responses are automatically sanitized via `scripts/sanitize.cjs`.
-5. Token 由系统自动管理，用户无需手动操作。
+4. 认证由 CLI 自动管理（首次请求自动登录，Token 内存缓存，401 自动刷新）。
 
 ## How to Execute
 
-1. **首次使用** — 读 `docs/setup.md` 了解环境变量配置和运行原理。
-2. **认证自动管理** — 首次请求自动登录，Token 内存缓存，401 自动刷新。
-3. 从下方命令表中匹配用户意图。
-4. 根据命令类型分发到对应 action 模块执行：
-   - 查询类 → `scripts/actions/query.cjs`
-   - 用户管理 → `scripts/actions/user.cjs`
-   - 项目管理 → `scripts/actions/project.cjs`
-   - 需求管理 → `scripts/actions/story.cjs`
-   - 任务管理 → `scripts/actions/task.cjs`
-   - Bug 管理 → `scripts/actions/bug.cjs`
-   - 史诗/故事管理 → `scripts/actions/epic.cjs` + `scripts/actions/story.cjs`
-   - 测试管理 → `scripts/actions/testcase.cjs` + `scripts/actions/testtask.cjs`
-   - 附件/文件管理 → `scripts/actions/file.cjs`
-   - 执行/迭代管理 → `scripts/actions/execution.cjs`
-   - 产品管理 → `scripts/actions/product.cjs`
-5. 如果用户询问禅道使用帮助 — 读 `docs/help.md`。
+1. **首次使用** — 提示用户安装 CLI：`npm i -g @tnnevol/chandao-cli`
+2. 从下方命令表中匹配用户意图。
+3. 使用 `chandao-cli <module> <action> [--args]` 执行。
 
 ## 命令表
 
-### P0 查询类命令（6 个）
+### 安装与帮助
 
-由 `scripts/actions/query.cjs` 实现，底层基于 `http/https` 模块（不用 fetch）。
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli help` | 查看所有模块 |
+| `chandao-cli version` | 查看版本 |
+| `chandao-cli <module> help` | 查看模块详细用法与参数 |
 
-| 命令 | 描述 | 输出格式 |
+### 查询类命令（6 个模块）
+
+| 命令 | 描述 | 输出示例 |
 |------|------|----------|
-| `/chandao users [--page=N] [--limit=N]` | 列出用户 | 表格：账号\|姓名\|角色\|部门\|手机 |
-| `/chandao user <id>` | 用户详情 | 卡片（含联系方式、部门等） |
-| `/chandao products [--page=N] [--limit=N]` | 列出产品 | 表格：ID\|名称\|类型\|负责人\|状态 |
-| `/chandao product <id>` | 产品详情 | 卡片（含负责人、创建时间等） |
-| `/chandao projects [--page=N] [--limit=N]` | 列出项目 | 表格：ID\|名称\|模式\|起止\|状态 |
-| `/chandao project <id>` | 项目详情 | 卡片（含进度、团队、负责人等） |
+| `chandao-cli user list [--limit N] [--page N]` | 列出用户 | 表格：账号\|姓名\|角色\|部门\|手机 |
+| `chandao-cli user get <id>` | 用户详情 | 卡片（含联系方式、部门等） |
+| `chandao-cli product list [--limit N] [--page N]` | 列出产品 | 表格：ID\|名称\|类型\|负责人\|状态 |
+| `chandao-cli product get <id>` | 产品详情 | 卡片（含负责人、创建时间等） |
+| `chandao-cli project list [--limit N] [--page N]` | 列出项目 | 表格：ID\|名称\|模式\|起止\|状态 |
+| `chandao-cli project get <id>` | 项目详情 | 卡片（含进度、团队、负责人等） |
 
-### 用户管理命令（6 个）
+### 用户管理
 
-由 `scripts/actions/user.cjs` 实现，包含参数校验和业务逻辑处理。
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli user create --account <account> --realname <name> --email <email>` | 创建用户 |
+| `chandao-cli user update <id> --realname <name>` | 更新用户 |
+| `chandao-cli user delete <id>` | 删除用户 |
 
-| 命令 | 描述 | 输出格式 |
-|------|------|----------|
-| `/chandao create-user --account=<account> --realname=<name> --email=<email>` | 创建用户 | 成功/失败信息 |
-| `/chandao update-user <id> --realname=<name> --email=<email>` | 更新用户信息 | 成功/失败信息 |
-| `/chandao delete-user <id>` | 删除用户 | 成功/失败信息 |
-| `/chandao activate-user <id>` | 激活用户 | 成功/失败信息 |
-| `/chandao unlock-user <id>` | 解锁用户 | 成功/失败信息 |
-| `/chandao reset-password <id> --password=<new_password>` | 重置用户密码 | 成功/失败信息 |
+### 产品管理
 
-### 项目管理命令（9 个）
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli product create --name <name> --code <code> [--type normal\|branch\|platform]` | 创建产品 |
+| `chandao-cli product update <id> --name <name>` | 更新产品 |
+| `chandao-cli product delete <id>` | 删除产品 |
+| `chandao-cli product list-by-program <id>` | 按项目集列出产品 |
 
-由 `scripts/actions/project.cjs` 实现，包含项目生命周期管理。
+### 项目管理
 
-| 命令 | 描述 | 输出格式 |
-|------|------|----------|
-| `/chandao create-project --name=<name> --code=<code> --begin=<date> --end=<date>` | 创建项目 | 成功/失败信息 |
-| `/chandao update-project <id> --name=<name> --code=<code>` | 更新项目信息 | 成功/失败信息 |
-| `/chandao start-project <id>` | 启动项目 | 成功/失败信息 |
-| `/chandao suspend-project <id>` | 暂停项目 | 成功/失败信息 |
-| `/chandao close-project <id>` | 关闭项目 | 成功/失败信息 |
-| `/chandao team <id>` | 查看项目团队 | 表格：用户\|角色 |
-| `/chandao add-team <id> --user=<account> --role=<role>` | 添加团队成员 | 成功/失败信息 |
-| `/chandao remove-team <id> --user=<account>` | 移除团队成员 | 成功/失败信息 |
-| `/chandao link-products <id> --products=ID1,ID2` | 关联产品到项目 | 成功/失败信息 |
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli project create --name <name> --code <code> --begin <date> --end <date>` | 创建项目 |
+| `chandao-cli project update <id> --name <name>` | 更新项目 |
+| `chandao-cli project delete <id>` | 删除项目 |
+| `chandao-cli project list-by-program <id>` | 按项目集列出项目 |
 
-### 需求管理命令（6 个）
+### 需求管理
 
-由 `scripts/actions/story.cjs` 实现，支持需求的完整生命周期。
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli story list [--product <id>] [--limit N]` | 列出需求 |
+| `chandao-cli story get <id>` | 获取需求详情 |
+| `chandao-cli story create --product <id> --title <title> [--spec <desc>] [--pri 1-4]` | 创建需求 |
+| `chandao-cli story update <id> --title <title>` | 更新需求 |
+| `chandao-cli story review <id> --result pass\|reject` | 评审需求 |
+| `chandao-cli story close <id>` | 关闭需求 |
+| `chandao-cli story activate <id>` | 激活已关闭的需求 |
+| `chandao-cli story delete <id>` | 删除需求 |
+| `chandao-cli story change <id> [--spec <desc>]` | 变更需求（提交评审） |
 
-| 命令 | 描述 | 输出格式 |
-|------|------|----------|
-| `/chandao list-story [--product=<id>] [--status=<status>]` | 列出需求 | 表格：ID\|标题\|状态\|负责人 |
-| `/chandao get-story <id>` | 获取需求详情 | 卡片（含描述、附件等） |
-| `/chandao create-story --product=<id> --title=<title> --specification=<desc>` | 创建需求 | 成功/失败信息 |
-| `/chandao update-story <id> --title=<title> --specification=<desc>` | 更新需求 | 成功/失败信息 |
-| `/chandao close-story <id>` | 关闭需求 | 成功/失败信息 |
-| `/chandao review-story <id> --result=<pass/reject>` | 评审需求 | 成功/失败信息 |
+### 任务管理
 
-### 任务管理命令（6 个）
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli task list [--execution <id>] [--assigned <user>] [--limit N]` | 列出任务 |
+| `chandao-cli task get <id>` | 获取任务详情 |
+| `chandao-cli task create --execution <id> --name <name> [--assigned <user>] [--type devel\|test\|design\|discuss\|ui]` | 创建任务 |
+| `chandao-cli task update <id> --name <name>` | 更新任务 |
+| `chandao-cli task start <id>` | 开始任务（状态→进行中） |
+| `chandao-cli task finish <id>` | 完成任务（状态→已完成） |
+| `chandao-cli task close <id>` | 关闭任务 |
+| `chandao-cli task activate <id>` | 激活已关闭的任务 |
+| `chandao-cli task delete <id>` | 删除任务 |
 
-由 `scripts/actions/task.cjs` 实现，支持任务的创建、分配、跟踪和关闭。
+### 执行/迭代管理
 
-| 命令 | 描述 | 输出格式 |
-|------|------|----------|
-| `/chandao list-task [--project=<id>] [--assignedTo=<user>]` | 列出任务 | 表格：ID\|标题\|状态\|负责人 |
-| `/chandao get-task <id>` | 获取任务详情 | 卡片（含描述、进度等） |
-| `/chandao create-task --project=<id> --name=<name> --assignedTo=<user>` | 创建任务 | 成功/失败信息 |
-| `/chandao update-task <id> --name=<name> --assignedTo=<user>` | 更新任务 | 成功/失败信息 |
-| `/chandao close-task <id>` | 关闭任务 | 成功/失败信息 |
-| `/chandao delete-task <id>` | 删除任务 | 成功/失败信息 |
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli execution list [--project <id>] [--status wait\|doing\|suspended\|closed] [--limit N]` | 列出执行 |
+| `chandao-cli execution get <id>` | 获取执行详情 |
+| `chandao-cli execution create --name <name> --begin <date> --end <date> --project <id> --product <id>` | 创建执行 |
+| `chandao-cli execution update <id> --name <name>` | 更新执行 |
+| `chandao-cli execution start <id>` | 启动执行 |
+| `chandao-cli execution suspend <id>` | 暂停执行 |
+| `chandao-cli execution close <id>` | 关闭执行 |
+| `chandao-cli execution link-products <id> --products <ID1,ID2>` | 关联产品到执行 |
+| `chandao-cli execution delete <id>` | 删除执行 |
 
-### 执行/迭代管理命令（9 个）
+### Bug 管理
 
-由 `scripts/actions/execution.cjs` 实现，支持执行/迭代的完整生命周期。
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli bug list [--product <id>] [--pri 1-4] [--limit N]` | 列出 Bug |
+| `chandao-cli bug get <id>` | Bug 详情 |
+| `chandao-cli bug create --product <id> --title <title> --opened-build <buildId>` | 创建 Bug |
+| `chandao-cli bug resolve <id> --resolution fixed\|bydesign\|external\|postponed\|willnotfix\|duplicate\|notrepro` | 解决 Bug |
+| `chandao-cli bug close <id>` | 关闭 Bug |
+| `chandao-cli bug activate <id>` | 激活 Bug |
+| `chandao-cli bug update <id> --title <title>` | 编辑 Bug |
+| `chandao-cli bug delete <id>` | 删除 Bug |
 
-| 命令 | 描述 | 输出格式 |
-|------|------|----------|
-| `/chandao list-execution [--project=<id>] [--product=<id>] [--status=<wait|doing|suspended|closed>] [--limit=<N>]` | 列出执行 | 表格：ID\|名称\|状态\|项目\|产品\|日期 |
-| `/chandao get-execution <id>` | 获取执行详情 | 卡片（含负责人、创建时间等） |
-| `/chandao create-execution --name=<name> --begin=<date> --end=<date> --project=<id> --product=<id>` | 创建执行 | 成功/失败信息 |
-| `/chandao update-execution <id> [--name=<name>] [--begin=<date>] [--end=<date>] [--desc=<desc>]` | 更新执行 | 成功/失败信息 |
-| `/chandao delete-execution <id>` | 删除执行 | 成功/失败信息 |
-| `/chandao start-execution <id>` | 启动执行 | 成功/失败信息 |
-| `/chandao suspend-execution <id>` | 暂停执行 | 成功/失败信息 |
-| `/chandao close-execution <id>` | 关闭执行 | 成功/失败信息 |
-| `/chandao link-products <id> --products=ID1,ID2` | 关联产品到执行 | 成功/失败信息 |
+### 史诗管理
 
-### 产品管理命令（4 个）
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli epic list-by-product <id> [--limit N]` | 列出史诗 |
+| `chandao-cli epic get <id>` | 史诗详情 |
+| `chandao-cli epic create --product <id> --title <title>` | 创建史诗 |
+| `chandao-cli epic update <id> --title <title>` | 更新史诗 |
+| `chandao-cli epic close <id>` | 关闭史诗 |
+| `chandao-cli epic activate <id>` | 激活已关闭的史诗 |
+| `chandao-cli epic change <id>` | 变更史诗（提交评审） |
+| `chandao-cli epic delete <id>` | 删除史诗 |
 
-由 `scripts/actions/product.cjs` 实现，支持产品的创建、更新、关闭。
+### 用户需求管理
 
-| 命令 | 描述 | 输出格式 |
-|------|------|----------|
-| `/chandao create-product --name=<name> --code=<code> [--type=normal\|branch\|platform]` | 创建产品 | 成功/失败信息 |
-| `/chandao update-product <id> [--name=xxx] [--code=xxx] [--type=xxx] [--desc=xxx] [--owner=xxx]` | 更新产品 | 成功/失败信息 |
-| `/chandao close-product <id> [--closedReason=xxx]` | 关闭产品 | 成功/失败信息 |
-| `/chandao delete-product <id>` | 删除产品 | 成功/失败信息 |
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli requirement list-by-product <id> [--limit N]` | 列出用户需求 |
+| `chandao-cli requirement get <id>` | 用户需求详情 |
+| `chandao-cli requirement create --product <id> --title <title>` | 创建用户需求 |
+| `chandao-cli requirement update <id> --title <title>` | 更新用户需求 |
+| `chandao-cli requirement close <id>` | 关闭用户需求 |
+| `chandao-cli requirement activate <id>` | 激活已关闭的需求 |
+| `chandao-cli requirement delete <id>` | 删除用户需求 |
+| `chandao-cli requirement change <id>` | 变更需求（提交评审） |
 
-### Bug 管理命令（8 个）
+### 测试用例管理
 
-由 `scripts/actions/bug.cjs` 实现，支持 Bug 的完整生命周期（创建→解决→关闭→激活）。
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli testcase list [--product <id>] [--limit N]` | 列出测试用例 |
+| `chandao-cli testcase get <id>` | 测试用例详情 |
+| `chandao-cli testcase create --product <id> --title <title> [--type feature\|interface\|performance\|security\|other]` | 创建测试用例 |
+| `chandao-cli testcase update <id> --title <title>` | 更新测试用例 |
+| `chandao-cli testcase delete <id>` | 删除测试用例 |
 
-| 命令 | 描述 | 输出格式 |
-|------|------|----------|
-| `/chandao list-bug [--product=<id>] [--status=<unresolved|resolved|closed>] [--pri=<1-4>]` | 列出 Bug | 表格：ID\|标题\|严重度\|优先级\|状态\|指派给 |
-| `/chandao get-bug <id>` | Bug 详情 | 卡片（含严重度/优先级/重现步骤/影响版本） |
-| `/chandao create-bug --product=<id> --title=<title> --openedBuild=trunk\|<buildID>` | 创建 Bug | 成功/失败信息 |
-| `/chandao resolve-bug <id> --resolution=<fixed\|bydesign\|external\|postponed\|willnotfix\|duplicate\|notrepro> --resolvedBuild=trunk\|<buildID>` | 解决 Bug | 成功/失败信息 |
-| `/chandao close-bug <id>` | 关闭 Bug | 成功/失败信息 |
-| `/chandao activate-bug <id>` | 激活 Bug | 成功/失败信息 |
-| `/chandao update-bug <id> [--title=<title>] [--pri=<1-4>] [--severity=<1-4>]` | 编辑 Bug | 成功/失败信息 |
-| `/chandao delete-bug <id>` | 删除 Bug | 成功/失败信息 |
+### 测试单管理
 
-### 史诗/故事管理命令（12 个）
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli testtask list-by-product <id>` | 按产品列出测试单 |
+| `chandao-cli testtask list-by-project <id>` | 按项目列出测试单 |
+| `chandao-cli testtask list-by-execution <id>` | 按执行列出测试单 |
+| `chandao-cli testtask create --product <id> --name <name>` | 创建测试单 |
+| `chandao-cli testtask update <id> --name <name>` | 更新测试单 |
+| `chandao-cli testtask delete <id>` | 删除测试单 |
 
-史诗和故事同属需求层级：史诗 → 故事 → 需求。由 `scripts/actions/epic.cjs` 和 `scripts/actions/story.cjs` 实现。
+### 文件/附件管理
 
-| 命令 | 描述 | 输出格式 |
-|------|------|----------|
-| `/chandao list-epic [--product=<id>]` | 列出史诗 | 表格：ID\|标题\|产品\|优先级\|状态 |
-| `/chandao get-epic <id>` | 史诗详情 | 卡片 |
-| `/chandao create-epic --product=<id> --title=<title>` | 创建史诗 | 成功/失败信息 |
-| `/chandao update-epic <id> [--title=xxx] [--desc=xxx]` | 更新史诗 | 成功/失败信息 |
-| `/chandao delete-epic <id>` | 删除史诗 | 成功/失败信息 |
-| `/chandao list-story [--product=<id>] [--epic=<id>] [--status=<status>]` | 列出需求 | 表格：ID\|标题\|产品\|优先级\|状态\|指派给 |
-| `/chandao get-story <id>` | 需求详情 | 卡片 |
-| `/chandao create-story --product=<id> --title=<title>` | 创建需求 | 成功/失败信息 |
-| `/chandao update-story <id> [--title=xxx] [--spec=xxx]` | 更新需求 | 成功/失败信息 |
-| `/chandao close-story <id>` | 关闭需求 | 成功/失败信息 |
-| `/chandao review-story <id> --result=<pass\|reject>` | 评审需求 | 成功/失败信息 |
-| `/chandao delete-story <id>` | 删除需求 | 成功/失败信息 |
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli file upload --path <file> --object-type <objectType> --object-id <objectID>` | 上传附件 |
+| `chandao-cli file edit <id> --name <newName>` | 编辑/重命名附件 |
+| `chandao-cli file delete <id>` | 删除附件 |
 
-### 测试管理命令（12 个）
+### 项目集管理
 
-由 `scripts/actions/testcase.cjs`（测试用例）和 `scripts/actions/testtask.cjs`（测试任务 + 结果）实现。
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli program list [--limit N]` | 列出项目集 |
+| `chandao-cli program get <id>` | 项目集详情 |
+| `chandao-cli program create --name <name>` | 创建项目集 |
+| `chandao-cli program update <id> --name <name>` | 更新项目集 |
+| `chandao-cli program delete <id>` | 删除项目集 |
 
-| 命令 | 描述 | 输出格式 |
-|------|------|----------|
-| `/chandao list-testcase [--product=<id>] [--type=feature\|interface\|performance\|security\|other]` | 列出测试用例 | 表格：ID\|标题\|类型\|优先级\|状态 |
-| `/chandao get-testcase <id>` | 测试用例详情 | 卡片（含前置条件/步骤/预期结果） |
-| `/chandao create-testcase --product=<id> --title=<title> --type=<type>` | 创建测试用例 | 成功/失败信息 |
-| `/chandao update-testcase <id> [--title=xxx] [--type=xxx]` | 更新测试用例 | 成功/失败信息 |
-| `/chandao delete-testcase <id>` | 删除测试用例 | 成功/失败信息 |
-| `/chandao list-testtask [--product=<id>] [--build=<id>]` | 列出测试任务 | 表格：ID\|名称\|产品\|状态\|创建人 |
-| `/chandao get-testtask <id>` | 测试任务详情 | 卡片 |
-| `/chandao create-testtask --product=<id> --name=<name>` | 创建测试任务 | 成功/失败信息 |
-| `/chandao update-testtask <id> [--name=xxx] [--build=xxx]` | 更新测试任务 | 成功/失败信息 |
-| `/chandao delete-testtask <id>` | 删除测试任务 | 成功/失败信息 |
-| `/chandao run-testtask <id>` | 执行测试任务 | 成功/失败信息 |
-| `/chandao submit-testresult --testtask=<id> --testcase=<id> --result=<pass\|fail\|blocked>` | 提交测试结果 | 成功/失败信息 |
+### 构建/版本管理
 
-### 附件/文件管理命令（4 个）
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli build list-by-project <id>` | 按项目列出版本 |
+| `chandao-cli build list-by-execution <id>` | 按执行列出版本 |
+| `chandao-cli build create --product <id> --name <name>` | 创建版本 |
+| `chandao-cli build update <id> --name <name>` | 更新版本 |
+| `chandao-cli build delete <id>` | 删除版本 |
 
-由 `scripts/actions/file.cjs` 实现。
+### 发布管理
 
-| 命令 | 描述 | 输出格式 |
-|------|------|----------|
-| `/chandao upload-file --file=<path> --objectType=<type> --objectID=<id>` | 上传附件 | 成功/失败信息 |
-| `/chandao list-files --objectType=<type> --objectID=<id>` | 附件列表 | 表格：ID\|文件名\|大小\|上传人\|时间 |
-| `/chandao download-file <id> [--output=path]` | 下载附件 | 成功/失败信息 |
-| `/chandao delete-file <id>` | 删除附件 | 成功/失败信息 |
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli release list-by-product <id>` | 按产品列出发布 |
+| `chandao-cli release list` | 列出所有发布 |
+| `chandao-cli release create --product <id> --name <name>` | 创建发布 |
+| `chandao-cli release update <id> --name <name>` | 更新发布 |
+| `chandao-cli release delete <id>` | 删除发布 |
 
-### CLI 用法
+### 产品计划管理
 
-```bash
-node scripts/actions/query.cjs users --page=1 --limit=20
-node scripts/actions/query.cjs user 1
-node scripts/actions/query.cjs products
-node scripts/actions/query.cjs product 5
-node scripts/actions/query.cjs projects --page=2
-node scripts/actions/query.cjs project 3
-```
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli productplan list-by-product <id>` | 按产品列出计划 |
+| `chandao-cli productplan get <id>` | 计划详情 |
+| `chandao-cli productplan create --product <id> --title <title> --begin <date> --end <date>` | 创建计划 |
+| `chandao-cli productplan update <id> --title <title>` | 更新计划 |
+| `chandao-cli productplan delete <id>` | 删除计划 |
 
-### 意图识别规则
+### 反馈管理
 
-**P0 查询类：**
-- "查用户" / "用户列表" / "有哪些用户" → `users`
-- "查产品" / "产品列表" / "有哪些产品" → `products`
-- "查项目" / "项目列表" / "有哪些项目" → `projects`
-- "用户详情" / "看看用户 X" → `user <id>`
-- "产品详情" / "看看产品 X" → `product <id>`
-- "项目详情" / "看看项目 X" → `project <id>`
-- "下一页" / "第 2 页" → `--page=2`
-- "显示 50 条" → `--limit=50`
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli feedback list-by-product <id>` | 按产品列出反馈 |
+| `chandao-cli feedback get <id>` | 反馈详情 |
+| `chandao-cli feedback create --product <id> --title <title>` | 创建反馈 |
+| `chandao-cli feedback update <id> --title <title>` | 更新反馈 |
+| `chandao-cli feedback close <id>` | 关闭反馈 |
+| `chandao-cli feedback activate <id>` | 激活已关闭的反馈 |
+| `chandao-cli feedback delete <id>` | 删除反馈 |
 
-**用户管理：**
-- "创建用户" / "新增用户" → `create-user`
-- "更新用户" / "修改用户" → `update-user`
-- "删除用户" → `delete-user`
-- "激活用户" → `activate-user`
-- "解锁用户" → `unlock-user`
-- "重置密码" → `reset-password`
+### 工单管理
 
-**项目管理：**
-- "创建项目" / "新建项目" → `create-project`
-- "更新项目" / "修改项目" → `update-project`
-- "启动项目" → `start-project`
-- "暂停项目" → `suspend-project`
-- "关闭项目" → `close-project`
-- "项目团队" / "查看团队" → `team`
-- "添加团队成员" / "增加成员" → `add-team`
-- "移除团队成员" / "删除成员" → `remove-team`
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli ticket list-by-product <id>` | 按产品列出工单 |
+| `chandao-cli ticket get <id>` | 工单详情 |
+| `chandao-cli ticket create --product <id> --title <title>` | 创建工单 |
+| `chandao-cli ticket update <id> --title <title>` | 更新工单 |
+| `chandao-cli ticket close <id>` | 关闭工单 |
+| `chandao-cli ticket activate <id>` | 激活已关闭的工单 |
+| `chandao-cli ticket delete <id>` | 删除工单 |
 
-**需求管理：**
-- "列出需求" / "需求列表" → `list-story`
-- "需求详情" / "查看需求" → `get-story`
-- "创建需求" / "新增需求" → `create-story`
-- "更新需求" / "修改需求" → `update-story`
-- "关闭需求" → `close-story`
-- "评审需求" → `review-story`
+### 系统管理
 
-**任务管理：**
-- "列出任务" / "任务列表" → `list-task`
-- "任务详情" / "查看任务" → `get-task`
-- "创建任务" / "新建任务" → `create-task`
-- "更新任务" / "修改任务" → `update-task`
-- "关闭任务" / "完成任务" → `close-task`
-- "删除任务" → `delete-task`
+| 命令 | 描述 |
+|------|------|
+| `chandao-cli system list` | 列出应用系统 |
 
-**执行/迭代管理：**
-- "列出执行" / "执行列表" / "迭代列表" → `list-execution`
-- "执行详情" / "查看执行" / "查看迭代" → `get-execution`
-- "创建执行" / "新建迭代" → `create-execution`
-- "更新执行" / "修改执行" → `update-execution`
-- "删除执行" / "归档执行" → `delete-execution`
-- "启动执行" / "启动迭代" → `start-execution`
-- "暂停执行" / "暂停迭代" → `suspend-execution`
-- "关闭执行" / "关闭迭代" → `close-execution`
-- "关联产品" / "绑定产品" → `link-products`
+## 通用选项
 
-**产品管理：**
-- "创建产品" / "新建产品" → `create-product`
-- "更新产品" / "修改产品" → `update-product`
-- "关闭产品" → `close-product`
-- "删除产品" → `delete-product`
+所有写操作（create/update/delete）支持：
+- `--dry-run` — 预览操作结果，不实际执行
 
-**Bug 管理：**
-- "Bug 列表" / "列出 Bug" / "查 Bug" → `list-bug`
-- "Bug 详情" / "查看 Bug" → `get-bug`
-- "创建 Bug" / "新建 Bug" / "报 Bug" → `create-bug`
-- "解决 Bug" → `resolve-bug`
-- "关闭 Bug" → `close-bug`
-- "激活 Bug" / "重新打开 Bug" → `activate-bug`
-- "编辑 Bug" / "修改 Bug" → `update-bug`
-- "删除 Bug" → `delete-bug`
+所有列表操作支持：
+- `--limit <N>` — 每页数量（默认 20，最大 1000）
+- `--page <N>` — 页码（从 1 开始）
 
-**史诗/故事管理：**
-- "史诗列表" / "列出史诗" → `list-epic`
-- "史诗详情" → `get-epic`
-- "创建史诗" → `create-epic`
-- "删除史诗" → `delete-epic`
-- "删除需求" → `delete-story`
-- "需求列表" 加 `--epic=N` → 按史诗过滤
+## 意图识别规则
 
-**测试管理：**
-- "测试用例列表" / "列出测试用例" → `list-testcase`
-- "测试用例详情" → `get-testcase`
-- "创建测试用例" → `create-testcase`
-- "测试任务列表" → `list-testtask`
-- "创建测试任务" → `create-testtask`
-- "执行测试任务" → `run-testtask`
-- "提交测试结果" / "测试通过/失败" → `submit-testresult`
+### 安装相关
+- "没有 chandao-cli" / "没装" / "找不到" → 提示 `npm i -g @tnnevol/chandao-cli`
 
-**附件/文件管理：**
-- "上传附件" → `upload-file`
-- "查看附件" / "附件列表" → `list-files`
-- "下载附件" → `download-file`
-- "删除附件" → `delete-file`
+### 用户管理
+- "查用户" / "用户列表" / "有哪些用户" → `user list`
+- "用户详情" / "看看用户 X" → `user get <id>`
+- "创建用户" / "新增用户" → `user create`
+- "删除用户" → `user delete`
 
-### 脱敏规则
+### 产品管理
+- "查产品" / "产品列表" / "有哪些产品" → `product list`
+- "产品详情" / "看看产品 X" → `product get <id>`
+- "创建产品" / "新建产品" → `product create`
+- "删除产品" → `product delete`
 
-- 密码、Token → `***`
-- 手机号 → `138****5678`（保留前3后4）
-- 邮箱 → `tes***@test.com`（保留前3字符 + @域名）
+### 项目管理
+- "查项目" / "项目列表" / "有哪些项目" → `project list`
+- "项目详情" / "看看项目 X" → `project get <id>`
+- "创建项目" / "新建项目" → `project create`
+- "删除项目" → `project delete`
+
+### 需求管理
+- "列出需求" / "需求列表" → `story list`
+- "需求详情" / "查看需求" → `story get <id>`
+- "创建需求" / "新增需求" → `story create`
+- "更新需求" / "修改需求" → `story update`
+- "评审需求" → `story review`
+- "关闭需求" → `story close`
+
+### 任务管理
+- "列出任务" / "任务列表" → `task list`
+- "任务详情" / "查看任务" → `task get <id>`
+- "创建任务" / "新建任务" → `task create`
+- "开始任务" / "认领" → `task start`
+- "完成任务" → `task finish`
+- "关闭任务" → `task close`
+- "删除任务" → `task delete`
+
+### 迭代/执行管理
+- "列出执行" / "迭代列表" → `execution list`
+- "执行详情" / "查看迭代" → `execution get <id>`
+- "创建执行" / "新建迭代" → `execution create`
+- "启动执行" / "启动迭代" → `execution start`
+- "暂停执行" / "暂停迭代" → `execution suspend`
+- "关闭执行" / "关闭迭代" → `execution close`
+- "关联产品" / "绑定产品" → `execution link-products`
+
+### Bug 管理
+- "Bug 列表" / "列出 Bug" → `bug list`
+- "Bug 详情" / "查看 Bug" → `bug get <id>`
+- "创建 Bug" / "报 Bug" → `bug create`
+- "解决 Bug" → `bug resolve`
+- "关闭 Bug" → `bug close`
+- "重新打开 Bug" → `bug activate`
+
+### 史诗管理
+- "史诗列表" / "列出史诗" → `epic list-by-product`
+- "史诗详情" → `epic get`
+- "创建史诗" → `epic create`
+- "关闭史诗" → `epic close`
+
+### 测试管理
+- "测试用例列表" → `testcase list`
+- "创建测试用例" → `testcase create`
+- "测试单列表" → `testtask list-by-product`
+- "创建测试单" → `testtask create`
+
+### 项目集管理
+- "项目集列表" / "有哪些项目集" → `program list`
+- "项目集详情" → `program get`
+
+### 发布/版本
+- "版本列表" / "构建列表" → `build list-by-project`
+- "发布列表" → `release list-by-product`
+- "产品计划" → `productplan list-by-product`
+
+### 反馈/工单
+- "反馈列表" → `feedback list-by-product`
+- "工单列表" → `ticket list-by-product`
 
 ## 目录结构
 
 ```
-chandao/
-├── SKILL.md                    # 本文件：主入口 + 命令定义
-├── .env.example                # 环境变量示例
-├── scripts/
-│   ├── env.cjs                 # 环境变量加载与校验
-│   ├── auth.cjs                # Token 认证管理
-│   ├── api.cjs                 # HTTP 请求封装（GET/POST/PUT）
-│   ├── sanitize.cjs            # 敏感信息脱敏
-│   ├── validate.cjs            # 参数校验工具（必填/长度/日期/邮箱等）
-│   └── actions/
-│       ├── query.cjs           # P0 查询命令实现
-│       ├── user.cjs            # 用户管理命令实现
-│       ├── project.cjs         # 项目管理命令实现
-│       ├── story.cjs           # 需求管理命令实现
-│       ├── task.cjs            # 任务管理命令实现
-│       ├── execution.cjs       # 执行/迭代管理命令实现
-│       ├── product.cjs         # 产品管理命令实现
-│       ├── bug.cjs             # Bug 管理命令实现
-│       ├── epic.cjs            # 史诗管理命令实现
-│       ├── testcase.cjs        # 测试用例管理命令实现
-│       ├── testtask.cjs        # 测试任务+结果管理命令实现
-│       └── file.cjs            # 附件/文件管理命令实现
-├── docs/
-│   ├── setup.md                # 安装配置指南
-│   ├── help.md                 # 禅道使用帮助
-│   ├── actions-query.md        # 查询命令详细文档
-│   ├── actions-user.md         # 用户模块 API 文档
-│   ├── actions-product.md      # 产品模块 API 文档
-│   └── actions-execution.md    # 执行/迭代模块 API 文档
-│   └── actions-project.md      # 项目模块 API 文档
+skills/chandao/
+├── SKILL.md       # 主入口 + 命令定义
 ```
+
+所有执行依赖 `chandao-cli`，无需额外脚本文件。
 
 ## 错误处理
 
-| 错误 | 处理 |
+| 情况 | 处理 |
 |------|------|
-| `CONFIG_MISSING` | 提示用户设置 CHANDAO_URL / CHANDAO_ACCOUNT / CHANDAO_PASSWORD |
-| 登录失败 | 提示检查账号密码或禅道实例是否可达 |
+| `command not found: chandao-cli` | 提示用户：`npm i -g @tnnevol/chandao-cli` |
+| 登录失败 | 提示检查 `~/.config/chandao/.env` 中的账号密码 |
 | 无数据 | "📭 暂无数据" |
 | 网络错误 | 友好提示，不暴露内部细节 |
-| Token 过期 | 系统自动刷新，用户无感知 |
-
-## P0+ 阶段（后续规划）
-
-| Action | Usage | Description |
-|--------|-------|-------------|
-| `create-bug` | `/chandao create-bug --product=ID --title=xxx` | 创建缺陷 |
-| `create-task` | `/chandao create-task --execution=ID --name=xxx` | 创建任务 |
-| `create-story` | `/chandao create-story --product=ID --title=xxx` | 创建需求 |
-| `resolve-bug` | `/chandao resolve-bug <id> --resolution=fixed` | 解决缺陷 |
-| `finish-task` | `/chandao finish-task <id>` | 完成任务 |
-| `bugs` | `/chandao bugs [--product=ID] [--status=unresolved]` | 列出缺陷 |
-| `tasks` | `/chandao tasks [--execution=ID] [--assignedTo=user]` | 列出任务 |
-| `stories` | `/chandao stories [--product=ID] [--status=open]` | 列出需求 |
-| `validate` | `/chandao validate --param=value` | 参数校验 |
+| `--dry-run` 输出 | 展示将要执行的操作，询问用户是否确认 |
