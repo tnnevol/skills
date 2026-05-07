@@ -45,6 +45,9 @@ enum Commands {
     /// Manage users
     #[command(subcommand)]
     User(actions::UserCommands),
+    /// Manage projects
+    #[command(subcommand)]
+    Project(actions::ProjectCommands),
     /// Print version
     Version,
 }
@@ -78,6 +81,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Product(args) => actions::handle_product(&client, &auth, args),
         Commands::File(args) => actions::handle_file(&client, &auth, args),
         Commands::User(args) => actions::handle_user(&client, &auth, args),
+        Commands::Project(args) => actions::handle_project(&client, &auth, args),
         _ => unreachable!(),
     };
 

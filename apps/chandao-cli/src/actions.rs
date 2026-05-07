@@ -1503,6 +1503,135 @@ pub enum ProductCommands {
     },
 }
 
+// ── Project ──
+
+#[derive(Subcommand)]
+pub enum ProjectCommands {
+    /// List projects
+    List {
+        /// Browse type (unclosed, all, etc.)
+        #[arg(short = 'b', long, default_value = "all")]
+        browse_type: String,
+        /// Order by field (e.g., id_desc, name_asc)
+        #[arg(short = 'o', long, default_value = "id_desc")]
+        order_by: String,
+        /// Page number
+        #[arg(short, long, default_value = "1")]
+        page: u32,
+        /// Records per page
+        #[arg(short = 'n', long, default_value = "20")]
+        limit: u32,
+    },
+    /// List projects by program
+    ListByProgram {
+        /// Program ID
+        #[arg(short, long)]
+        program: i64,
+        /// Page number
+        #[arg(short, long, default_value = "1")]
+        page: u32,
+        /// Records per page
+        #[arg(short = 'n', long, default_value = "20")]
+        limit: u32,
+    },
+    /// Get project details
+    Get {
+        /// Project ID
+        id: i64,
+    },
+    /// Create a new project
+    Create {
+        /// Project name (required)
+        #[arg(short, long)]
+        name: String,
+        /// Project code (required)
+        #[arg(short, long)]
+        code: String,
+        /// Project type (sprint, stage, kanban, etc.)
+        #[arg(short, long, default_value = "sprint")]
+        r#type: String,
+        /// Parent project ID
+        #[arg(long)]
+        parent: Option<i64>,
+        /// Begin date (YYYY-MM-DD)
+        #[arg(long)]
+        begin: Option<String>,
+        /// End date (YYYY-MM-DD)
+        #[arg(long)]
+        end: Option<String>,
+        /// Status (wait, doing, suspended, closed)
+        #[arg(short, long, default_value = "wait")]
+        status: String,
+        /// Description
+        #[arg(short, long)]
+        desc: Option<String>,
+        /// Project budget (in hours)
+        #[arg(long)]
+        budget: Option<f64>,
+        /// Product IDs (comma-separated)
+        #[arg(long, value_delimiter = ',')]
+        products: Option<Vec<i64>>,
+        /// PM (project manager account)
+        #[arg(long)]
+        pm: Option<String>,
+        /// Dry run
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Update a project
+    Update {
+        /// Project ID
+        id: i64,
+        /// Project name
+        #[arg(short, long)]
+        name: Option<String>,
+        /// Project code
+        #[arg(short, long)]
+        code: Option<String>,
+        /// Project type (sprint, stage, kanban, etc.)
+        #[arg(short, long)]
+        r#type: Option<String>,
+        /// Parent project ID
+        #[arg(long)]
+        parent: Option<i64>,
+        /// Begin date (YYYY-MM-DD)
+        #[arg(long)]
+        begin: Option<String>,
+        /// End date (YYYY-MM-DD)
+        #[arg(long)]
+        end: Option<String>,
+        /// Status (wait, doing, suspended, closed)
+        #[arg(short, long)]
+        status: Option<String>,
+        /// Description
+        #[arg(short, long)]
+        desc: Option<String>,
+        /// Project budget (in hours)
+        #[arg(long)]
+        budget: Option<f64>,
+        /// Product IDs (comma-separated)
+        #[arg(long, value_delimiter = ',')]
+        products: Option<Vec<i64>>,
+        /// PM (project manager account)
+        #[arg(long)]
+        pm: Option<String>,
+        /// Dry run
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Delete a project
+    Delete {
+        /// Project ID
+        id: i64,
+        /// Skip confirmation
+        #[arg(long)]
+        yes: bool,
+        /// Dry run
+        #[arg(long)]
+        dry_run: bool,
+    },
+}
+
 pub fn handle_product(
     client: &Client,
     auth: &Rc<RefCell<AuthManager>>,
@@ -1697,6 +1826,190 @@ pub fn handle_product(
                     &data,
                     &["id", "name", "code", "status", "PO", "type"],
                 );
+                Ok(())
+            })
+        }
+    }
+}
+
+// ── Project handler ──
+
+pub fn handle_project(
+    client: &Client,
+    auth: &Rc<RefCell<AuthManager>>,
+    cmd: &ProjectCommands,
+) -> Result<(), String> {
+    match cmd {
+        ProjectCommands::List {
+            browse_type,
+            order_by,
+            page,
+            limit,
+        } => {
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let data = ac.get(&format!(
+                    "/projects?browseType={}&orderBy={}&recPerPage={}&pageID={}",
+                    browse_type, order_by, limit, page
+                ))?;
+                utils::print_table(
+                    &data,
+                    &["id", "name", "code", "status", "type", "begin", "end", "PM"],
+                );
+                Ok(())
+            })
+        }
+        ProjectCommands::ListByProgram {
+            program,
+            page,
+            limit,
+        } => {
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let data = ac.get(&format!(
+                    "/programs/{}/projects?pageID={}&recPerPage={}",
+                    program, page, limit
+                ))?;
+                utils::print_table(
+                    &data,
+                    &["id", "name", "code", "status", "type", "begin", "end", "PM"],
+                );
+                Ok(())
+            })
+        }
+        ProjectCommands::Get { id } => {
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let data = ac.get(&format!("/projects/{}", id))?;
+                utils::print_json(&data);
+                Ok(())
+            })
+        }
+        ProjectCommands::Create {
+            name,
+            code,
+            r#type,
+            parent,
+            begin,
+            end,
+            status,
+            desc,
+            budget,
+            products,
+            pm,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!(
+                    "🔍 [DRY-RUN] 创建项目: name={}, code={}",
+                    name, code
+                );
+                return Ok(());
+            }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let mut body = json!({
+                    "name": name,
+                    "code": code,
+                });
+                body["type"] = json!(r#type);
+                body["status"] = json!(status);
+                if let Some(v) = parent {
+                    body["parent"] = json!(v);
+                }
+                if let Some(v) = begin {
+                    body["begin"] = json!(v);
+                }
+                if let Some(v) = end {
+                    body["end"] = json!(v);
+                }
+                if let Some(v) = desc {
+                    body["desc"] = json!(v);
+                }
+                if let Some(v) = budget {
+                    body["budget"] = json!(v);
+                }
+                if let Some(v) = products {
+                    body["products"] = json!(v);
+                }
+                if let Some(v) = pm {
+                    body["PM"] = json!(v);
+                }
+                let result = ac.post("/projects", &body)?;
+                println!("✅ 项目创建成功");
+                utils::print_json(&result);
+                Ok(())
+            })
+        }
+        ProjectCommands::Update {
+            id,
+            name,
+            code,
+            r#type,
+            parent,
+            begin,
+            end,
+            status,
+            desc,
+            budget,
+            products,
+            pm,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 更新项目 #{}", id);
+                return Ok(());
+            }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let mut body = json!({});
+                if let Some(v) = name {
+                    body["name"] = json!(v);
+                }
+                if let Some(v) = code {
+                    body["code"] = json!(v);
+                }
+                if let Some(v) = r#type {
+                    body["type"] = json!(v);
+                }
+                if let Some(v) = parent {
+                    body["parent"] = json!(v);
+                }
+                if let Some(v) = begin {
+                    body["begin"] = json!(v);
+                }
+                if let Some(v) = end {
+                    body["end"] = json!(v);
+                }
+                if let Some(v) = status {
+                    body["status"] = json!(v);
+                }
+                if let Some(v) = desc {
+                    body["desc"] = json!(v);
+                }
+                if let Some(v) = budget {
+                    body["budget"] = json!(v);
+                }
+                if let Some(v) = products {
+                    body["products"] = json!(v);
+                }
+                if let Some(v) = pm {
+                    body["PM"] = json!(v);
+                }
+                let result = ac.put(&format!("/projects/{}", id), &body)?;
+                println!("✅ 项目 #{} 更新成功", id);
+                utils::print_json(&result);
+                Ok(())
+            })
+        }
+        ProjectCommands::Delete { id, yes, dry_run } => {
+            if !yes && !*dry_run {
+                println!("⚠️  确认删除项目 #{}? 使用 --yes 确认", id);
+                return Ok(());
+            }
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 删除项目 #{}", id);
+                return Ok(());
+            }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let result = ac.delete(&format!("/projects/{}", id))?;
+                println!("✅ 项目 #{} 已删除", id);
+                utils::print_json(&result);
                 Ok(())
             })
         }
