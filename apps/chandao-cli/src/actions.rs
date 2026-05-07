@@ -4148,3 +4148,263 @@ pub fn handle_testtask(
         }
     }
 }
+
+// ── Feedback ──
+
+#[derive(Subcommand)]
+pub enum FeedbackCommands {
+    /// List feedbacks by product
+    ListByProduct {
+        /// Product ID
+        #[arg(short = 'p', long)]
+        product: i64,
+        /// Page number
+        #[arg(short, long, default_value = "1")]
+        page: u32,
+        /// Records per page
+        #[arg(short = 'n', long, default_value = "20")]
+        limit: u32,
+    },
+    /// Get feedback details
+    Get {
+        /// Feedback ID
+        id: i64,
+    },
+    /// Create a feedback
+    Create {
+        /// Product ID (required)
+        #[arg(short = 'p', long)]
+        product: i64,
+        /// Title (required)
+        #[arg(short, long)]
+        title: String,
+        /// Description
+        #[arg(short, long)]
+        desc: Option<String>,
+        /// Assigned to
+        #[arg(short = 'a', long)]
+        assigned: Option<String>,
+        /// Priority (1-4)
+        #[arg(short, long)]
+        pri: Option<u8>,
+        /// Type (feedback/advise/issue)
+        #[arg(short, long)]
+        r#type: Option<String>,
+        /// Source (customer/ market/ other)
+        #[arg(short, long)]
+        source: Option<String>,
+        /// Dry run
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Update a feedback
+    Update {
+        /// Feedback ID
+        id: i64,
+        /// Title
+        #[arg(short, long)]
+        title: Option<String>,
+        /// Description
+        #[arg(short, long)]
+        desc: Option<String>,
+        /// Assigned to
+        #[arg(short = 'a', long)]
+        assigned: Option<String>,
+        /// Priority (1-4)
+        #[arg(short, long)]
+        pri: Option<u8>,
+        /// Status
+        #[arg(short, long)]
+        status: Option<String>,
+        /// Dry run
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Close a feedback
+    Close {
+        /// Feedback ID
+        id: i64,
+        /// Dry run
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Activate a closed feedback
+    Activate {
+        /// Feedback ID
+        id: i64,
+        /// Dry run
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Delete a feedback
+    Delete {
+        /// Feedback ID
+        id: i64,
+        /// Skip confirmation
+        #[arg(long)]
+        yes: bool,
+        /// Dry run
+        #[arg(long)]
+        dry_run: bool,
+    },
+}
+
+pub fn handle_feedback(
+    client: &Client,
+    auth: &Rc<RefCell<AuthManager>>,
+    cmd: &FeedbackCommands,
+) -> Result<(), String> {
+    match cmd {
+        FeedbackCommands::ListByProduct {
+            product,
+            page,
+            limit,
+        } => {
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let data = ac.get(&format!(
+                    "/products/{}/feedbacks?pageID={}&recPerPage={}",
+                    product, page, limit
+                ))?;
+                utils::print_table(
+                    &data,
+                    &[
+                        "id",
+                        "title",
+                        "status",
+                        "pri",
+                        "assignedTo",
+                        "openedDate",
+                        "source",
+                    ],
+                );
+                Ok(())
+            })
+        }
+        FeedbackCommands::Get { id } => {
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let data = ac.get(&format!("/feedbacks/{}", id))?;
+                utils::print_json(&data);
+                Ok(())
+            })
+        }
+        FeedbackCommands::Create {
+            product,
+            title,
+            desc,
+            assigned,
+            pri,
+            r#type,
+            source,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!(
+                    "🔍 [DRY-RUN] 创建反馈: title={}, product={}",
+                    title, product
+                );
+                return Ok(());
+            }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let mut body = json!({
+                    "product": product,
+                    "title": title,
+                });
+                if let Some(v) = desc {
+                    body["desc"] = json!(v);
+                }
+                if let Some(v) = assigned {
+                    body["assignedTo"] = json!(v);
+                }
+                if let Some(v) = pri {
+                    body["pri"] = json!(v);
+                }
+                if let Some(v) = r#type {
+                    body["type"] = json!(v);
+                }
+                if let Some(v) = source {
+                    body["source"] = json!(v);
+                }
+                let result = ac.post("/feedbacks", &body)?;
+                println!("✅ 反馈创建成功");
+                utils::print_json(&result);
+                Ok(())
+            })
+        }
+        FeedbackCommands::Update {
+            id,
+            title,
+            desc,
+            assigned,
+            pri,
+            status,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 更新反馈 #{}", id);
+                return Ok(());
+            }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let mut body = json!({});
+                if let Some(v) = title {
+                    body["title"] = json!(v);
+                }
+                if let Some(v) = desc {
+                    body["desc"] = json!(v);
+                }
+                if let Some(v) = assigned {
+                    body["assignedTo"] = json!(v);
+                }
+                if let Some(v) = pri {
+                    body["pri"] = json!(v);
+                }
+                if let Some(v) = status {
+                    body["status"] = json!(v);
+                }
+                let result = ac.put(&format!("/feedbacks/{}", id), &body)?;
+                println!("✅ 反馈 #{} 更新成功", id);
+                utils::print_json(&result);
+                Ok(())
+            })
+        }
+        FeedbackCommands::Close { id, dry_run } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 关闭反馈 #{}", id);
+                return Ok(());
+            }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let result = ac.put(&format!("/feedbacks/{}/close", id), &json!({}))?;
+                println!("✅ 反馈 #{} 已关闭", id);
+                utils::print_json(&result);
+                Ok(())
+            })
+        }
+        FeedbackCommands::Activate { id, dry_run } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 激活反馈 #{}", id);
+                return Ok(());
+            }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let result = ac.put(&format!("/feedbacks/{}/activate", id), &json!({}))?;
+                println!("✅ 反馈 #{} 已激活", id);
+                utils::print_json(&result);
+                Ok(())
+            })
+        }
+        FeedbackCommands::Delete { id, yes, dry_run } => {
+            if !yes && !*dry_run {
+                println!("⚠️  确认删除反馈 #{}? 使用 --yes 确认", id);
+                return Ok(());
+            }
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 删除反馈 #{}", id);
+                return Ok(());
+            }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let result = ac.delete(&format!("/feedbacks/{}", id))?;
+                println!("✅ 反馈 #{} 已删除", id);
+                utils::print_json(&result);
+                Ok(())
+            })
+        }
+    }
+}
