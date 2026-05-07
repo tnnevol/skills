@@ -1,6 +1,6 @@
 {
   "name": "@tnnevol/chandao-cli",
-  "version": "1.0.0",
+  "version": "2.0.5-beta.1",
   "description": "禅道 (ZenTao) CLI tool - manage projects, tasks, bugs, stories",
   "bin": {
     "chandao": "./index.js"
@@ -11,7 +11,14 @@
     "build:macos": "make macos",
     "build:windows": "make windows",
     "clean": "make clean",
-    "verify": "make verify"
+    "verify": "make verify",
+    "bump": "bumpp",
+    "bump:patch": "bumpp patch -y",
+    "bump:minor": "bumpp minor -y",
+    "bump:major": "bumpp major -y"
   },
-  "files": ["index.js", "bin/"]
+  "files": ["index.js", "bin/"],
+  "devDependencies": {
+    "bumpp": "^11.0.1"
+  }
 }

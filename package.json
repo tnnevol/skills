@@ -14,7 +14,11 @@
     "halo:bump": "pnpm --filter @tnnevol/halo-cli bump",
     "halo:bump:patch": "pnpm --filter @tnnevol/halo-cli bump:patch",
     "halo:bump:minor": "pnpm --filter @tnnevol/halo-cli bump:minor",
-    "halo:bump:major": "pnpm --filter @tnnevol/halo-cli bump:major"
+    "halo:bump:major": "pnpm --filter @tnnevol/halo-cli bump:major",
+    "chandao:bump": "pnpm --filter @tnnevol/chandao-cli bump",
+    "chandao:bump:patch": "pnpm --filter @tnnevol/chandao-cli bump:patch",
+    "chandao:bump:minor": "pnpm --filter @tnnevol/chandao-cli bump:minor",
+    "chandao:bump:major": "pnpm --filter @tnnevol/chandao-cli bump:major"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^7.7.2",
