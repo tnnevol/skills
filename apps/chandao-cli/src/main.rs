@@ -63,6 +63,9 @@ enum Commands {
     /// Manage requirements (用户需求)
     #[command(subcommand)]
     Requirement(actions::RequirementCommands),
+    /// Manage epics (史诗需求)
+    #[command(subcommand)]
+    Epic(actions::EpicCommands),
     /// Print version
     Version,
 }
@@ -102,6 +105,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Release(args) => actions::handle_release(&client, &auth, args),
         Commands::Productplan(args) => actions::handle_productplan(&client, &auth, args),
         Commands::Requirement(args) => actions::handle_requirement(&client, &auth, args),
+        Commands::Epic(args) => actions::handle_epic(&client, &auth, args),
         _ => unreachable!(),
     };
 
