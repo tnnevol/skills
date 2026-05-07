@@ -54,6 +54,9 @@ enum Commands {
     /// Manage builds/versions
     #[command(subcommand)]
     Build(actions::BuildCommands),
+    /// Manage releases
+    #[command(subcommand)]
+    Release(actions::ReleaseCommands),
     /// Print version
     Version,
 }
@@ -90,6 +93,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Project(args) => actions::handle_project(&client, &auth, args),
         Commands::Program(args) => actions::handle_program(&client, &auth, args),
         Commands::Build(args) => actions::handle_build(&client, &auth, args),
+        Commands::Release(args) => actions::handle_release(&client, &auth, args),
         _ => unreachable!(),
     };
 
