@@ -51,6 +51,9 @@ enum Commands {
     /// Manage programs (项目集)
     #[command(subcommand)]
     Program(actions::ProgramCommands),
+    /// Manage builds/versions
+    #[command(subcommand)]
+    Build(actions::BuildCommands),
     /// Print version
     Version,
 }
@@ -86,6 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::User(args) => actions::handle_user(&client, &auth, args),
         Commands::Project(args) => actions::handle_project(&client, &auth, args),
         Commands::Program(args) => actions::handle_program(&client, &auth, args),
+        Commands::Build(args) => actions::handle_build(&client, &auth, args),
         _ => unreachable!(),
     };
 
