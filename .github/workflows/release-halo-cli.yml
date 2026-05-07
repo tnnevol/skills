@@ -69,11 +69,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .node-version
           registry-url: https://registry.npmjs.org/
 
-      - name: Setup pnpm
-        run: npm i -g pnpm@10.32.1
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
