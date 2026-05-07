@@ -36,6 +36,9 @@ enum Commands {
     /// Manage application systems
     #[command(subcommand)]
     System(actions::SystemCommands),
+    /// Manage products
+    #[command(subcommand)]
+    Product(actions::ProductCommands),
     /// Print version
     Version,
 }
@@ -66,6 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Bug(args) => actions::handle_bug(&client, &auth, args),
         Commands::Testcase(args) => actions::handle_testcase(&client, &auth, args),
         Commands::System(args) => actions::handle_system(&client, &auth, args),
+        Commands::Product(args) => actions::handle_product(&client, &auth, args),
         _ => unreachable!(),
     };
 
