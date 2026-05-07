@@ -203,13 +203,13 @@ impl AuthenticatedClient {
             return Ok(data.clone());
         }
         // Try entity-specific array keys (format: { status, <entity>s: [...] })
-        for key in &["executions", "tasks", "stories", "bugs", "testcases", "users", "products", "projects", "programs", "builds", "releases", "plans", "requirements", "epics", "testtasks", "feedbacks", "files", "systems", "tickets"] {
+        for key in &["executions", "tasks", "stories", "bugs", "testcases", "users", "products", "projects", "programs", "builds", "releases", "plans", "productplans", "requirements", "epics", "testtasks", "feedbacks", "files", "systems", "tickets"] {
             if let Some(items) = body.get(*key) {
                 return Ok(items.clone());
             }
         }
         // Also try single entity keys (format: { status, <entity>: {...} })
-        for key in &["execution", "task", "story", "bug", "testcase", "user", "product", "project", "program", "build", "release", "plan", "requirement", "epic", "testtask", "feedback", "file", "system", "ticket"] {
+        for key in &["execution", "task", "story", "bug", "testcase", "user", "product", "project", "program", "build", "release", "plan", "productplan", "requirement", "epic", "testtask", "feedback", "file", "system", "ticket"] {
             if let Some(item) = body.get(*key) {
                 return Ok(item.clone());
             }

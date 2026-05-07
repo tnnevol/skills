@@ -3088,7 +3088,7 @@ pub fn handle_productplan(
         } => {
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let data = ac.get(&format!(
-                    "/products/{}/plans?pageID={}&recPerPage={}",
+                    "/products/{}/productplans?pageID={}&recPerPage={}",
                     product, page, limit
                 ))?;
                 utils::print_table(
