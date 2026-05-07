@@ -66,6 +66,9 @@ enum Commands {
     /// Manage epics (史诗需求)
     #[command(subcommand)]
     Epic(actions::EpicCommands),
+    /// Manage test tasks (测试单)
+    #[command(subcommand)]
+    Testtask(actions::TesttaskCommands),
     /// Print version
     Version,
 }
@@ -106,6 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Productplan(args) => actions::handle_productplan(&client, &auth, args),
         Commands::Requirement(args) => actions::handle_requirement(&client, &auth, args),
         Commands::Epic(args) => actions::handle_epic(&client, &auth, args),
+        Commands::Testtask(args) => actions::handle_testtask(&client, &auth, args),
         _ => unreachable!(),
     };
 
