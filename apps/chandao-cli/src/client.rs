@@ -99,7 +99,69 @@ impl AuthenticatedClient {
     pub fn post(&mut self, endpoint: &str, body: &Value) -> Result<Value, String> {
         let url = self.build_url(endpoint);
         let resp = self.do_request("POST", &url, Some(body))?;
-        let body: Value = resp.into_json().map_err(|e| format!("JSON 解析失败: {}", e))?;
+        let body: Value = resp.into_json().map_err(|e| format!("JSON 解析失败: {e}"))?;
+        Self::check_response(body)
+    }
+
+    /// Upload a file via multipart/form-data using `curl` CLI.
+    pub fn post_multipart(
+        &mut self,
+        endpoint: &str,
+        _fields: &[(&str, &str)],
+        _file_field: &str,
+        _file_path: &str,
+        _file_name: Option<&str>,
+    ) -> Result<Value, String> {
+        // Delegate to curl-based method
+        self.post_multipart_curl(endpoint, _fields, _file_field, _file_path)
+    }
+
+    /// Upload a file via multipart/form-data using `curl` CLI with explicit args.
+    fn post_multipart_curl(
+        &mut self,
+        endpoint: &str,
+        fields: &[(&str, &str)],
+        file_field: &str,
+        file_path: &str,
+    ) -> Result<Value, String> {
+        let url = self.build_url(endpoint);
+        let mut cmd = std::process::Command::new("curl");
+        cmd.arg("-s")
+            .arg("-X")
+            .arg("POST")
+            .arg("-H")
+            .arg(format!("token: {}", self.token));
+        for (name, value) in fields {
+            cmd.arg("-F").arg(format!("{}={}", name, value));
+        }
+        cmd.arg("-F")
+            .arg(format!("{}@{}", file_field, file_path));
+        cmd.arg(&url);
+
+        let output = cmd
+            .output()
+            .map_err(|e| format!("curl 执行失败: {e}"))?;
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+
+        if !output.status.success() {
+            let code = output.status.code().unwrap_or(-1);
+            // 401 → refresh token and retry once
+            if code == 401 || stdout.contains("Not allowed") {
+                self.token = self
+                    .auth
+                    .borrow_mut()
+                    .refresh_token(&self.client.base_url)?;
+                // Recursive retry (at most once, since retry won't 401 again)
+                return self.post_multipart_curl(endpoint, fields, file_field, file_path);
+            }
+            return Err(format!("curl 返回错误 ({code}): {stderr}"));
+        }
+
+        let body: Value = serde_json::from_str(&stdout)
+            .map_err(|e| format!("JSON 解析失败: {e} (body: {stdout:.300})"))?;
+
         Self::check_response(body)
     }
 
@@ -155,6 +217,87 @@ impl AuthenticatedClient {
         // Return the full body as a fallback (for simple responses like { status, id })
         Ok(body)
     }
+}
+
+/// Generate a random boundary string for multipart requests.
+fn rand_boundary() -> u128 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let ts = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    // Mix in some pointer address for extra entropy
+    ts.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407)
+}
+
+/// Build a multipart/form-data body containing text fields and one file.
+/// NOTE: This is kept as a reference but not currently used. The curl-based
+/// `post_multipart_curl` is used instead for file uploads.
+use std::fs;
+use std::path::Path;
+/// `fields` is a list of (field_name, value) pairs.
+/// `file_field` is the form field name for the file.
+/// `file_path` is the path to the file to upload.
+/// `file_name` is an optional override for the filename in the Content-Disposition.
+fn build_multipart_body(
+    boundary: &str,
+    fields: &[(&str, &str)],
+    file_field: &str,
+    file_path: &str,
+    file_name: Option<&str>,
+) -> Result<Vec<u8>, String> {
+    use std::fs;
+    use std::path::Path;
+
+    let dash_boundary = format!("--{boundary}");
+    let crlf = "\r\n";
+
+    let mut body = Vec::new();
+
+    // Text fields
+    for (name, value) in fields {
+        body.extend_from_slice(dash_boundary.as_bytes());
+        body.extend_from_slice(crlf.as_bytes());
+        body.extend_from_slice(
+            format!("Content-Disposition: form-data; name=\"{name}\"{crlf}")
+                .as_bytes(),
+        );
+        body.extend_from_slice(crlf.as_bytes());
+        body.extend_from_slice(value.as_bytes());
+        body.extend_from_slice(crlf.as_bytes());
+    }
+
+    // File field
+    let file_bytes = fs::read(file_path)
+        .map_err(|e| format!("无法读取文件 {file_path}: {e}"))?;
+    let actual_file_name = file_name
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| {
+            Path::new(file_path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("file")
+                .to_string()
+        });
+
+    body.extend_from_slice(dash_boundary.as_bytes());
+    body.extend_from_slice(crlf.as_bytes());
+    body.extend_from_slice(
+        format!(
+            "Content-Disposition: form-data; name=\"{file_field}\"; filename=\"{actual_file_name}\"{crlf}"
+        )
+        .as_bytes(),
+    );
+    body.extend_from_slice(b"Content-Type: application/octet-stream");
+    body.extend_from_slice(crlf.as_bytes());
+    body.extend_from_slice(crlf.as_bytes());
+    body.extend_from_slice(&file_bytes);
+    body.extend_from_slice(crlf.as_bytes());
+
+    // Closing boundary
+    body.extend_from_slice(format!("{dash_boundary}--{crlf}").as_bytes());
+
+    Ok(body)
 }
 
 #[cfg(test)]

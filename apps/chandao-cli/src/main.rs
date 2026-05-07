@@ -39,6 +39,9 @@ enum Commands {
     /// Manage products
     #[command(subcommand)]
     Product(actions::ProductCommands),
+    /// Manage file attachments
+    #[command(subcommand)]
+    File(actions::FileCommands),
     /// Print version
     Version,
 }
@@ -70,6 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Testcase(args) => actions::handle_testcase(&client, &auth, args),
         Commands::System(args) => actions::handle_system(&client, &auth, args),
         Commands::Product(args) => actions::handle_product(&client, &auth, args),
+        Commands::File(args) => actions::handle_file(&client, &auth, args),
         _ => unreachable!(),
     };
 
