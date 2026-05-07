@@ -48,10 +48,10 @@ pub enum ExecutionCommands {
         code: Option<String>,
         /// Begin date (YYYY-MM-DD)
         #[arg(long)]
-        begin: Option<String>,
+        begin: String,
         /// End date (YYYY-MM-DD)
         #[arg(long)]
-        end: Option<String>,
+        end: String,
         /// Description
         #[arg(short, long)]
         desc: Option<String>,
@@ -111,6 +111,20 @@ pub enum ExecutionCommands {
         #[arg(long)]
         dry_run: bool,
     },
+    /// Link products to an execution
+    LinkProducts {
+        /// Execution ID
+        id: i64,
+        /// Product IDs (comma-separated)
+        #[arg(short = 'p', long, value_delimiter = ',', required = true)]
+        products: Vec<i64>,
+        /// Plans mapping (JSON: {\"productId\": [planId, ...]})
+        #[arg(long)]
+        plans: Option<String>,
+        /// Dry run
+        #[arg(long)]
+        dry_run: bool,
+    },
 }
 
 // ── Story ──
@@ -139,9 +153,12 @@ pub enum StoryCommands {
         /// Title
         #[arg(short, long)]
         title: String,
-        /// Description
+        /// Specification
         #[arg(short, long)]
-        desc: Option<String>,
+        spec: Option<String>,
+        /// Verification criteria
+        #[arg(long)]
+        verify: Option<String>,
         /// Module ID
         #[arg(short = 'm', long)]
         module: Option<i64>,
@@ -196,7 +213,9 @@ pub enum StoryCommands {
     /// Close a story
     Close {
         id: i64,
-        reason: Option<String>,
+        /// Reason: done, duplicate, postponed, willnotfix, bydesign
+        #[arg(short, long)]
+        reason: String,
         #[arg(long)]
         dry_run: bool,
     },
@@ -211,6 +230,25 @@ pub enum StoryCommands {
         id: i64,
         #[arg(long)]
         yes: bool,
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Change a story (submit for review)
+    Change {
+        /// Story ID
+        id: i64,
+        /// Reviewers (comma-separated)
+        #[arg(short, long, value_delimiter = ',', required = true)]
+        reviewer: Vec<String>,
+        /// New title
+        #[arg(short, long)]
+        title: Option<String>,
+        /// New specification
+        #[arg(long)]
+        spec: Option<String>,
+        /// New verification criteria
+        #[arg(long)]
+        verify: Option<String>,
         #[arg(long)]
         dry_run: bool,
     },
@@ -263,6 +301,12 @@ pub enum TaskCommands {
         /// Module ID
         #[arg(short = 'm', long)]
         module: Option<i64>,
+        /// Estimated start date (YYYY-MM-DD)
+        #[arg(long)]
+        est_started: Option<String>,
+        /// Deadline (YYYY-MM-DD)
+        #[arg(long)]
+        deadline: Option<String>,
         /// Dry run
         #[arg(long)]
         dry_run: bool,
@@ -296,14 +340,23 @@ pub enum TaskCommands {
         id: i64,
         /// Consumed hours (required by 禅道 to finish)
         #[arg(short = 'c', long)]
-        consumed: f64,
+        consumed: Option<f64>,
         #[arg(long)]
         dry_run: bool,
     },
     /// Close task
     Close {
         id: i64,
+        #[arg(short = 'r', long)]
         reason: Option<String>,
+        #[arg(long)]
+        dry_run: bool,
+    },
+    /// Activate task (reactivate a task)
+    Activate {
+        id: i64,
+        #[arg(short, long)]
+        comment: Option<String>,
         #[arg(long)]
         dry_run: bool,
     },
@@ -355,6 +408,9 @@ pub enum BugCommands {
         /// Type (codeassign/interface/config/design/others)
         #[arg(short, long, default_value = "codeassign")]
         r#type: String,
+        /// Opened build
+        #[arg(short = 'b', long)]
+        opened_build: String,
         /// Steps to reproduce
         #[arg(short = 'd', long)]
         desc: Option<String>,
@@ -402,6 +458,15 @@ pub enum BugCommands {
         resolution: String,
         #[arg(short, long)]
         comment: Option<String>,
+        /// Resolved date
+        #[arg(long)]
+        resolved_date: Option<String>,
+        /// Resolved build
+        #[arg(long)]
+        resolved_build: Option<String>,
+        /// Assigned to
+        #[arg(short = 'a', long)]
+        assigned_to: Option<String>,
         #[arg(long)]
         dry_run: bool,
     },
@@ -454,13 +519,19 @@ pub enum TestcaseCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
+        /// Project ID
+        #[arg(short = 'j', long)]
+        project: Option<i64>,
+        /// Execution ID
+        #[arg(short = 'e', long)]
+        execution: Option<i64>,
         /// Module ID
         #[arg(short = 'm', long)]
         module: Option<i64>,
         /// Title
         #[arg(short, long)]
         title: String,
-        /// Type (feature/performance/config/interface/security/others)
+        /// Type (feature/performance/config/interface/security/other/unit/install)
         #[arg(short, long, default_value = "feature")]
         r#type: String,
         /// Stage (unit/feature/intergr/system/accept/others)
@@ -475,6 +546,12 @@ pub enum TestcaseCommands {
         /// Steps (JSON array of {step,expect})
         #[arg(long)]
         steps: Option<String>,
+        /// Expected results (overrides expect from steps JSON)
+        #[arg(long)]
+        expect: Option<String>,
+        /// Step type (step/group)
+        #[arg(long, default_value = "step")]
+        step_type: Option<String>,
         /// Story ID
         #[arg(long)]
         story: Option<i64>,
@@ -547,8 +624,8 @@ pub fn handle_execution(
                     "name": name,
                 });
                 if let Some(c) = code { body["code"] = json!(c); }
-                if let Some(b) = begin { body["begin"] = json!(b); }
-                if let Some(e) = end { body["end"] = json!(e); }
+                body["begin"] = json!(begin);
+                body["end"] = json!(end);
                 if let Some(d) = desc { body["desc"] = json!(d); }
                 let result = ac.post("/executions", &body)?;
                 println!("✅ 执行创建成功");
@@ -608,6 +685,28 @@ pub fn handle_execution(
                 Ok(())
             })
         }
+        ExecutionCommands::LinkProducts { id, products, plans, dry_run } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 关联产品到执行 #{}: {:?}", id, products);
+                return Ok(());
+            }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let mut body = json!({
+                    "products": products,
+                });
+                if let Some(p) = plans {
+                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(p) {
+                        body["plans"] = val;
+                    } else {
+                        return Err("plans 参数必须是有效的 JSON 对象".to_string());
+                    }
+                }
+                let result = ac.post(&format!("/executions/{}/linkProducts", id), &body)?;
+                println!("✅ 产品已关联到执行 #{}", id);
+                utils::print_json(&result);
+                Ok(())
+            })
+        }
     }
 }
 
@@ -632,11 +731,12 @@ pub fn handle_story(
             utils::print_json(&data);
             Ok(())
         }),
-        StoryCommands::Create { product, title, desc, module, pri, source, assigned, estimate, dry_run } => {
+        StoryCommands::Create { product, title, spec, verify, module, pri, source, assigned, estimate, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 创建需求: {}", title); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({"product": product, "title": title});
-                if let Some(d) = desc { body["desc"] = json!(d); }
+                if let Some(d) = spec { body["spec"] = json!(d); }
+                if let Some(v) = verify { body["verify"] = json!(v); }
                 if let Some(m) = module { body["module"] = json!(m); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
                 if let Some(s) = source { body["source"] = json!(s); }
@@ -677,8 +777,7 @@ pub fn handle_story(
         StoryCommands::Close { id, reason, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 关闭需求 #{}", id); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                let mut body = json!({});
-                if let Some(r) = reason { body["reason"] = json!(r); }
+                let body = json!({"reason": reason});
                 ac.put(&format!("/stories/{}/close", id), &body)?;
                 println!("✅ 需求 #{} 已关闭", id);
                 Ok(())
@@ -698,6 +797,19 @@ pub fn handle_story(
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 ac.delete(&format!("/stories/{}", id))?;
                 println!("✅ 需求 #{} 已删除", id);
+                Ok(())
+            })
+        }
+        StoryCommands::Change { id, reviewer, title, spec, verify, dry_run } => {
+            if *dry_run { println!("🔍 [DRY-RUN] 变更需求 #{}: reviewer={:?}", id, reviewer); return Ok(()); }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let mut body = json!({"reviewer": reviewer});
+                if let Some(t) = title { body["title"] = json!(t); }
+                if let Some(s) = spec { body["spec"] = json!(s); }
+                if let Some(v) = verify { body["verify"] = json!(v); }
+                let result = ac.put(&format!("/stories/{}/change", id), &body)?;
+                println!("✅ 需求 #{} 已提交变更", id);
+                utils::print_json(&result);
                 Ok(())
             })
         }
@@ -725,7 +837,7 @@ pub fn handle_task(
             utils::print_json(&data);
             Ok(())
         }),
-        TaskCommands::Create { execution, name, assigned, pri, estimate, desc, r#type, story, module, dry_run } => {
+        TaskCommands::Create { execution, name, assigned, pri, estimate, desc, r#type, story, module, est_started, deadline, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 创建任务: {}", name); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
@@ -739,6 +851,8 @@ pub fn handle_task(
                 if let Some(d) = desc { body["desc"] = json!(d); }
                 if let Some(s) = story { body["story"] = json!(s); }
                 if let Some(m) = module { body["module"] = json!(m); }
+                if let Some(es) = est_started { body["estStarted"] = json!(es); }
+                if let Some(dl) = deadline { body["deadline"] = json!(dl); }
                 let result = ac.post("/tasks", &body)?;
                 println!("✅ 任务创建成功");
                 utils::print_json(&result);
@@ -770,20 +884,47 @@ pub fn handle_task(
             })
         }
         TaskCommands::Finish { id, consumed, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 完成任务 #{} (consumed={}h)", id, consumed); return Ok(()); }
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 完成任务 #{} (consumed={:?}h)", id, consumed);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                ac.put(&format!("/tasks/{}/finish", id), &json!({"consumed": consumed}))?;
-                println!("✅ 任务 #{} 已完成 (耗时 {}h)", id, consumed);
+                let mut body = json!({});
+                if let Some(c) = consumed {
+                    body["consumed"] = json!(c);
+                }
+                ac.put(&format!("/tasks/{}/finish", id), &body)?;
+                println!("✅ 任务 #{} 已完成", id);
                 Ok(())
             })
         }
         TaskCommands::Close { id, reason, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 关闭任务 #{}", id); return Ok(()); }
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 关闭任务 #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
-                if let Some(r) = reason { body["reason"] = json!(r); }
+                if let Some(r) = reason {
+                    body["comment"] = json!(r);
+                }
                 ac.put(&format!("/tasks/{}/close", id), &body)?;
                 println!("✅ 任务 #{} 已关闭", id);
+                Ok(())
+            })
+        }
+        TaskCommands::Activate { id, comment, dry_run } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 激活任务 #{}", id);
+                return Ok(());
+            }
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let mut body = json!({});
+                if let Some(c) = comment {
+                    body["comment"] = json!(c);
+                }
+                ac.put(&format!("/tasks/{}/activate", id), &body)?;
+                println!("✅ 任务 #{} 已激活", id);
                 Ok(())
             })
         }
@@ -820,10 +961,10 @@ pub fn handle_bug(
             utils::print_json(&data);
             Ok(())
         }),
-        BugCommands::Create { product, title, assigned, pri, severity, r#type, desc, module, execution, task, story, os, browser, dry_run } => {
+        BugCommands::Create { product, title, assigned, pri, severity, r#type, opened_build, desc, module, execution, task, story, os, browser, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 创建Bug: {}", title); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                let mut body = json!({"product": product, "title": title, "type": r#type});
+                let mut body = json!({"product": product, "title": title, "type": r#type, "openedBuild": [opened_build]});
                 if let Some(a) = assigned { body["assignedTo"] = json!(a); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
                 if let Some(s) = severity { body["severity"] = json!(s); }
@@ -854,12 +995,15 @@ pub fn handle_bug(
                 Ok(())
             })
         }
-        BugCommands::Resolve { id, resolution, comment, dry_run } => {
+        BugCommands::Resolve { id, resolution, comment, resolved_date, resolved_build, assigned_to, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 解决Bug #{}: {}", id, resolution); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({"resolution": resolution});
                 if let Some(c) = comment { body["comment"] = json!(c); }
-                ac.post(&format!("/bugs/{}/resolve", id), &body)?;
+                if let Some(d) = resolved_date { body["resolvedDate"] = json!(d); }
+                if let Some(b) = resolved_build { body["resolvedBuild"] = json!(b); }
+                if let Some(a) = assigned_to { body["assignedTo"] = json!(a); }
+                ac.put(&format!("/bugs/{}/resolve", id), &body)?;
                 println!("✅ Bug #{} 已解决: {}", id, resolution);
                 Ok(())
             })
@@ -917,7 +1061,7 @@ pub fn handle_testcase(
             utils::print_json(&data);
             Ok(())
         }),
-        TestcaseCommands::Create { product, module, title, r#type, stage, pri, precondition, steps, story, dry_run } => {
+        TestcaseCommands::Create { product, module, title, r#type, stage, pri, precondition, steps, expect, step_type, story, project, execution, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 创建测试用例: {}", title); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
@@ -929,8 +1073,31 @@ pub fn handle_testcase(
                 if let Some(m) = module { body["module"] = json!(m); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
                 if let Some(pc) = precondition { body["precondition"] = json!(pc); }
-                if let Some(s) = steps { body["steps"] = json!(s); }
                 if let Some(s) = story { body["story"] = json!(s); }
+                if let Some(p) = project { body["project"] = json!(p); }
+                if let Some(e) = execution { body["execution"] = json!(e); }
+                // Parse steps JSON [{step, expect}] into parallel arrays
+                if let Some(s) = steps {
+                    if let Ok(parsed) = serde_json::from_str::<Vec<serde_json::Value>>(&s) {
+                        let step_strs: Vec<String> = parsed.iter().map(|v| {
+                            v.get("step").and_then(|s| s.as_str()).unwrap_or("").to_string()
+                        }).collect();
+                        let expect_strs: Vec<String> = parsed.iter().map(|v| {
+                            v.get("expect").and_then(|s| s.as_str()).unwrap_or("").to_string()
+                        }).collect();
+                        body["steps"] = json!(step_strs);
+                        body["expects"] = json!(expect_strs);
+                        body["stepType"] = json!(vec![step_type.as_deref().unwrap_or("step"); step_strs.len()]);
+                    } else {
+                        body["steps"] = json!([s]);
+                        body["expects"] = json!([expect.as_deref().unwrap_or("")]);
+                        body["stepType"] = json!([step_type.as_deref().unwrap_or("step")]);
+                    }
+                } else if let Some(e) = expect {
+                    body["steps"] = json!([""]);
+                    body["expects"] = json!([e]);
+                    body["stepType"] = json!([step_type.as_deref().unwrap_or("step")]);
+                }
                 let result = ac.post("/testcases", &body)?;
                 println!("✅ 测试用例创建成功");
                 utils::print_json(&result);
