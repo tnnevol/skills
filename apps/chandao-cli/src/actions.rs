@@ -12,6 +12,7 @@ use serde_json::json;
 
 use crate::auth::AuthManager;
 use crate::client::{AuthenticatedClient, Client};
+use crate::markdown::markdown_to_html;
 use crate::utils;
 
 // ── Execution / Sprint ──
@@ -961,8 +962,8 @@ pub fn handle_story(
             if *dry_run { println!("🔍 [DRY-RUN] 创建需求: {}", title); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({"product": product, "title": title});
-                if let Some(d) = spec { body["spec"] = json!(d); }
-                if let Some(v) = verify { body["verify"] = json!(v); }
+                if let Some(d) = spec { body["spec"] = json!(markdown_to_html(&d)); }
+                if let Some(v) = verify { body["verify"] = json!(markdown_to_html(&v)); }
                 if let Some(m) = module { body["module"] = json!(m); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
                 if let Some(s) = source { body["source"] = json!(s); }
@@ -1031,8 +1032,8 @@ pub fn handle_story(
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({"reviewer": reviewer});
                 if let Some(t) = title { body["title"] = json!(t); }
-                if let Some(s) = spec { body["spec"] = json!(s); }
-                if let Some(v) = verify { body["verify"] = json!(v); }
+                if let Some(s) = spec { body["spec"] = json!(markdown_to_html(&s)); }
+                if let Some(v) = verify { body["verify"] = json!(markdown_to_html(&v)); }
                 let result = ac.put(&format!("/stories/{}/change", id), &body)?;
                 println!("✅ 需求 #{} 已提交变更", id);
                 utils::print_json(&result);
@@ -3570,10 +3571,10 @@ pub fn handle_requirement(
                     "title": title,
                 });
                 if let Some(v) = spec {
-                    body["spec"] = json!(v);
+                    body["spec"] = json!(markdown_to_html(&v));
                 }
                 if let Some(v) = verify {
-                    body["verify"] = json!(v);
+                    body["verify"] = json!(markdown_to_html(&v));
                 }
                 if let Some(m) = module {
                     body["module"] = json!(m);
@@ -3657,10 +3658,10 @@ pub fn handle_requirement(
                     body["title"] = json!(t);
                 }
                 if let Some(s) = spec {
-                    body["spec"] = json!(s);
+                    body["spec"] = json!(markdown_to_html(&s));
                 }
                 if let Some(v) = verify {
-                    body["verify"] = json!(v);
+                    body["verify"] = json!(markdown_to_html(&v));
                 }
                 let result = ac.put(&format!("/requirements/{}/change", id), &body)?;
                 println!("✅ 用户需求 #{} 已提交变更", id);
@@ -3889,10 +3890,10 @@ pub fn handle_epic(
                     "title": title,
                 });
                 if let Some(v) = spec {
-                    body["spec"] = json!(v);
+                    body["spec"] = json!(markdown_to_html(&v));
                 }
                 if let Some(v) = verify {
-                    body["verify"] = json!(v);
+                    body["verify"] = json!(markdown_to_html(&v));
                 }
                 if let Some(m) = module {
                     body["module"] = json!(m);
@@ -3976,10 +3977,10 @@ pub fn handle_epic(
                     body["title"] = json!(t);
                 }
                 if let Some(s) = spec {
-                    body["spec"] = json!(s);
+                    body["spec"] = json!(markdown_to_html(&s));
                 }
                 if let Some(v) = verify {
-                    body["verify"] = json!(v);
+                    body["verify"] = json!(markdown_to_html(&v));
                 }
                 let result = ac.put(&format!("/epics/{}/change", id), &body)?;
                 println!("✅ 史诗需求 #{} 已提交变更", id);
