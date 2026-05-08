@@ -92,14 +92,23 @@ impl AuthenticatedClient {
     pub fn get(&mut self, endpoint: &str) -> Result<Value, String> {
         let url = self.build_url(endpoint);
         let resp = self.do_request("GET", &url, None)?;
-        let body: Value = resp.into_json().map_err(|e| format!("JSON 解析失败: {}", e))?;
+        let text = resp.into_string().map_err(|e| format!("读取响应失败: {}", e))?;
+        if text.trim().is_empty() {
+            return Ok(serde_json::json!([]));
+        }
+        let body: Value = serde_json::from_str(&text).map_err(|e| format!("JSON 解析失败: {} (body: {:.200})", e, text))?;
         Self::check_response(body)
     }
 
     pub fn post(&mut self, endpoint: &str, body: &Value) -> Result<Value, String> {
         let url = self.build_url(endpoint);
         let resp = self.do_request("POST", &url, Some(body))?;
-        let body: Value = resp.into_json().map_err(|e| format!("JSON 解析失败: {e}"))?;
+        let text = resp.into_string().map_err(|e| format!("读取响应失败: {}", e))?;
+        if text.trim().is_empty() {
+            return Ok(serde_json::json!({"status": "success"}));
+        }
+        let body: Value = serde_json::from_str(&text)
+            .map_err(|e| format!("JSON 解析失败: {e} (body: {:.200})", text))?;
         Self::check_response(body)
     }
 

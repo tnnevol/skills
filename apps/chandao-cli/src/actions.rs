@@ -24,7 +24,7 @@ pub enum ExecutionCommands {
         #[arg(short = 'p', long)]
         project: Option<i64>,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Results per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -137,7 +137,7 @@ pub enum StoryCommands {
         #[arg(short = 'p', long)]
         product: Option<i64>,
         /// Page
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Limit
         #[arg(short = 'n', long, default_value = "20")]
@@ -264,7 +264,7 @@ pub enum TaskCommands {
         #[arg(short = 'e', long)]
         execution: Option<i64>,
         /// Page
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Limit
         #[arg(short = 'n', long, default_value = "20")]
@@ -392,7 +392,7 @@ pub enum BugCommands {
         #[arg(short = 'p', long)]
         product: Option<i64>,
         /// Page
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Limit
         #[arg(short = 'n', long, default_value = "20")]
@@ -518,7 +518,7 @@ pub enum TestcaseCommands {
         #[arg(short = 'p', long)]
         product: Option<i64>,
         /// Page
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Limit
         #[arg(short = 'n', long, default_value = "20")]
@@ -603,7 +603,7 @@ pub enum UserCommands {
         #[arg(short = 'o', long, default_value = "id_desc")]
         order_by: String,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Results per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -669,13 +669,25 @@ pub enum UserCommands {
 
 #[derive(Subcommand)]
 pub enum TesttaskCommands {
+    /// List test tasks (requires --product)
+    List {
+        /// Product ID
+        #[arg(short = 'p', long)]
+        product: i64,
+        /// Page number
+        #[arg(short = 'g', long, default_value = "1")]
+        page: u32,
+        /// Records per page
+        #[arg(short = 'n', long, default_value = "20")]
+        limit: u32,
+    },
     /// List test tasks by product
     ListByProduct {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Results per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -687,7 +699,7 @@ pub enum TesttaskCommands {
         #[arg(short = 'j', long)]
         project: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Results per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -699,7 +711,7 @@ pub enum TesttaskCommands {
         #[arg(short = 'e', long)]
         execution: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Results per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -1505,7 +1517,7 @@ pub enum ProductCommands {
         #[arg(short = 'o', long, default_value = "id_desc")]
         order_by: String,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -1625,7 +1637,7 @@ pub enum ProductCommands {
         #[arg(short, long)]
         program: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -1646,7 +1658,7 @@ pub enum ProjectCommands {
         #[arg(short = 'o', long, default_value = "id_desc")]
         order_by: String,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -1658,7 +1670,7 @@ pub enum ProjectCommands {
         #[arg(short, long)]
         program: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -2357,7 +2369,7 @@ pub enum ProgramCommands {
         #[arg(short = 'o', long, default_value = "id_desc")]
         order_by: String,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -2608,13 +2620,28 @@ pub fn handle_program(
 
 #[derive(Subcommand)]
 pub enum BuildCommands {
+    /// List builds (requires --project or --execution)
+    List {
+        /// Project ID
+        #[arg(short = 'j', long)]
+        project: Option<i64>,
+        /// Execution ID
+        #[arg(short = 'e', long)]
+        execution: Option<i64>,
+        /// Page number
+        #[arg(short = 'g', long, default_value = "1")]
+        page: u32,
+        /// Records per page
+        #[arg(short = 'n', long, default_value = "20")]
+        limit: u32,
+    },
     /// List builds by project
     ListByProject {
         /// Project ID
         #[arg(short, long)]
         project: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -2626,7 +2653,7 @@ pub enum BuildCommands {
         #[arg(short, long)]
         execution: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -2716,6 +2743,28 @@ pub fn handle_build(
     cmd: &BuildCommands,
 ) -> Result<(), String> {
     match cmd {
+        BuildCommands::List { project, execution, page, limit } => {
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let data = if let Some(e) = execution {
+                    ac.get(&format!(
+                        "/executions/{}/builds?pageID={}&recPerPage={}",
+                        e, page, limit
+                    ))?
+                } else if let Some(p) = project {
+                    ac.get(&format!(
+                        "/projects/{}/builds?pageID={}&recPerPage={}",
+                        p, page, limit
+                    ))?
+                } else {
+                    return Err("需要指定 --project 或 --execution".to_string());
+                };
+                utils::print_table(
+                    &data,
+                    &["id", "name", "projectName", "builder", "date", "desc"],
+                );
+                Ok(())
+            })
+        }
         BuildCommands::ListByProject {
             project,
             page,
@@ -2876,7 +2925,7 @@ pub enum ReleaseCommands {
         #[arg(short, long)]
         product: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -2885,7 +2934,7 @@ pub enum ReleaseCommands {
     /// List all releases (general list)
     List {
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -3134,13 +3183,25 @@ pub fn handle_release(
 
 #[derive(Subcommand)]
 pub enum ProductplanCommands {
-    /// List plans by product
+    /// List product plans (requires --product)
+    List {
+        /// Product ID
+        #[arg(short = 'p', long)]
+        product: i64,
+        /// Page number
+        #[arg(short = 'g', long, default_value = "1")]
+        page: u32,
+        /// Records per page
+        #[arg(short = 'n', long, default_value = "20")]
+        limit: u32,
+    },
+    /// List product plans by product
     ListByProduct {
         /// Product ID
         #[arg(short, long)]
         product: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -3209,13 +3270,25 @@ pub enum ProductplanCommands {
 
 #[derive(Subcommand)]
 pub enum RequirementCommands {
+    /// List requirements (requires --product)
+    List {
+        /// Product ID
+        #[arg(short = 'p', long)]
+        product: i64,
+        /// Page number
+        #[arg(short = 'g', long, default_value = "1")]
+        page: u32,
+        /// Records per page
+        #[arg(short = 'n', long, default_value = "20")]
+        limit: u32,
+    },
     /// List requirements by product
     ListByProduct {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -3328,11 +3401,8 @@ pub fn handle_productplan(
     cmd: &ProductplanCommands,
 ) -> Result<(), String> {
     match cmd {
-        ProductplanCommands::ListByProduct {
-            product,
-            page,
-            limit,
-        } => {
+        ProductplanCommands::List { product, page, limit }
+        | ProductplanCommands::ListByProduct { product, page, limit } => {
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let data = ac.get(&format!(
                     "/products/{}/productplans?pageID={}&recPerPage={}",
@@ -3444,11 +3514,8 @@ pub fn handle_requirement(
     cmd: &RequirementCommands,
 ) -> Result<(), String> {
     match cmd {
-        RequirementCommands::ListByProduct {
-            product,
-            page,
-            limit,
-        } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+        RequirementCommands::List { product, page, limit }
+        | RequirementCommands::ListByProduct { product, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let data = ac.get(&format!(
                 "/products/{}/requirements?pageID={}&recPerPage={}",
                 product, page, limit
@@ -3635,13 +3702,25 @@ pub fn handle_requirement(
 
 #[derive(Subcommand)]
 pub enum EpicCommands {
+    /// List epics (requires --product)
+    List {
+        /// Product ID
+        #[arg(short = 'p', long)]
+        product: i64,
+        /// Page number
+        #[arg(short = 'g', long, default_value = "1")]
+        page: u32,
+        /// Records per page
+        #[arg(short = 'n', long, default_value = "20")]
+        limit: u32,
+    },
     /// List epics by product
     ListByProduct {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -3754,11 +3833,8 @@ pub fn handle_epic(
     cmd: &EpicCommands,
 ) -> Result<(), String> {
     match cmd {
-        EpicCommands::ListByProduct {
-            product,
-            page,
-            limit,
-        } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+        EpicCommands::List { product, page, limit }
+        | EpicCommands::ListByProduct { product, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let data = ac.get(&format!(
                 "/products/{}/epics?pageID={}&recPerPage={}",
                 product, page, limit
@@ -3949,7 +4025,8 @@ pub fn handle_testtask(
     cmd: &TesttaskCommands,
 ) -> Result<(), String> {
     match cmd {
-        TesttaskCommands::ListByProduct {
+        TesttaskCommands::List { product, page, limit }
+        | TesttaskCommands::ListByProduct {
             product,
             page,
             limit,
@@ -4153,13 +4230,25 @@ pub fn handle_testtask(
 
 #[derive(Subcommand)]
 pub enum FeedbackCommands {
+    /// List feedbacks (requires --product)
+    List {
+        /// Product ID
+        #[arg(short = 'p', long)]
+        product: i64,
+        /// Page number
+        #[arg(short = 'g', long, default_value = "1")]
+        page: u32,
+        /// Records per page
+        #[arg(short = 'n', long, default_value = "20")]
+        limit: u32,
+    },
     /// List feedbacks by product
     ListByProduct {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -4255,11 +4344,8 @@ pub fn handle_feedback(
     cmd: &FeedbackCommands,
 ) -> Result<(), String> {
     match cmd {
-        FeedbackCommands::ListByProduct {
-            product,
-            page,
-            limit,
-        } => {
+        FeedbackCommands::List { product, page, limit }
+        | FeedbackCommands::ListByProduct { product, page, limit } => {
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let data = ac.get(&format!(
                     "/products/{}/feedbacks?pageID={}&recPerPage={}",
@@ -4413,13 +4499,25 @@ pub fn handle_feedback(
 
 #[derive(Subcommand)]
 pub enum TicketCommands {
+    /// List tickets (requires --product)
+    List {
+        /// Product ID
+        #[arg(short = 'p', long)]
+        product: i64,
+        /// Page number
+        #[arg(short = 'g', long, default_value = "1")]
+        page: u32,
+        /// Records per page
+        #[arg(short = 'n', long, default_value = "20")]
+        limit: u32,
+    },
     /// List tickets by product
     ListByProduct {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
         /// Page number
-        #[arg(short, long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'n', long, default_value = "20")]
@@ -4518,11 +4616,8 @@ pub fn handle_ticket(
     cmd: &TicketCommands,
 ) -> Result<(), String> {
     match cmd {
-        TicketCommands::ListByProduct {
-            product,
-            page,
-            limit,
-        } => {
+        TicketCommands::List { product, page, limit }
+        | TicketCommands::ListByProduct { product, page, limit } => {
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let data = ac.get(&format!(
                     "/products/{product}/tickets?pageID={page}&recPerPage={limit}"
