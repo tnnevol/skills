@@ -1,6 +1,6 @@
 {
   "name": "@tnnevol/chandao-cli",
-  "version": "2.0.5-beta.3",
+  "version": "2.0.5-beta.4",
   "description": "禅道 (ZenTao) CLI tool - manage projects, tasks, bugs, stories",
   "bin": {
     "chandao-cli": "./index.js"
