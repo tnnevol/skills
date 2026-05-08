@@ -961,7 +961,7 @@ pub fn handle_story(
         StoryCommands::Create { product, title, spec, verify, module, pri, source, assigned, estimate, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 创建需求: {}", title); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                let mut body = json!({"product": product, "title": title});
+                let mut body = json!({"productID": product, "title": title});
                 if let Some(d) = spec { body["spec"] = json!(markdown_to_html(&d)); }
                 if let Some(v) = verify { body["verify"] = json!(markdown_to_html(&v)); }
                 if let Some(m) = module { body["module"] = json!(m); }
@@ -1194,7 +1194,7 @@ pub fn handle_bug(
         BugCommands::Create { product, title, assigned, pri, severity, r#type, opened_build, desc, module, execution, task, story, os, browser, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 创建Bug: {}", title); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                let mut body = json!({"product": product, "title": title, "type": r#type, "openedBuild": [opened_build]});
+                let mut body = json!({"productID": product, "title": title, "type": r#type, "openedBuild": [opened_build]});
                 if let Some(a) = assigned { body["assignedTo"] = json!(a); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
                 if let Some(s) = severity { body["severity"] = json!(s); }
@@ -1295,7 +1295,7 @@ pub fn handle_testcase(
             if *dry_run { println!("🔍 [DRY-RUN] 创建测试用例: {}", title); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
-                    "product": product,
+                    "productID": product,
                     "title": title,
                     "type": r#type,
                     "stage": stage,
@@ -3102,7 +3102,7 @@ pub fn handle_release(
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
-                    "product": product,
+                    "productID": product,
                     "build": build,
                     "name": name,
                 });
@@ -3452,7 +3452,7 @@ pub fn handle_productplan(
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
-                    "product": product,
+                    "productID": product,
                     "title": title,
                 });
                 if let Some(v) = desc {
@@ -3567,7 +3567,7 @@ pub fn handle_requirement(
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
-                    "product": product,
+                    "productID": product,
                     "title": title,
                 });
                 if let Some(v) = spec {
@@ -3886,7 +3886,7 @@ pub fn handle_epic(
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
-                    "product": product,
+                    "productID": product,
                     "title": title,
                 });
                 if let Some(v) = spec {
@@ -4133,7 +4133,7 @@ pub fn handle_testtask(
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
-                    "product": product,
+                    "productID": product,
                     "name": name,
                 });
                 if let Some(v) = project {
@@ -4405,7 +4405,7 @@ pub fn handle_feedback(
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
-                    "product": product,
+                    "productID": product,
                     "title": title,
                 });
                 if let Some(v) = desc {
@@ -4676,7 +4676,7 @@ pub fn handle_ticket(
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
-                    "product": product,
+                    "productID": product,
                     "title": title,
                 });
                 if let Some(v) = keywords {

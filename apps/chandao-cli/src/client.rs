@@ -84,7 +84,10 @@ impl AuthenticatedClient {
 
                 resp2.map_err(|e| format!("请求失败 (重试后): {}", e))
             }
-            Err(ureq::Error::Status(s, _)) => Err(format!("请求失败 (HTTP {})", s)),
+            Err(ureq::Error::Status(s, resp)) => {
+                let body = resp.into_string().unwrap_or_default();
+                Err(format!("请求失败 (HTTP {}): {}", s, body))
+            }
             Err(ureq::Error::Transport(e)) => Err(format!("网络错误: {}", e)),
         }
     }
@@ -201,7 +204,7 @@ impl AuthenticatedClient {
                     .or_else(|| body.get("reason"))
                     .and_then(|m| m.as_str())
                     .unwrap_or("未知错误");
-                return Err(format!("禅道 API 错误: {}", msg));
+                return Err(format!("禅道 API 错误: {} (响应: {:.200})", msg, body));
             }
         }
         // Extract data field if present (format: { status, data: [...] })
