@@ -163,10 +163,10 @@ pub enum StoryCommands {
         #[arg(short = 'm', long)]
         module: Option<i64>,
         /// Priority (1-4)
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         /// Source
-        #[arg(short, long)]
+        #[arg(short = 'o', long)]
         source: Option<String>,
         /// Assigned to
         #[arg(short = 'a', long)]
@@ -188,7 +188,7 @@ pub enum StoryCommands {
         desc: Option<String>,
         #[arg(short = 'm', long)]
         module: Option<i64>,
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         #[arg(short = 'a', long)]
         assigned: Option<String>,
@@ -284,7 +284,7 @@ pub enum TaskCommands {
         #[arg(short = 'a', long)]
         assigned: Option<String>,
         /// Priority (1-4)
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         /// Estimate (hours)
         #[arg(long)]
@@ -293,7 +293,7 @@ pub enum TaskCommands {
         #[arg(short, long)]
         desc: Option<String>,
         /// Type (devel/test/design/discuss/ui)
-        #[arg(short, long, default_value = "devel")]
+        #[arg(short = 'y', long, default_value = "devel")]
         r#type: String,
         /// Story ID
         #[arg(long)]
@@ -318,7 +318,7 @@ pub enum TaskCommands {
         name: Option<String>,
         #[arg(short = 'a', long)]
         assigned: Option<String>,
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         #[arg(short, long)]
         status: Option<String>,
@@ -412,13 +412,13 @@ pub enum BugCommands {
         #[arg(short = 'a', long)]
         assigned: Option<String>,
         /// Priority (1-4)
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         /// Severity (1-4)
         #[arg(short = 's', long)]
         severity: Option<u8>,
         /// Type (codeassign/interface/config/design/others)
-        #[arg(short, long, default_value = "codeassign")]
+        #[arg(short = 'y', long, default_value = "codeassign")]
         r#type: String,
         /// Opened build
         #[arg(short = 'b', long)]
@@ -457,7 +457,7 @@ pub enum BugCommands {
         assigned: Option<String>,
         #[arg(short, long)]
         status: Option<String>,
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         #[arg(long)]
         dry_run: bool,
@@ -544,13 +544,13 @@ pub enum TestcaseCommands {
         #[arg(short, long)]
         title: String,
         /// Type (feature/performance/config/interface/security/other/unit/install)
-        #[arg(short, long, default_value = "feature")]
+        #[arg(short = 'y', long, default_value = "feature")]
         r#type: String,
         /// Stage (unit/feature/intergr/system/accept/others)
         #[arg(short, long, default_value = "feature")]
         stage: String,
         /// Priority (1-4)
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         /// Preconditions
         #[arg(long)]
@@ -738,7 +738,7 @@ pub enum TesttaskCommands {
         #[arg(short = 'a', long)]
         assigned: Option<String>,
         /// Priority (1-4)
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         /// Begin date (YYYY-MM-DD)
         #[arg(long)]
@@ -782,7 +782,7 @@ pub enum TesttaskCommands {
         #[arg(short = 'a', long)]
         assigned: Option<String>,
         /// New priority
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         /// New status
         #[arg(short = 's', long)]
@@ -1368,11 +1368,16 @@ pub enum SystemCommands {
         #[arg(short, long)]
         product: i32,
         /// Page number
-        #[arg(short = 'p', long, default_value = "1")]
+        #[arg(short = 'g', long, default_value = "1")]
         page: u32,
         /// Records per page
         #[arg(short = 'r', long, default_value = "20")]
         limit: u32,
+    },
+    /// Get system details
+    Get {
+        /// System ID
+        id: i32,
     },
     /// Create a new system
     Create {
@@ -1434,6 +1439,13 @@ pub fn handle_system(
                     product, page, limit
                 ))?;
                 utils::print_table(&data, &["id", "name", "code", "type", "desc"]);
+                Ok(())
+            })
+        }
+        SystemCommands::Get { id } => {
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let data = ac.get(&format!("/systems/{}", id))?;
+                utils::print_json(&data);
                 Ok(())
             })
         }
@@ -1543,7 +1555,7 @@ pub enum ProductCommands {
         #[arg(long)]
         line: Option<i64>,
         /// Product type (normal, multi-branch, platform, etc.)
-        #[arg(short, long, default_value = "normal")]
+        #[arg(short = 'y', long, default_value = "normal")]
         r#type: String,
         /// Status (normal, closed)
         #[arg(short, long, default_value = "normal")]
@@ -1590,7 +1602,7 @@ pub enum ProductCommands {
         #[arg(long)]
         line: Option<i64>,
         /// Product type (normal, multi-branch, platform, etc.)
-        #[arg(short, long)]
+        #[arg(short = 'y', long)]
         r#type: Option<String>,
         /// Status (normal, closed)
         #[arg(short, long)]
@@ -1690,7 +1702,7 @@ pub enum ProjectCommands {
         #[arg(short, long)]
         code: String,
         /// Project type (sprint, stage, kanban, etc.)
-        #[arg(short, long, default_value = "sprint")]
+        #[arg(short = 'y', long, default_value = "sprint")]
         r#type: String,
         /// Parent project ID
         #[arg(long)]
@@ -1731,7 +1743,7 @@ pub enum ProjectCommands {
         #[arg(short, long)]
         code: Option<String>,
         /// Project type (sprint, stage, kanban, etc.)
-        #[arg(short, long)]
+        #[arg(short = 'y', long)]
         r#type: Option<String>,
         /// Parent project ID
         #[arg(long)]
@@ -3317,10 +3329,10 @@ pub enum RequirementCommands {
         #[arg(short = 'm', long)]
         module: Option<i64>,
         /// Priority (1-4)
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         /// Source
-        #[arg(short, long)]
+        #[arg(short = 'o', long)]
         source: Option<String>,
         /// Assigned to
         #[arg(short = 'a', long)]
@@ -3342,7 +3354,7 @@ pub enum RequirementCommands {
         desc: Option<String>,
         #[arg(short = 'm', long)]
         module: Option<i64>,
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         #[arg(short = 'a', long)]
         assigned: Option<String>,
@@ -3749,10 +3761,10 @@ pub enum EpicCommands {
         #[arg(short = 'm', long)]
         module: Option<i64>,
         /// Priority (1-4)
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         /// Source
-        #[arg(short, long)]
+        #[arg(short = 'o', long)]
         source: Option<String>,
         /// Assigned to
         #[arg(short = 'a', long)]
@@ -3774,7 +3786,7 @@ pub enum EpicCommands {
         desc: Option<String>,
         #[arg(short = 'm', long)]
         module: Option<i64>,
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         #[arg(short = 'a', long)]
         assigned: Option<String>,
@@ -4274,13 +4286,13 @@ pub enum FeedbackCommands {
         #[arg(short = 'a', long)]
         assigned: Option<String>,
         /// Priority (1-4)
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         /// Type (feedback/advise/issue)
-        #[arg(short, long)]
+        #[arg(short = 'y', long)]
         r#type: Option<String>,
         /// Source (customer/ market/ other)
-        #[arg(short, long)]
+        #[arg(short = 'o', long)]
         source: Option<String>,
         /// Dry run
         #[arg(long)]
@@ -4300,7 +4312,7 @@ pub enum FeedbackCommands {
         #[arg(short = 'a', long)]
         assigned: Option<String>,
         /// Priority (1-4)
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         /// Status
         #[arg(short, long)]
@@ -4543,10 +4555,10 @@ pub enum TicketCommands {
         #[arg(short = 'a', long)]
         assigned: Option<String>,
         /// Priority (1-4)
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         /// Type
-        #[arg(short, long)]
+        #[arg(short = 'y', long)]
         r#type: Option<String>,
         /// Module ID
         #[arg(short = 'm', long)]
@@ -4572,7 +4584,7 @@ pub enum TicketCommands {
         #[arg(short = 'a', long)]
         assigned: Option<String>,
         /// Priority (1-4)
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         pri: Option<u8>,
         /// Status
         #[arg(short, long)]
