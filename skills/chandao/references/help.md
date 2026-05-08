@@ -22,7 +22,7 @@ CHANDAO_ACCOUNT=your-username
 CHANDAO_PASSWORD=***
 ```
 
-详细步骤见 `docs/setup.md`。
+详细步骤见 `references/setup.md`。
 
 ## 支持哪些模块和操作？
 

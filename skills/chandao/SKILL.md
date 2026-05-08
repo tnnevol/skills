@@ -7,18 +7,25 @@ description: Assistant for 禅道 (ZenTao) project management system via chandao
 
 让 AI Agent 通过自然语言操作禅道系统，实现项目查询与管理。基于 `chandao-cli`（Rust CLI）调用 ZenTao RESTful API v2。
 
+## 命令别名
+
+- **用户界面命令**: `/chandao <module> <action> [--args]`
+- **实际执行**: `chandao-cli <module> <action> [--args]`
+
+当用户输入 `/chandao` 时，实际执行 `chandao-cli`。
+
 ## Quick Start
 
 ```bash
 # 检查是否已安装，未安装则提示用户
 which chandao-cli || npm i -g @tnnevol/chandao-cli
 
-# 基本用法
-chandao-cli <module> <action> [--args]
+# 基本用法（用户输入 /chandao，实际执行 chandao-cli）
+/chandao <module> <action> [--args]  # → chandao-cli <module> <action> [--args]
 
 # 帮助
-chandao-cli help
-chandao-cli <module> help
+/chandao help
+/chandao <module> help
 ```
 
 ## Security Guidelines
@@ -40,20 +47,20 @@ chandao-cli <module> help
 
 | 命令 | 描述 |
 |------|------|
-| `chandao-cli help` | 查看所有模块 |
-| `chandao-cli version` | 查看版本 |
-| `chandao-cli <module> help` | 查看模块详细用法与参数 |
+| `/chandao help` | 查看所有模块 |
+| `/chandao version` | 查看版本 |
+| `/chandao <module> help` | 查看模块详细用法与参数 |
 
 ### 查询类命令（6 个模块）
 
 | 命令 | 描述 | 输出示例 |
 |------|------|----------|
-| `chandao-cli user list [--limit N] [--page N]` | 列出用户 | 表格：账号\|姓名\|角色\|部门\|手机 |
-| `chandao-cli user get <id>` | 用户详情 | 卡片（含联系方式、部门等） |
-| `chandao-cli product list [--limit N] [--page N]` | 列出产品 | 表格：ID\|名称\|类型\|负责人\|状态 |
-| `chandao-cli product get <id>` | 产品详情 | 卡片（含负责人、创建时间等） |
-| `chandao-cli project list [--limit N] [--page N]` | 列出项目 | 表格：ID\|名称\|模式\|起止\|状态 |
-| `chandao-cli project get <id>` | 项目详情 | 卡片（含进度、团队、负责人等） |
+| `/chandao user list [--limit N] [--page N]` | 列出用户 | 表格：账号\|姓名\|角色\|部门\|手机 |
+| `/chandao user get <id>` | 用户详情 | 卡片（含联系方式、部门等） |
+| `/chandao product list [--limit N] [--page N]` | 列出产品 | 表格：ID\|名称\|类型\|负责人\|状态 |
+| `/chandao product get <id>` | 产品详情 | 卡片（含负责人、创建时间等） |
+| `/chandao project list [--limit N] [--page N]` | 列出项目 | 表格：ID\|名称\|模式\|起止\|状态 |
+| `/chandao project get <id>` | 项目详情 | 卡片（含进度、团队、负责人等） |
 
 ### 用户管理
 
