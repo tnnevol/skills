@@ -11,7 +11,14 @@
     "build:macos": "make macos",
     "build:windows": "make windows",
     "clean": "make clean",
-    "verify": "make verify"
+    "verify": "make verify",
+    "bump": "bumpp",
+    "bump:patch": "bumpp patch -y",
+    "bump:minor": "bumpp minor -y",
+    "bump:major": "bumpp major -y"
   },
-  "files": ["index.js", "bin/"]
+  "files": ["index.js", "bin/"],
+  "devDependencies": {
+    "bumpp": "^11.0.1"
+  }
 }
