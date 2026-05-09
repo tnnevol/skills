@@ -395,6 +395,9 @@ pub enum BugCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: Option<i64>,
+        /// Execution ID (list bugs for a specific execution)
+        #[arg(short = 'e', long)]
+        execution: Option<i64>,
         /// Page
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -424,8 +427,8 @@ pub enum BugCommands {
         /// Type (codeassign/interface/config/design/others)
         #[arg(short = 'y', long, default_value = "codeassign")]
         r#type: String,
-        /// Opened build
-        #[arg(short = 'b', long)]
+        /// Opened build (默认 trunk)
+        #[arg(short = 'b', long, default_value = "trunk")]
         opened_build: String,
         /// Steps to reproduce
         #[arg(short = 'd', long)]
@@ -463,6 +466,9 @@ pub enum BugCommands {
         status: Option<String>,
         #[arg(short = 'i', long)]
         pri: Option<u8>,
+        /// Execution ID (关联到执行)
+        #[arg(short = 'e', long)]
+        execution: Option<i64>,
         #[arg(long)]
         dry_run: bool,
     },
@@ -1199,8 +1205,10 @@ pub fn handle_bug(
     cmd: &BugCommands,
 ) -> Result<(), String> {
     match cmd {
-        BugCommands::List { product, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-            let path = if let Some(p) = product {
+        BugCommands::List { product, execution, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+            let path = if let Some(e) = execution {
+                format!("/executions/{}/bugs?pageID={}&recPerPage={}", e, page, limit)
+            } else if let Some(p) = product {
                 format!("/products/{}/bugs?pageID={}&recPerPage={}", p, page, limit)
             } else {
                 format!("/bugs?pageID={}&recPerPage={}", page, limit)
@@ -1234,7 +1242,7 @@ pub fn handle_bug(
                 Ok(())
             })
         }
-        BugCommands::Update { id, title, assigned, status, pri, dry_run } => {
+        BugCommands::Update { id, title, assigned, status, pri, execution, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 更新Bug #{}", id); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 // 如果指定了 status，使用专门的状态流转端点
@@ -1258,6 +1266,7 @@ pub fn handle_bug(
                 if let Some(t) = title { body["title"] = json!(t); }
                 if let Some(a) = assigned { body["assignedTo"] = json!(a); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
+                if let Some(e) = execution { body["execution"] = json!(e); }
                 let result = ac.put(&format!("/bugs/{}", id), &body)?;
                 println!("✅ Bug #{} 更新成功", id);
                 utils::print_json(&result);

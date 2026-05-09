@@ -197,6 +197,10 @@ impl AuthenticatedClient {
     }
 
     fn check_response(body: Value) -> Result<Value, String> {
+        // 检查 error 字段（某些 API 端点使用这种格式）
+        if let Some(error) = body.get("error").and_then(|e| e.as_str()) {
+            return Err(format!("禅道 API 错误: {} (响应: {:.200})", error, body));
+        }
         if let Some(status) = body.get("status").and_then(|s| s.as_str()) {
             if status == "fail" {
                 let msg = body
