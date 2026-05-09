@@ -94,8 +94,8 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 |------|------|
 | `/chandao story list [--product <id>] [--limit N]` | 列出需求 |
 | `/chandao story get <id>` | 获取需求详情 |
-| `/chandao story create --product <id> --title <title> [--spec <desc>] [--pri 1-4]` | 创建需求 |
-| `/chandao story update <id> --title <title>` | 更新需求 |
+| `/chandao story create --product <id> --title <title> [--spec <desc>] [--verify <criteria>] [--module <id>] [--pri 1-4] [--source <source>] [--assigned <user>] [--reviewer <account>] [--estimate <hours>]` | 创建需求 |
+| `/chandao story update <id> [--title <title>] [--desc <desc>] [--module <id>] [--pri 1-4] [--assigned <user>] [--status <status>]` | 更新需求 |
 | `/chandao story review <id> --result pass\|reject` | 评审需求 |
 | `/chandao story close <id>` | 关闭需求 |
 | `/chandao story activate <id>` | 激活已关闭的需求 |
@@ -108,8 +108,8 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 |------|------|
 | `/chandao task list [--execution <id>] [--assigned <user>] [--limit N]` | 列出任务 |
 | `/chandao task get <id>` | 获取任务详情 |
-| `/chandao task create --execution <id> --name <name> [--assigned <user>] [--type devel\|test\|design\|discuss\|ui]` | 创建任务 |
-| `/chandao task update <id> --name <name>` | 更新任务 |
+| `/chandao task create --execution <id> --name <name> [--assigned <user>] [--type devel\|test\|design\|discuss\|ui] [--pri 1-4] [--estimate <hours>] [--story <id>] [--module <id>] [--est-started <YYYY-MM-DD>] [--deadline <YYYY-MM-DD>]` | 创建任务 |
+| `/chandao task update <id> [--name <name>] [--assigned <user>] [--pri 1-4] [--status <status>] [--estimate <hours>] [--consumed <hours>]` | 更新任务 |
 | `/chandao task start <id>` | 开始任务（状态→进行中） |
 | `/chandao task finish <id>` | 完成任务（状态→已完成） |
 | `/chandao task close <id>` | 关闭任务 |
@@ -136,11 +136,11 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 |------|------|
 | `/chandao bug list [--product <id>] [--pri 1-4] [--limit N]` | 列出 Bug |
 | `/chandao bug get <id>` | Bug 详情 |
-| `/chandao bug create --product <id> --title <title> --opened-build <buildId>` | 创建 Bug |
-| `/chandao bug resolve <id> --resolution fixed\|bydesign\|external\|postponed\|willnotfix\|duplicate\|notrepro` | 解决 Bug |
+| `/chandao bug create --product <id> --title <title> --opened-build <buildId> [--assigned <user>] [--pri 1-4] [--severity 1-4] [--type <type>] [--desc <desc>] [--module <id>] [--execution <id>] [--task <id>] [--story <id>] [--os <os>] [--browser <browser>]` | 创建 Bug |
+| `/chandao bug resolve <id> --resolution fixed\|bydesign\|external\|postponed\|willnotfix\|duplicate\|notrepro [--assigned-to <user>] [--resolved-build <id>]` | 解决 Bug（注意：需通过 `--assigned-to` 指定指派人，否则禅道会清空指派人） |
 | `/chandao bug close <id>` | 关闭 Bug |
 | `/chandao bug activate <id>` | 激活 Bug |
-| `/chandao bug update <id> --title <title>` | 编辑 Bug |
+| `/chandao bug update <id> [--title <title>] [--assigned <user>] [--pri 1-4]` | 编辑 Bug |
 | `/chandao bug delete <id>` | 删除 Bug |
 
 ### 史诗管理
@@ -176,7 +176,7 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 | `/chandao testcase list [--product <id>] [--limit N]` | 列出测试用例 |
 | `/chandao testcase get <id>` | 测试用例详情 |
 | `/chandao testcase create --product <id> --title <title> [--type feature\|interface\|performance\|security\|other]` | 创建测试用例 |
-| `/chandao testcase update <id> --title <title>` | 更新测试用例 |
+| `/chandao testcase update <id> [--title <title>] [--status <status>] [--pri 1-4] [--type <type>] [--precondition <text>] [--story <id>]` | 更新测试用例 |
 | `/chandao testcase delete <id>` | 删除测试用例 |
 
 ### 测试单管理
@@ -194,8 +194,8 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 
 | 命令 | 描述 |
 |------|------|
-| `/chandao file upload --path <file> --object-type <objectType> --object-id <objectID>` | 上传附件 |
-| `/chandao file edit <id> --name <newName>` | 编辑/重命名附件 |
+| `/chandao file upload --file <path> [--title <title>] [--object-type <objectType>] [--object-id <objectID>]` | 上传附件 |
+| `/chandao file edit --id <id> --title <newName>` | 编辑/重命名附件 |
 | `/chandao file delete <id>` | 删除附件 |
 
 ### 项目集管理
@@ -204,7 +204,7 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 |------|------|
 | `/chandao program list [--limit N]` | 列出项目集 |
 | `/chandao program get <id>` | 项目集详情 |
-| `/chandao program create --name <name>` | 创建项目集 |
+| `/chandao program create --name <name> --code <code>` | 创建项目集 |
 | `/chandao program update <id> --name <name>` | 更新项目集 |
 | `/chandao program delete <id>` | 删除项目集 |
 
@@ -214,7 +214,7 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 |------|------|
 | `/chandao build list-by-project <id>` | 按项目列出版本 |
 | `/chandao build list-by-execution <id>` | 按执行列出版本 |
-| `/chandao build create --product <id> --name <name>` | 创建版本 |
+| `/chandao build create --project <id> --execution <id> --name <name>` | 创建版本 |
 | `/chandao build update <id> --name <name>` | 更新版本 |
 | `/chandao build delete <id>` | 删除版本 |
 
@@ -224,7 +224,7 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 |------|------|
 | `/chandao release list-by-product <id>` | 按产品列出发布 |
 | `/chandao release list` | 列出所有发布 |
-| `/chandao release create --product <id> --name <name>` | 创建发布 |
+| `/chandao release create --product <id> --build <id> --name <name>` | 创建发布 |
 | `/chandao release update <id> --name <name>` | 更新发布 |
 | `/chandao release delete <id>` | 删除发布 |
 
@@ -266,7 +266,7 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 
 | 命令 | 描述 |
 |------|------|
-| `/chandao system list` | 列出应用系统 |
+| `/chandao system list --product <id>` | 列出应用系统 |
 
 ## 通用选项
 
@@ -373,6 +373,34 @@ skills/chandao/
 ```
 
 所有执行依赖 `chandao-cli`，无需额外脚本文件。
+
+## 最佳实践
+
+### Bug 解决（保留原指派人）
+
+**问题**：禅道 `bug resolve` 接口如果不传 `assignedTo` 参数，会将指派人清空。
+
+**正确流程**：
+1. 先获取 Bug 详情，拿到当前指派人：
+   ```bash
+   chandao bug get <bug_id>
+   # 从返回的 JSON 中读取 assignedTo 字段
+   ```
+
+2. 解决时带上 `--assigned-to` 参数：
+   ```bash
+   chandao bug resolve <bug_id> --resolution fixed --assigned-to <原指派人> --resolved-build <build_id>
+   ```
+
+**示例**（解决 Bug #36 并保留指派人 hai）：
+```bash
+# 1. 获取详情
+chandao bug get 36
+# 返回: {"assignedTo": "hai", ...}
+
+# 2. 解决并保留指派人
+chandao bug resolve 36 --resolution bydesign --assigned-to hai --resolved-build 1
+```
 
 ## 错误处理
 

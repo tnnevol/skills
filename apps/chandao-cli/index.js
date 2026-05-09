@@ -11,7 +11,7 @@ const binaryName =
       ? "chandao-macos"
       : "chandao-linux";
 
-const binaryPath = path.join(__dirname, "bin", binaryName);
+const binaryPath = path.join(__dirname, "bin", binaryName, binaryName);
 const args = process.argv.slice(2);
 
 try {

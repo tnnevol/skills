@@ -172,6 +172,9 @@ pub enum StoryCommands {
         /// Assigned to
         #[arg(short = 'a', long)]
         assigned: Option<String>,
+        /// Reviewer
+        #[arg(short = 'r', long)]
+        reviewer: Option<String>,
         /// Estimate (hours)
         #[arg(long)]
         estimate: Option<f64>,
@@ -579,8 +582,21 @@ pub enum TestcaseCommands {
         title: Option<String>,
         #[arg(short, long)]
         status: Option<String>,
+        /// Priority (1-4)
+        #[arg(short = 'i', long)]
+        pri: Option<u8>,
+        /// Type (feature/performance/config/interface/security/other/unit/install)
+        #[arg(short = 'y', long)]
+        r#type: Option<String>,
+        /// Preconditions
+        #[arg(long)]
+        precondition: Option<String>,
+        /// Steps (JSON array of {step,expect})
         #[arg(long)]
         steps: Option<String>,
+        /// Story ID
+        #[arg(long)]
+        story: Option<i64>,
         #[arg(long)]
         dry_run: bool,
     },
@@ -612,8 +628,8 @@ pub enum UserCommands {
     },
     /// Get user details
     Get {
-        /// User ID
-        id: i64,
+        /// User ID or account name
+        id: String,
     },
     /// Create a new user
     Create {
@@ -675,6 +691,9 @@ pub enum TesttaskCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
+        /// Browse type (all, unfinished, blocked)
+        #[arg(short = 'b', long, default_value = "all")]
+        browse: String,
         /// Page number
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -687,6 +706,9 @@ pub enum TesttaskCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
+        /// Browse type (all, unfinished, blocked)
+        #[arg(short = 'b', long, default_value = "all")]
+        browse: String,
         /// Page number
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -726,27 +748,27 @@ pub enum TesttaskCommands {
         /// Test task name (required)
         #[arg(short, long)]
         name: String,
+        /// Build ID (required)
+        #[arg(short = 'b', long)]
+        build: i64,
+        /// Begin date (YYYY-MM-DD, required)
+        #[arg(long)]
+        begin: String,
+        /// End date (YYYY-MM-DD, required)
+        #[arg(long)]
+        end: String,
         /// Project ID
         #[arg(short = 'j', long)]
         project: Option<i64>,
         /// Execution ID
         #[arg(short = 'e', long)]
         execution: Option<i64>,
-        /// Build ID
-        #[arg(short = 'b', long)]
-        build: Option<i64>,
         /// Assigned to
         #[arg(short = 'a', long)]
         assigned: Option<String>,
         /// Priority (1-4)
         #[arg(short = 'i', long)]
         pri: Option<u8>,
-        /// Begin date (YYYY-MM-DD)
-        #[arg(long)]
-        begin: Option<String>,
-        /// End date (YYYY-MM-DD)
-        #[arg(long)]
-        end: Option<String>,
         /// Description
         #[arg(short = 'd', long)]
         desc: Option<String>,
@@ -958,7 +980,7 @@ pub fn handle_story(
             utils::print_json(&data);
             Ok(())
         }),
-        StoryCommands::Create { product, title, spec, verify, module, pri, source, assigned, estimate, dry_run } => {
+        StoryCommands::Create { product, title, spec, verify, module, pri, source, assigned, reviewer, estimate, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 创建需求: {}", title); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({"productID": product, "title": title});
@@ -969,6 +991,7 @@ pub fn handle_story(
                 if let Some(s) = source { body["source"] = json!(s); }
                 if let Some(a) = assigned { body["assignedTo"] = json!(a); }
                 if let Some(e) = estimate { body["estimate"] = json!(e); }
+                if let Some(r) = reviewer { body["reviewer"] = json!(r); }
                 let result = ac.post("/stories", &body)?;
                 println!("✅ 需求创建成功");
                 utils::print_json(&result);
@@ -1068,7 +1091,7 @@ pub fn handle_task(
             if *dry_run { println!("🔍 [DRY-RUN] 创建任务: {}", name); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
-                    "execution": execution,
+                    "executionID": execution,
                     "name": name,
                     "type": r#type,
                 });
@@ -1214,10 +1237,26 @@ pub fn handle_bug(
         BugCommands::Update { id, title, assigned, status, pri, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 更新Bug #{}", id); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                // 如果指定了 status，使用专门的状态流转端点
+                if let Some(s) = status {
+                    match s.as_str() {
+                        "resolved" => {
+                            return Err("❌ Bug 状态不能通过 update 修改，请使用: bug resolve --resolution <type>".to_string());
+                        }
+                        "closed" => {
+                            return Err("❌ Bug 状态不能通过 update 修改，请使用: bug close".to_string());
+                        }
+                        "active" => {
+                            return Err("❌ Bug 状态不能通过 update 修改，请使用: bug activate".to_string());
+                        }
+                        _ => {
+                            return Err(format!("❌ 无效的状态 '{}'，有效值: active, resolved, closed", s));
+                        }
+                    }
+                }
                 let mut body = json!({});
                 if let Some(t) = title { body["title"] = json!(t); }
                 if let Some(a) = assigned { body["assignedTo"] = json!(a); }
-                if let Some(s) = status { body["status"] = json!(s); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
                 let result = ac.put(&format!("/bugs/{}", id), &body)?;
                 println!("✅ Bug #{} 更新成功", id);
@@ -1334,12 +1373,16 @@ pub fn handle_testcase(
                 Ok(())
             })
         }
-        TestcaseCommands::Update { id, title, status, steps, dry_run } => {
+        TestcaseCommands::Update { id, title, status, pri, r#type, precondition, steps, story, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 更新测试用例 #{}", id); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
                 if let Some(t) = title { body["title"] = json!(t); }
                 if let Some(s) = status { body["status"] = json!(s); }
+                if let Some(p) = pri { body["pri"] = json!(p); }
+                if let Some(t) = r#type { body["type"] = json!(t); }
+                if let Some(pc) = precondition { body["precondition"] = json!(pc); }
+                if let Some(s) = story { body["story"] = json!(s); }
                 if let Some(s) = steps { body["steps"] = json!(s); }
                 let result = ac.put(&format!("/testcases/{}", id), &body)?;
                 println!("✅ 测试用例 #{} 更新成功", id);
@@ -2285,7 +2328,9 @@ pub fn handle_user(
             Ok(())
         }),
         UserCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-            let data = ac.get(&format!("/users/{}", id))?;
+            // Support both numeric ID and account name
+            let path = format!("/users/{}", id);
+            let data = ac.get(&path)?;
             utils::print_json(&data);
             Ok(())
         }),
@@ -3288,6 +3333,9 @@ pub enum RequirementCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
+        /// Browse type (allstory, assignedtome, openedbyme, reviewedbyme, draftstory)
+        #[arg(short = 'b', long, default_value = "allstory")]
+        browse: String,
         /// Page number
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -3300,6 +3348,9 @@ pub enum RequirementCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
+        /// Browse type (allstory, assignedtome, openedbyme, reviewedbyme, draftstory)
+        #[arg(short = 'b', long, default_value = "allstory")]
+        browse: String,
         /// Page number
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -3527,11 +3578,11 @@ pub fn handle_requirement(
     cmd: &RequirementCommands,
 ) -> Result<(), String> {
     match cmd {
-        RequirementCommands::List { product, page, limit }
-        | RequirementCommands::ListByProduct { product, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+        RequirementCommands::List { product, browse, page, limit }
+        | RequirementCommands::ListByProduct { product, browse, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let data = ac.get(&format!(
-                "/products/{}/requirements?pageID={}&recPerPage={}",
-                product, page, limit
+                "/products/{}/requirements?browse={}&pageID={}&recPerPage={}",
+                product, browse, page, limit
             ))?;
             utils::print_table(
                 &data,
@@ -3720,6 +3771,9 @@ pub enum EpicCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
+        /// Browse type (allstory, unclosed)
+        #[arg(short = 'b', long, default_value = "allstory")]
+        browse: String,
         /// Page number
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -3732,6 +3786,9 @@ pub enum EpicCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
+        /// Browse type (allstory, unclosed)
+        #[arg(short = 'b', long, default_value = "allstory")]
+        browse: String,
         /// Page number
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -3846,11 +3903,11 @@ pub fn handle_epic(
     cmd: &EpicCommands,
 ) -> Result<(), String> {
     match cmd {
-        EpicCommands::List { product, page, limit }
-        | EpicCommands::ListByProduct { product, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+        EpicCommands::List { product, browse, page, limit }
+        | EpicCommands::ListByProduct { product, browse, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let data = ac.get(&format!(
-                "/products/{}/epics?pageID={}&recPerPage={}",
-                product, page, limit
+                "/products/{}/epics?browse={}&pageID={}&recPerPage={}",
+                product, browse, page, limit
             ))?;
             utils::print_table(
                 &data,
@@ -4038,14 +4095,15 @@ pub fn handle_testtask(
     cmd: &TesttaskCommands,
 ) -> Result<(), String> {
     match cmd {
-        TesttaskCommands::List { product, page, limit }
+        TesttaskCommands::List { product, browse, page, limit }
         | TesttaskCommands::ListByProduct {
             product,
+            browse,
             page,
             limit,
         } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let data = ac.get(&format!(
-                "/products/{product}/testtasks?pageID={page}&recPerPage={limit}"
+                "/products/{product}/testtasks?browseType={browse}&pageID={page}&recPerPage={limit}"
             ))?;
             utils::print_table(
                 &data,
@@ -4142,21 +4200,15 @@ pub fn handle_testtask(
                 if let Some(v) = execution {
                     body["execution"] = json!(v);
                 }
-                if let Some(v) = build {
-                    body["build"] = json!(v);
-                }
+                body["build"] = json!(build);
                 if let Some(v) = assigned {
                     body["assignedTo"] = json!(v);
                 }
                 if let Some(v) = pri {
                     body["pri"] = json!(v);
                 }
-                if let Some(v) = begin {
-                    body["begin"] = json!(v);
-                }
-                if let Some(v) = end {
-                    body["end"] = json!(v);
-                }
+                body["begin"] = json!(begin);
+                body["end"] = json!(end);
                 if let Some(v) = desc {
                     body["desc"] = json!(v);
                 }
@@ -4248,6 +4300,9 @@ pub enum FeedbackCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
+        /// Browse type (wait, all, closed, resolved, byme)
+        #[arg(short = 'b', long, default_value = "all")]
+        browse: String,
         /// Page number
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -4260,6 +4315,9 @@ pub enum FeedbackCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
+        /// Browse type (wait, all, closed, resolved, byme)
+        #[arg(short = 'b', long, default_value = "all")]
+        browse: String,
         /// Page number
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -4357,12 +4415,12 @@ pub fn handle_feedback(
     cmd: &FeedbackCommands,
 ) -> Result<(), String> {
     match cmd {
-        FeedbackCommands::List { product, page, limit }
-        | FeedbackCommands::ListByProduct { product, page, limit } => {
+        FeedbackCommands::List { product, browse, page, limit }
+        | FeedbackCommands::ListByProduct { product, browse, page, limit } => {
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let data = ac.get(&format!(
-                    "/products/{}/feedbacks?pageID={}&recPerPage={}",
-                    product, page, limit
+                    "/products/{}/feedbacks?browseType={}&pageID={}&recPerPage={}",
+                    product, browse, page, limit
                 ))?;
                 utils::print_table(
                     &data,
@@ -4517,6 +4575,9 @@ pub enum TicketCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
+        /// Status filter (active, closed, all, resolved)
+        #[arg(short = 's', long, default_value = "active")]
+        status: String,
         /// Page number
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -4529,6 +4590,9 @@ pub enum TicketCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: i64,
+        /// Status filter (active, closed, all, resolved)
+        #[arg(short = 's', long, default_value = "active")]
+        status: String,
         /// Page number
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -4629,11 +4693,11 @@ pub fn handle_ticket(
     cmd: &TicketCommands,
 ) -> Result<(), String> {
     match cmd {
-        TicketCommands::List { product, page, limit }
-        | TicketCommands::ListByProduct { product, page, limit } => {
+        TicketCommands::List { product, status, page, limit }
+        | TicketCommands::ListByProduct { product, status, page, limit } => {
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let data = ac.get(&format!(
-                    "/products/{product}/tickets?pageID={page}&recPerPage={limit}"
+                    "/products/{product}/tickets?status={status}&pageID={page}&recPerPage={limit}"
                 ))?;
                 utils::print_table(
                     &data,
