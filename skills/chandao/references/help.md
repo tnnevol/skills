@@ -46,8 +46,7 @@ chandao-cli 覆盖禅道 19 个模块的 CRUD 和业务操作：
 | 构建/版本 | 列表/创建/更新/删除 | `chandao-cli build list-by-project 1` |
 | 发布 | 列表/创建/更新/删除 | `chandao-cli release list-by-product 21` |
 | 产品计划 | 列表/详情/创建/更新/删除 | `chandao-cli productplan list-by-product 21` |
-| 反馈 | 列表/详情/创建/更新/关闭/激活 | `chandao-cli feedback list-by-product 21` |
-| 工单 | 列表/详情/创建/更新/关闭/激活 | `chandao-cli ticket list-by-product 21` |
+
 | 系统 | 列表 | `chandao-cli system list` |
 
 ## 如何使用帮助？

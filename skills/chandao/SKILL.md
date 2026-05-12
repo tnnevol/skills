@@ -238,30 +238,6 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 | `/chandao productplan update <id> --title <title>` | 更新计划 |
 | `/chandao productplan delete <id>` | 删除计划 |
 
-### 反馈管理
-
-| 命令 | 描述 |
-|------|------|
-| `/chandao feedback list-by-product <id>` | 按产品列出反馈 |
-| `/chandao feedback get <id>` | 反馈详情 |
-| `/chandao feedback create --product <id> --title <title>` | 创建反馈 |
-| `/chandao feedback update <id> --title <title>` | 更新反馈 |
-| `/chandao feedback close <id>` | 关闭反馈 |
-| `/chandao feedback activate <id>` | 激活已关闭的反馈 |
-| `/chandao feedback delete <id>` | 删除反馈 |
-
-### 工单管理
-
-| 命令 | 描述 |
-|------|------|
-| `/chandao ticket list-by-product <id>` | 按产品列出工单 |
-| `/chandao ticket get <id>` | 工单详情 |
-| `/chandao ticket create --product <id> --title <title>` | 创建工单 |
-| `/chandao ticket update <id> --title <title>` | 更新工单 |
-| `/chandao ticket close <id>` | 关闭工单 |
-| `/chandao ticket activate <id>` | 激活已关闭的工单 |
-| `/chandao ticket delete <id>` | 删除工单 |
-
 ### 系统管理
 
 | 命令 | 描述 |
@@ -354,10 +330,6 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - "版本列表" / "构建列表" → `build list-by-project`
 - "发布列表" → `release list-by-product`
 - "产品计划" → `productplan list-by-product`
-
-### 反馈/工单
-- "反馈列表" → `feedback list-by-product`
-- "工单列表" → `ticket list-by-product`
 
 ### 系统管理
 - "系统列表" / "应用系统" / "有哪些系统" → `system list`

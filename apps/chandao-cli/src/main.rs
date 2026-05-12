@@ -69,12 +69,6 @@ enum Commands {
     /// Manage test tasks (测试单)
     #[command(subcommand)]
     Testtask(actions::TesttaskCommands),
-    /// Manage feedbacks
-    #[command(subcommand)]
-    Feedback(actions::FeedbackCommands),
-    /// Manage tickets
-    #[command(subcommand)]
-    Ticket(actions::TicketCommands),
     /// Print version
     Version,
 }
@@ -116,8 +110,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Requirement(args) => actions::handle_requirement(&client, &auth, args),
         Commands::Epic(args) => actions::handle_epic(&client, &auth, args),
         Commands::Testtask(args) => actions::handle_testtask(&client, &auth, args),
-        Commands::Feedback(args) => actions::handle_feedback(&client, &auth, args),
-        Commands::Ticket(args) => actions::handle_ticket(&client, &auth, args),
         _ => unreachable!(),
     };
 
