@@ -1,28 +1,61 @@
 #!/usr/bin/env node
 
-const { execFileSync } = require("child_process");
-const path = require("path");
+const { spawn } = require("node:child_process");
+const fs = require("node:fs");
+const path = require("node:path");
+const process = require("node:process");
 
 const platform = process.platform;
-const binaryName =
-  platform === "win32"
-    ? "chandao-win.exe"
-    : platform === "darwin"
-      ? "chandao-macos"
-      : "chandao-linux";
+const arch = process.arch;
 
-const binaryPath = path.join(__dirname, "bin", binaryName, binaryName);
-const args = process.argv.slice(2);
-
-try {
-  execFileSync(binaryPath, args, { stdio: "inherit" });
-} catch (e) {
-  if (e.status === 127) {
-    console.error(
-      `[chandao] Binary not found for platform ${platform}.`,
-    );
-    console.error(`  Expected: ${binaryPath}`);
-    console.error("  Run `make build-all` to build for all platforms.");
-  }
-  process.exit(e.status ?? 1);
+let binName;
+if (platform === "linux") {
+  binName = "chandao-linux";
+} else if (platform === "darwin") {
+  binName = arch === "arm64" ? "chandao-macos-arm" : "chandao-macos";
+} else if (platform === "win32") {
+  binName = "chandao-win.exe";
+} else {
+  console.error(`Unsupported platform: ${platform} (${arch})`);
+  process.exit(1);
 }
+
+function resolveBinPath(binPath) {
+  // If it's a directory (old workflow artifact structure), look inside
+  if (fs.statSync(binPath).isDirectory()) {
+    const entries = fs.readdirSync(binPath);
+    for (const entry of entries) {
+      if (entry === binName || entry.endsWith(".exe") || !entry.includes(".")) {
+        return path.join(binPath, entry);
+      }
+    }
+  }
+  return binPath;
+}
+
+function ensureExecutable(binPath) {
+  if (platform !== "win32") {
+    try {
+      const resolved = resolveBinPath(binPath);
+      fs.chmodSync(resolved, 0o755);
+      return resolved;
+    } catch {}
+  }
+  return binPath;
+}
+
+const binPath = path.join(__dirname, "bin", binName);
+const resolvedPath = ensureExecutable(binPath);
+
+const child = spawn(resolvedPath, process.argv.slice(2), {
+  stdio: "inherit",
+});
+
+child.on("error", (err) => {
+  console.error(`Failed to execute ${binName}: ${err.message}`);
+  process.exit(1);
+});
+
+child.on("exit", (code) => {
+  process.exit(code);
+});

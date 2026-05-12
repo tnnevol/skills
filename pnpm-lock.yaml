@@ -30,6 +30,12 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  apps/chandao-cli:
+    devDependencies:
+      bumpp:
+        specifier: ^11.0.1
+        version: 11.0.1
+
   apps/halo-cli:
     devDependencies:
       bumpp:

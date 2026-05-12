@@ -86,8 +86,8 @@ jobs:
       - name: Flatten artifact directories
         working-directory: apps/halo-cli/bin/
         run: |
-          find . -type f -exec mv -f {} . \;
-          find . -type d -empty -delete
+          mv */* . 2>/dev/null || true
+          rmdir * 2>/dev/null || true
 
       - name: Publish to npm
         working-directory: apps/halo-cli
