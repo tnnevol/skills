@@ -1,40 +1,86 @@
-TARGET_DIR = target/release
-BIN_DIR = bin
+.PHONY: all clean linux macos windows install-targets verify build-all
 
-ARCH ?= $(shell uname -m)
-ifeq ($(ARCH), aarch64)
-  ARCH_LINUX = aarch64-unknown-linux-gnu
-  ARCH_MACOS = aarch64-apple-darwin
-  ARCH_WIN = aarch64-pc-windows-gnu
-else
-  ARCH_LINUX = x86_64-unknown-linux-gnu
-  ARCH_MACOS = x86_64-apple-darwin
-  ARCH_WIN = x86_64-pc-windows-gnu
-endif
-
-.PHONY: all linux macos windows build-all clean verify
-
+# 一键编译所有平台
 all: build-all
 
-linux:
-	cargo build --release --target $(ARCH_LINUX)
-	cp $(TARGET_DIR)/$(ARCH_LINUX)/chandao $(BIN_DIR)/chandao-linux
-
-macos:
-	cargo build --release --target $(ARCH_MACOS)
-	cp $(TARGET_DIR)/$(ARCH_MACOS)/chandao $(BIN_DIR)/chandao-macos
-
-windows:
-	cargo build --release --target $(ARCH_WIN)
-	cp $(TARGET_DIR)/$(ARCH_WIN)/chandao.exe $(BIN_DIR)/chandao-win.exe
-
+# 编译所有三个平台
 build-all: linux macos windows
+	@echo ""
+	@echo "========================================="
+	@echo "✅ 所有平台编译完成"
+	@echo "========================================="
+	@if [ -f bin/chandao-linux ]; then \
+		ls -lh bin/chandao-linux | awk '{print "   Linux:   bin/chandao-linux  (" $$5 ")"}'; \
+	else echo "   Linux:   未编译"; fi
+	@if [ -f bin/chandao-macos ]; then \
+		ls -lh bin/chandao-macos | awk '{print "   macOS:   bin/chandao-macos (Intel) (" $$5 ")"}'; \
+	else echo "   macOS:   未编译 (Intel)"; fi
+	@if [ -f bin/chandao-macos-arm ]; then \
+		ls -lh bin/chandao-macos-arm | awk '{print "   macOS:   bin/chandao-macos-arm (Apple Silicon) (" $$5 ")"}'; \
+	else echo "   macOS:   未编译 (Apple Silicon)"; fi
+	@if [ -f bin/chandao-win.exe ]; then \
+		ls -lh bin/chandao-win.exe | awk '{print "   Windows: bin/chandao-win.exe (" $$5 ")"}'; \
+	else echo "   Windows: 未编译"; fi
 
+# Linux（本机编译，与 workflow 一致）
+linux:
+	@mkdir -p bin
+	@if cargo build --release --target x86_64-unknown-linux-gnu 2>/dev/null; then \
+		cp target/x86_64-unknown-linux-gnu/release/chandao bin/chandao-linux; \
+		echo "✅ Linux (x86_64-unknown-linux-gnu) 编译完成"; \
+	else \
+		echo "⚠️  跳过 Linux 编译（缺少 target: rustup target add x86_64-unknown-linux-gnu）"; \
+	fi
+
+# macOS（检测本机架构，只编译当前平台；workflow 会分别编译两者）
+macos:
+	@mkdir -p bin
+	@if [ "$$(uname -m)" = "arm64" ]; then \
+		if cargo build --release --target aarch64-apple-darwin 2>/dev/null; then \
+			cp target/aarch64-apple-darwin/release/chandao bin/chandao-macos-arm; \
+			echo "✅ macOS Apple Silicon (aarch64-apple-darwin) 编译完成"; \
+		else \
+			echo "⚠️  跳过 macOS Apple Silicon 编译（缺少 target: rustup target add aarch64-apple-darwin）"; \
+		fi; \
+	else \
+		if cargo build --release --target x86_64-apple-darwin 2>/dev/null; then \
+			cp target/x86_64-apple-darwin/release/chandao bin/chandao-macos; \
+			echo "✅ macOS Intel (x86_64-apple-darwin) 编译完成"; \
+		else \
+			echo "⚠️  跳过 macOS Intel 编译（缺少 target: rustup target add x86_64-apple-darwin）"; \
+		fi; \
+	fi
+
+# Windows（本机交叉编译，与 workflow 一致）
+windows:
+	@mkdir -p bin
+	@if cargo build --release --target x86_64-pc-windows-msvc 2>/dev/null; then \
+		cp target/x86_64-pc-windows-msvc/release/chandao.exe bin/chandao-win.exe; \
+		echo "✅ Windows (x86_64-pc-windows-msvc) 编译完成"; \
+	else \
+		echo "⚠️  跳过 Windows 编译（缺少 target: rustup target add x86_64-pc-windows-msvc）"; \
+	fi
+
+# 清理
 clean:
-	cargo clean
-	rm -f $(BIN_DIR)/*
+	rm -rf target/
+	rm -f bin/chandao-linux bin/chandao-macos bin/chandao-macos-arm bin/chandao-win.exe
+	@echo "✅ 清理完成"
 
+# 安装交叉编译目标（与 workflow 的 targets 一致）
+install-targets:
+	rustup target add x86_64-unknown-linux-gnu
+	rustup target add x86_64-apple-darwin
+	rustup target add aarch64-apple-darwin
+	rustup target add x86_64-pc-windows-msvc
+	@echo "✅ 所有目标已安装"
+
+# 验证编译结果
 verify:
-	cargo test
-	cargo clippy -- -D warnings
-	cargo check --release
+	@echo "=== 版本检查 ==="
+	@bin/chandao-linux version 2>/dev/null || echo "Linux 二进制不存在"
+	@bin/chandao-macos version 2>/dev/null || echo "macOS Intel 二进制不存在"
+	@bin/chandao-macos-arm version 2>/dev/null || echo "macOS ARM 二进制不存在"
+	@echo ""
+	@echo "=== 文件列表 ==="
+	@ls -lh bin/

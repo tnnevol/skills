@@ -10,6 +10,7 @@
     "build:linux": "make linux",
     "build:macos": "make macos",
     "build:windows": "make windows",
+    "build:targets": "make install-targets",
     "clean": "make clean",
     "verify": "make verify",
     "bump": "bumpp",
@@ -17,7 +18,17 @@
     "bump:minor": "bumpp minor -y",
     "bump:major": "bumpp major -y"
   },
-  "files": ["index.js", "bin/"],
+  "files": [
+    "index.js",
+    "bin/"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tnnevol/skills.git",
+    "directory": "apps/chandao-cli"
+  },
+  "author": "tnnevol",
   "devDependencies": {
     "bumpp": "^11.0.1"
   }
