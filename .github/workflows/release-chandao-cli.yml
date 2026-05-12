@@ -5,7 +5,7 @@ name: Release Chandao CLI
 on:
   push:
     tags:
-      - 'v*'
+      - 'chandao-cli/v*'
 
 jobs:
   build:

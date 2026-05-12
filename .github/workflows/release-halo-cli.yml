@@ -5,7 +5,7 @@ name: Release Halo CLI
 on:
   push:
     tags:
-      - 'v*'
+      - 'halo-cli/v*'
 
 jobs:
   build:
