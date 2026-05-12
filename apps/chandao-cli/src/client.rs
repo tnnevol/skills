@@ -86,7 +86,14 @@ impl AuthenticatedClient {
             }
             Err(ureq::Error::Status(s, resp)) => {
                 let body = resp.into_string().unwrap_or_default();
-                Err(format!("请求失败 (HTTP {}): {}", s, body))
+                if s == 403 && body.contains("Not allowed") {
+                    Err(format!(
+                        "请求失败 (HTTP 403): 权限不足\n\n💡 可能原因：\n  1. 当前用户未分配角色（禅道后台 → 组织 → 用户 → 编辑 → 分配角色）\n  2. 当前用户缺少该模块的访问权限\n\n原始响应: {}",
+                        body
+                    ))
+                } else {
+                    Err(format!("请求失败 (HTTP {}): {}", s, body))
+                }
             }
             Err(ureq::Error::Transport(e)) => Err(format!("网络错误: {}", e)),
         }

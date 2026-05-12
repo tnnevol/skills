@@ -1434,6 +1434,9 @@ pub enum SystemCommands {
     },
     /// Create a new system
     Create {
+        /// Product ID
+        #[arg(short = 'p', long)]
+        product: i64,
         /// System name (required)
         #[arg(long)]
         name: String,
@@ -1503,6 +1506,7 @@ pub fn handle_system(
             })
         }
         SystemCommands::Create {
+            product,
             name,
             code,
             key,
@@ -1515,7 +1519,7 @@ pub fn handle_system(
                 return Ok(());
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                let mut body = json!({"name": name});
+                let mut body = json!({"name": name, "productID": product});
                 if let Some(c) = code {
                     body["code"] = json!(c);
                 }
