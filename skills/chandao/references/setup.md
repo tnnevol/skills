@@ -82,3 +82,26 @@ chandao-cli help
 chandao-cli <module> help
 chandao-cli <module> <action> --help
 ```
+
+## Monorepo 本地开发
+
+chandao-cli 在 skills monorepo 的 `apps/chandao-cli/` 目录下。本地开发时：
+
+```bash
+# 1. 在 skills 根目录安装依赖
+cd /path/to/skills
+pnpm install
+
+# 2. 编译 chandao-cli
+cd apps/chandao-cli
+make build-all
+
+# 3. 用新编译的二进制测试
+./target/release/chandao version
+./target/release/chandao user list --limit 3
+```
+
+**注意**：
+- 不要在子目录下 `npm install`，用根目录 `pnpm install` 统一管理
+- 子目录不应有 `package-lock.json`
+- 编译产物在 `target/` 和 `bin/`，已在根 `.gitignore` 中排除
