@@ -20,10 +20,7 @@ pnpx skills add tnnevol/skills --skill='*' -g
 
 ### 详细安装指南
 
-不同 Agent 工具的安装方式略有差异，详见 [Agent Setup Guide](apps/chandao-cli/agent-setup.md)：
-
-- **Claw**: `npx skills add tnnevol/skills@chandao -g -y`
-- **Hermes**: `hermes skills install tnnevol/skills/skills/chandao -y`
+不同 Agent 工具（Claw、Hermes 等）的安装方式略有差异，详见 [Agent Setup Guide](apps/chandao-cli/agent-setup.md)。
 
 ## 技能列表
 
