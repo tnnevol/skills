@@ -18,6 +18,13 @@ pnpx skills add tnnevol/skills --skill='*' -g
 
 了解更多 CLI 用法请参考 [skills](https://github.com/vercel-labs/skills)。
 
+### 详细安装指南
+
+不同 Agent 工具的安装方式略有差异，详见 [Agent Setup Guide](apps/chandao-cli/agent-setup.md)：
+
+- **Claw**: `npx skills add tnnevol/skills@chandao -g -y`
+- **Hermes**: `hermes skills install tnnevol/skills/skills/chandao -y`
+
 ## 技能列表
 
 ### 技能
