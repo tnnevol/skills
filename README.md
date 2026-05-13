@@ -22,6 +22,10 @@ pnpx skills add tnnevol/skills --skill='*' -g
 
 详见 [Agent Setup Guide](apps/chandao-cli/agent-setup.md)。
 
+### halo-cli 食用文档
+
+详见 [Agent Setup Guide](apps/halo-cli/agent-setup.md)。
+
 ## 技能列表
 
 ### 技能
