@@ -126,10 +126,12 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - "列出执行" / "迭代列表" → `execution list`
 - "执行详情" / "查看迭代" → `execution get <id>`
 - "创建执行" / "新建迭代" → `execution create`
+- "更新执行" / "修改执行" / "编辑执行" → `execution update`
 - "启动执行" / "启动迭代" → `execution start`
 - "暂停执行" / "暂停迭代" → `execution suspend`
 - "关闭执行" / "关闭迭代" → `execution close`
 - "关联产品" / "绑定产品" → `execution link-products`
+- "删除执行" / "删除迭代" → `execution delete`
 
 ### Bug 管理
 - "Bug 列表" / "列出 Bug" → `bug list`
@@ -204,6 +206,8 @@ chandao bug resolve <id> --resolution fixed --assigned-to <原指派人> --resol
 - ⚠️ `system create` CLI 没有 `--product` 参数
 - ⚠️ `project create` 必填 `name` + `code` + `model` + `begin` + `end`，`model` 取值 `scrum` / `waterfall` / `kanban` / `agileplus` / `waterfallplus`
 - ⚠️ `project create/update` 的 `model` 字段与 `execution` 的 `type` 是不同概念，不要混淆
+- ⚠️ `execution create` 必填 `project` + `name` + `begin` + `end`，支持 `lifetime`/`days`/`products`/`plans`/`PO`/`QD`/`PM`/`RD`/`acl` 等扩展字段
+- ⚠️ `execution update` 必填 `name` + `begin` + `end`，`--project` 用于修改所属项目
 - ⚠️ 所有 `delete` 命令需要 `--yes` 确认
 - ⚠️ `user create` 必须传 `--password`
 - ⚠️ 403 错误可能是参数名错误、用户无角色、或角色缺少模块权限
