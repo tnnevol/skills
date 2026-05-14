@@ -106,9 +106,12 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 
 ### 需求管理
 - "列出需求" / "需求列表" → `story list`
+- "项目 N 的需求" → `story list --project N`
+- "执行 N 的需求" → `story list --execution N`
 - "需求详情" / "查看需求" → `story get <id>`
 - "创建需求" / "新增需求" → `story create`
 - "更新需求" / "修改需求" → `story update`
+- "激活需求" / "重新打开需求" → `story activate`
 - "评审需求" → `story review`
 - "关闭需求" → `story close --reason done`
 - "变更需求" → `story change --reviewer <account>`
@@ -198,7 +201,7 @@ chandao bug resolve <id> --resolution fixed --assigned-to <原指派人> --resol
 - ⚠️ API v2 创建接口参数名必须带 `ID` 后缀（如 `executionID`），否则返回 403
 - ⚠️ Bug 状态流转必须用专用端点（`bug resolve/close/activate`），`bug update --status` 无效
 - ⚠️ Bug 解决建议传 `--assigned-to`（否则清空指派人）和 `--resolved-build`
-- ⚠️ `story close`/`epic close`/`requirement close` 必须传 `--reason`
+- ⚠️ `story close` 必须传 `--reason`（枚举：done/subdivided/duplicate/postponed/willnotdo/cancel/bydesign）
 - ⚠️ `story change`/`epic change`/`requirement change` 必须传 `--reviewer`
 - ⚠️ `task finish` 必须传 `--consumed`
 - ⚠️ `execution create` 用 `--project`（不是 `--product`）
