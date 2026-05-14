@@ -1580,7 +1580,7 @@ pub enum ProductCommands {
     /// List products
     List {
         /// Browse type (unclosed, all, etc.)
-        #[arg(short = 'b', long, default_value = "all")]
+        #[arg(short = 'b', long, default_value = "undone")]
         browse_type: String,
         /// Order by field (e.g., id_desc, name_asc)
         #[arg(short = 'o', long, default_value = "id_desc")]
@@ -1721,7 +1721,7 @@ pub enum ProjectCommands {
     /// List projects
     List {
         /// Browse type (unclosed, all, etc.)
-        #[arg(short = 'b', long, default_value = "all")]
+        #[arg(short = 'b', long, default_value = "undone")]
         browse_type: String,
         /// Order by field (e.g., id_desc, name_asc)
         #[arg(short = 'o', long, default_value = "id_desc")]
@@ -1758,18 +1758,18 @@ pub enum ProjectCommands {
         /// Project code (required)
         #[arg(short, long)]
         code: String,
-        /// Project type (sprint, stage, kanban, etc.)
-        #[arg(short = 'y', long, default_value = "sprint")]
-        r#type: String,
+        /// Project model (scrum, waterfall, kanban, agileplus, waterfallplus)
+        #[arg(short = 'm', long, default_value = "scrum")]
+        model: String,
+        /// Begin date (YYYY-MM-DD)
+        #[arg(long)]
+        begin: String,
+        /// End date (YYYY-MM-DD)
+        #[arg(long)]
+        end: String,
         /// Parent project ID
         #[arg(long)]
         parent: Option<i64>,
-        /// Begin date (YYYY-MM-DD)
-        #[arg(long)]
-        begin: Option<String>,
-        /// End date (YYYY-MM-DD)
-        #[arg(long)]
-        end: Option<String>,
         /// Status (wait, doing, suspended, closed)
         #[arg(short, long, default_value = "wait")]
         status: String,
@@ -1793,24 +1793,24 @@ pub enum ProjectCommands {
     Update {
         /// Project ID
         id: i64,
-        /// Project name
+        /// Project name (required)
         #[arg(short, long)]
-        name: Option<String>,
+        name: String,
         /// Project code
         #[arg(short, long)]
         code: Option<String>,
-        /// Project type (sprint, stage, kanban, etc.)
-        #[arg(short = 'y', long)]
-        r#type: Option<String>,
+        /// Project model (scrum, waterfall, kanban, agileplus, waterfallplus) (required)
+        #[arg(short = 'm', long)]
+        model: String,
         /// Parent project ID
         #[arg(long)]
         parent: Option<i64>,
-        /// Begin date (YYYY-MM-DD)
+        /// Begin date (YYYY-MM-DD) (required)
         #[arg(long)]
-        begin: Option<String>,
-        /// End date (YYYY-MM-DD)
+        begin: String,
+        /// End date (YYYY-MM-DD) (required)
         #[arg(long)]
-        end: Option<String>,
+        end: String,
         /// Status (wait, doing, suspended, closed)
         #[arg(short, long)]
         status: Option<String>,
@@ -2096,10 +2096,10 @@ pub fn handle_project(
         ProjectCommands::Create {
             name,
             code,
-            r#type,
-            parent,
+            model,
             begin,
             end,
+            parent,
             status,
             desc,
             budget,
@@ -2109,8 +2109,8 @@ pub fn handle_project(
         } => {
             if *dry_run {
                 println!(
-                    "🔍 [DRY-RUN] 创建项目: name={}, code={}",
-                    name, code
+                    "🔍 [DRY-RUN] 创建项目: name={}, code={}, model={}",
+                    name, code, model
                 );
                 return Ok(());
             }
@@ -2118,17 +2118,13 @@ pub fn handle_project(
                 let mut body = json!({
                     "name": name,
                     "code": code,
+                    "model": model,
+                    "begin": begin,
+                    "end": end,
                 });
-                body["type"] = json!(r#type);
                 body["status"] = json!(status);
                 if let Some(v) = parent {
                     body["parent"] = json!(v);
-                }
-                if let Some(v) = begin {
-                    body["begin"] = json!(v);
-                }
-                if let Some(v) = end {
-                    body["end"] = json!(v);
                 }
                 if let Some(v) = desc {
                     body["desc"] = json!(v);
@@ -2152,7 +2148,7 @@ pub fn handle_project(
             id,
             name,
             code,
-            r#type,
+            model,
             parent,
             begin,
             end,
@@ -2164,28 +2160,21 @@ pub fn handle_project(
             dry_run,
         } => {
             if *dry_run {
-                println!("🔍 [DRY-RUN] 更新项目 #{}", id);
+                println!("🔍 [DRY-RUN] 更新项目 #{}, name={}, model={}, begin={}, end={}", id, name, model, begin, end);
                 return Ok(());
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                let mut body = json!({});
-                if let Some(v) = name {
-                    body["name"] = json!(v);
-                }
+                let mut body = json!({
+                    "name": name,
+                    "model": model,
+                    "begin": begin,
+                    "end": end,
+                });
                 if let Some(v) = code {
                     body["code"] = json!(v);
                 }
-                if let Some(v) = r#type {
-                    body["type"] = json!(v);
-                }
                 if let Some(v) = parent {
                     body["parent"] = json!(v);
-                }
-                if let Some(v) = begin {
-                    body["begin"] = json!(v);
-                }
-                if let Some(v) = end {
-                    body["end"] = json!(v);
                 }
                 if let Some(v) = status {
                     body["status"] = json!(v);

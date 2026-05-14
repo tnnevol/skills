@@ -14,6 +14,7 @@ API v2 的创建接口（POST）要求关联字段使用 `xxxID` 格式，而非
 | Bug create | `productID` | `product` | `productID` |
 | Epic create | `productID` | `product` | `productID` |
 | Execution create | `project` | — | `project`（Execution 特殊，不需要 ID 后缀） |
+| Project create | `model`, `begin`, `end` | `type` | `model`（项目管理方式，非 type） |
 
 ### 错误表现
 

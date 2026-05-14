@@ -82,7 +82,25 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - "查项目" / "项目列表" / "有哪些项目" → `project list`
 - "项目详情" / "看看项目 X" → `project get <id>`
 - "创建项目" / "新建项目" → `project create`
+- "更新项目" / "修改项目" / "编辑项目" → `project update`
 - "删除项目" → `project delete`
+- "项目集的项目" / "项目集 N 的项目" → `project listbyprogram <program>`
+
+### 透传参数提取规则
+
+| 用户关键词 | 提取字段 | 取值 |
+|-----------|---------|------|
+| 敏捷 / Scrum | `--model` | `scrum` |
+| 瀑布 / Waterfall | `--model` | `waterfall` |
+| 看板 / Kanban | `--model` | `kanban` |
+| 融合敏捷 / Agile Plus | `--model` | `agileplus` |
+| 融合瀑布 / Waterfall Plus | `--model` | `waterfallplus` |
+
+### 模糊指令处理
+
+- "看下项目" / "查看项目" / "项目详情" **未提供 ID** → 追问用户："请提供项目 ID"
+- "更新项目" / "修改项目" **未提供 ID** → 追问用户："请提供项目 ID"
+- "删除项目" **未提供 ID** → 追问用户："请提供项目 ID"
 
 ### 需求管理
 - "列出需求" / "需求列表" → `story list`
@@ -182,6 +200,8 @@ chandao bug resolve <id> --resolution fixed --assigned-to <原指派人> --resol
 - ⚠️ `execution create` 用 `--project`（不是 `--product`）
 - ⚠️ `bug list` 没有 `--pri` 参数
 - ⚠️ `system create` CLI 没有 `--product` 参数
+- ⚠️ `project create` 必填 `name` + `code` + `model` + `begin` + `end`，`model` 取值 `scrum` / `waterfall` / `kanban` / `agileplus` / `waterfallplus`
+- ⚠️ `project create/update` 的 `model` 字段与 `execution` 的 `type` 是不同概念，不要混淆
 - ⚠️ 所有 `delete` 命令需要 `--yes` 确认
 - ⚠️ `user create` 必须传 `--password`
 - ⚠️ 403 错误可能是参数名错误、用户无角色、或角色缺少模块权限
