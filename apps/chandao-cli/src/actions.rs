@@ -1580,7 +1580,7 @@ pub enum ProductCommands {
     /// List products
     List {
         /// Browse type (unclosed, all, etc.)
-        #[arg(short = 'b', long, default_value = "undone")]
+        #[arg(short = 'b', long, default_value = "noclosed")]
         browse_type: String,
         /// Order by field (e.g., id_desc, name_asc)
         #[arg(short = 'o', long, default_value = "id_desc")]

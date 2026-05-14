@@ -76,7 +76,9 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - "查产品" / "产品列表" / "有哪些产品" → `product list`
 - "产品详情" / "看看产品 X" → `product get <id>`
 - "创建产品" / "新建产品" → `product create`
+- "更新产品" / "修改产品" / "编辑产品" → `product update`
 - "删除产品" → `product delete`
+- "项目集的产品" / "项目集 N 的产品" → `product list-by-program <program>`
 
 ### 项目管理
 - "查项目" / "项目列表" / "有哪些项目" → `project list`
