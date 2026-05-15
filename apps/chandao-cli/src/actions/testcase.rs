@@ -125,16 +125,16 @@ pub fn handle_testcase(
     cmd: &TestcaseCommands,
 ) -> Result<(), String> {
     match cmd {
-   128|        TestcaseCommands::List { product, project, execution, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-   129|            let path = if let Some(e) = execution {
-   130|                format!("/executions/{}/testcases?pageID={}&recPerPage={}", e, page, limit)
-   131|            } else if let Some(j) = project {
-   132|                format!("/projects/{}/testcases?pageID={}&recPerPage={}", j, page, limit)
-   133|            } else if let Some(p) = product {
-   134|                format!("/products/{}/testcases?pageID={}&recPerPage={}", p, page, limit)
-   135|            } else {
-   136|                format!("/testcases?pageID={}&recPerPage={}", page, limit)
-   137|            };
+        TestcaseCommands::List { product, project, execution, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+            let path = if let Some(e) = execution {
+                format!("/executions/{}/testcases?pageID={}&recPerPage={}", e, page, limit)
+            } else if let Some(j) = project {
+                format!("/projects/{}/testcases?pageID={}&recPerPage={}", j, page, limit)
+            } else if let Some(p) = product {
+                format!("/products/{}/testcases?pageID={}&recPerPage={}", p, page, limit)
+            } else {
+                format!("/testcases?pageID={}&recPerPage={}", page, limit)
+            };
             let data = ac.get(&path)?;
             utils::print_table(&data, &["id", "title", "status", "pri", "type", "stage"]);
             Ok(())
