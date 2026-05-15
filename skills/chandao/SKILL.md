@@ -138,10 +138,15 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 
 ### Bug 管理
 - "Bug 列表" / "列出 Bug" → `bug list`
+- "产品 N 的 Bug" → `bug list --product N`
+- "项目 N 的 Bug" → `bug list --project N`
 - "执行下的 Bug" / "迭代 Bug" / "执行 N 的 bug" → `bug list --execution <id>`
-- "Bug 详情" / "查看 Bug" → `bug get <id>`
+- "Bug 详情" / "查看 Bug N" → `bug get <id>`
 - "创建 Bug" / "报 Bug" → `bug create`
-- "解决 Bug" → `bug resolve`
+- "解决 Bug N" → `bug resolve`
+- "关闭 Bug N" → `bug close`
+- "重新打开 Bug N" / "激活 Bug N" → `bug activate`
+- "删除 Bug N" → `bug delete`（需用户确认）
 - "关闭 Bug" → `bug close`
 - "重新打开 Bug" → `bug activate`
 
