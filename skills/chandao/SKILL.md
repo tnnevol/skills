@@ -153,7 +153,13 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 
 ### 测试管理
 - "测试用例列表" → `testcase list`
+- "产品 N 的用例" → `testcase list --product N`
+- "项目 N 的测试用例" → `testcase list --project N`
+- "执行 N 的测试用例" → `testcase list --execution N`
+- "测试用例详情" / "查看用例 N" → `testcase get N`
 - "创建测试用例" → `testcase create`
+- "修改测试用例" / "编辑用例" → `testcase update`
+- "删除测试用例" / "删除用例 N" → `testcase delete`（需用户确认）
 - "测试单列表" → `testtask list-by-product`
 - "创建测试单" → `testtask create`
 

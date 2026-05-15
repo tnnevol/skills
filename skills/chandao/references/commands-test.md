@@ -4,10 +4,10 @@
 
 | 命令 | 描述 |
 |------|------|
-| `/chandao testcase list [--product <id>] [--limit N] [--page N]` | 列出测试用例 |
+| `/chandao testcase list [--product <id>] [--project <id>] [--execution <id>] [--limit N] [--page N]` | 列出测试用例（支持按产品/项目/执行筛选） |
 | `/chandao testcase get <id>` | 测试用例详情 |
 | `/chandao testcase create --product <id> --title <title> [--project <id>] [--execution <id>] [--module <id>] [--type <type>] [--stage <stage>] [--pri 1-4] [--precondition <text>] [--steps <json>] [--expect <text>] [--step-type step\|group] [--story <id>]` | 创建测试用例 |
-| `/chandao testcase update <id> [--title <title>] [--status <status>] [--pri 1-4] [--type <type>] [--precondition <text>] [--steps <json>] [--story <id>]` | 更新测试用例 |
+| `/chandao testcase update <id> [--title <title>] [--status <status>] [--pri 1-4] [--type <type>] [--module <id>] [--precondition <text>] [--steps <json>] [--story <id>]` | 更新测试用例 |
 | `/chandao testcase delete <id>` | 删除测试用例 |
 
 > type 可选值：`feature|performance|config|interface|security|other|unit|install`

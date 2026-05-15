@@ -23,6 +23,12 @@ pub enum TestcaseCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: Option<i64>,
+        /// Project ID
+        #[arg(short = 'j', long)]
+        project: Option<i64>,
+        /// Execution ID
+        #[arg(short = 'e', long)]
+        execution: Option<i64>,
         /// Page
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -119,12 +125,16 @@ pub fn handle_testcase(
     cmd: &TestcaseCommands,
 ) -> Result<(), String> {
     match cmd {
-        TestcaseCommands::List { product, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-            let path = if let Some(p) = product {
-                format!("/products/{}/testcases?pageID={}&recPerPage={}", p, page, limit)
-            } else {
-                format!("/testcases?pageID={}&recPerPage={}", page, limit)
-            };
+   128|        TestcaseCommands::List { product, project, execution, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+   129|            let path = if let Some(e) = execution {
+   130|                format!("/executions/{}/testcases?pageID={}&recPerPage={}", e, page, limit)
+   131|            } else if let Some(j) = project {
+   132|                format!("/projects/{}/testcases?pageID={}&recPerPage={}", j, page, limit)
+   133|            } else if let Some(p) = product {
+   134|                format!("/products/{}/testcases?pageID={}&recPerPage={}", p, page, limit)
+   135|            } else {
+   136|                format!("/testcases?pageID={}&recPerPage={}", page, limit)
+   137|            };
             let data = ac.get(&path)?;
             utils::print_table(&data, &["id", "title", "status", "pri", "type", "stage"]);
             Ok(())
