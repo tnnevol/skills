@@ -96,6 +96,9 @@ pub enum TestcaseCommands {
         /// Type (feature/performance/config/interface/security/other/unit/install)
         #[arg(short = 'y', long)]
         r#type: Option<String>,
+        /// Module ID
+        #[arg(short = 'm', long)]
+        module: Option<i64>,
         /// Preconditions
         #[arg(long)]
         precondition: Option<String>,
@@ -187,7 +190,7 @@ pub fn handle_testcase(
                 Ok(())
             })
         }
-        TestcaseCommands::Update { id, title, status, pri, r#type, precondition, steps, story, dry_run } => {
+        TestcaseCommands::Update { id, title, status, pri, r#type, module, precondition, steps, story, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 更新测试用例 #{}", id); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
@@ -195,9 +198,27 @@ pub fn handle_testcase(
                 if let Some(s) = status { body["status"] = json!(s); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
                 if let Some(t) = r#type { body["type"] = json!(t); }
+                if let Some(m) = module { body["module"] = json!(m); }
                 if let Some(pc) = precondition { body["precondition"] = json!(pc); }
                 if let Some(s) = story { body["story"] = json!(s); }
-                if let Some(s) = steps { body["steps"] = json!(s); }
+                // Parse steps JSON [{step, expect}] into parallel arrays
+                if let Some(s) = steps {
+                    if let Ok(parsed) = serde_json::from_str::<Vec<serde_json::Value>>(&s) {
+                        let step_strs: Vec<String> = parsed.iter().map(|v| {
+                            v.get("step").and_then(|s| s.as_str()).unwrap_or("").to_string()
+                        }).collect();
+                        let expect_strs: Vec<String> = parsed.iter().map(|v| {
+                            v.get("expect").and_then(|s| s.as_str()).unwrap_or("").to_string()
+                        }).collect();
+                        body["steps"] = json!(step_strs);
+                        body["expects"] = json!(expect_strs);
+                        body["stepType"] = json!(vec!["step"; step_strs.len()]);
+                    } else {
+                        body["steps"] = json!([s]);
+                        body["expects"] = json!([""]);
+                        body["stepType"] = json!(["step"]);
+                    }
+                }
                 let result = ac.put(&format!("/testcases/{}", id), &body)?;
                 println!("✅ 测试用例 #{} 更新成功", id);
                 utils::print_json(&result);
