@@ -23,6 +23,9 @@ pub enum BugCommands {
         /// Product ID
         #[arg(short = 'p', long)]
         product: Option<i64>,
+        /// Project ID
+        #[arg(short = 'j', long)]
+        project: Option<i64>,
         /// Execution ID (list bugs for a specific execution)
         #[arg(short = 'e', long)]
         execution: Option<i64>,
@@ -52,8 +55,8 @@ pub enum BugCommands {
         /// Severity (1-4)
         #[arg(short = 's', long)]
         severity: Option<u8>,
-        /// Type (codeassign/interface/config/design/others)
-        #[arg(short = 'y', long, default_value = "codeassign")]
+        /// Type (codeerror/config/install/security/performance/standard/automation/designdefect/others)
+        #[arg(short = 'y', long, default_value = "codeerror")]
         r#type: String,
         /// Opened build (默认 trunk)
         #[arg(short = 'b', long, default_value = "trunk")]
@@ -153,9 +156,11 @@ pub fn handle_bug(
     cmd: &BugCommands,
 ) -> Result<(), String> {
     match cmd {
-        BugCommands::List { product, execution, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+        BugCommands::List { product, project, execution, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let path = if let Some(e) = execution {
                 format!("/executions/{}/bugs?pageID={}&recPerPage={}", e, page, limit)
+            } else if let Some(j) = project {
+                format!("/projects/{}/bugs?pageID={}&recPerPage={}", j, page, limit)
             } else if let Some(p) = product {
                 format!("/products/{}/bugs?pageID={}&recPerPage={}", p, page, limit)
             } else {
