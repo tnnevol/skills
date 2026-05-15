@@ -154,7 +154,7 @@ fnOS 基于 Linux (Debian) 内核，支持：
 
 | 工具 | 用途 | 安装 |
 |------|------|------|
-| `fnpack` | 应用打包 | `npm i -g @fnnas/fnpack` |
+| `fnpack` | 应用打包 | 下载对应平台二进制文件：[fnpack-1.2.1-darwin-amd64](https://static2.fnnas.com/fnpack/fnpack-1.2.1-darwin-amd64) / [fnpack-1.2.1-darwin-arm64](https://static2.fnnas.com/fnpack/fnpack-1.2.1-darwin-arm64)，放到 PATH 中 |
 | `appcenter-cli` | 应用管理（安装/卸载/日志） | fnOS 设备预装 |
 
 ## References
