@@ -82,6 +82,8 @@ pub enum TaskCommands {
         pri: Option<u8>,
         #[arg(short, long)]
         status: Option<String>,
+        #[arg(short, long)]
+        desc: Option<String>,
         #[arg(long)]
         estimate: Option<f64>,
         #[arg(long)]
@@ -186,16 +188,44 @@ pub fn handle_task(
                 Ok(())
             })
         }
-        TaskCommands::Update { id, name, assigned, pri, status, estimate, consumed, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 更新任务 #{}", id); return Ok(()); }
+        TaskCommands::Update {
+            id,
+            name,
+            assigned,
+            pri,
+            status,
+            desc,
+            estimate,
+            consumed,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 更新任务 #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
-                if let Some(n) = name { body["name"] = json!(n); }
-                if let Some(a) = assigned { body["assignedTo"] = json!(a); }
-                if let Some(p) = pri { body["pri"] = json!(p); }
-                if let Some(s) = status { body["status"] = json!(s); }
-                if let Some(e) = estimate { body["estimate"] = json!(e); }
-                if let Some(c) = consumed { body["consumed"] = json!(c); }
+                if let Some(n) = name {
+                    body["name"] = json!(n);
+                }
+                if let Some(a) = assigned {
+                    body["assignedTo"] = json!(a);
+                }
+                if let Some(p) = pri {
+                    body["pri"] = json!(p);
+                }
+                if let Some(s) = status {
+                    body["status"] = json!(s);
+                }
+                if let Some(d) = desc {
+                    body["desc"] = json!(d);
+                }
+                if let Some(e) = estimate {
+                    body["estimate"] = json!(e);
+                }
+                if let Some(c) = consumed {
+                    body["consumed"] = json!(c);
+                }
                 let result = ac.put(&format!("/tasks/{}", id), &body)?;
                 println!("✅ 任务 #{} 更新成功", id);
                 utils::print_json(&result);

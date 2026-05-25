@@ -142,6 +142,9 @@ pub enum StoryCommands {
         /// Reason: done, subdivided, duplicate, postponed, willnotdo, cancel, bydesign
         #[arg(short, long)]
         reason: String,
+        /// Comment
+        #[arg(short, long)]
+        comment: Option<String>,
         #[arg(long)]
         dry_run: bool,
     },
@@ -263,10 +266,21 @@ pub fn handle_story(
                 Ok(())
             })
         }
-        StoryCommands::Close { id, reason, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 关闭需求 #{}", id); return Ok(()); }
+        StoryCommands::Close {
+            id,
+            reason,
+            comment,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 关闭需求 #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                let body = json!({"closedReason": reason});
+                let mut body = json!({"closedReason": reason});
+                if let Some(c) = comment {
+                    body["comment"] = json!(c);
+                }
                 ac.put(&format!("/stories/{}/close", id), &body)?;
                 println!("✅ 需求 #{} 已关闭", id);
                 Ok(())

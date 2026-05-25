@@ -116,6 +116,11 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - "关闭需求" → `story close --reason done`
 - "变更需求" → `story change --reviewer <account>`
 
+**⚠️ 重要：spec/verify 字段格式要求**
+- 需求描述（`--spec`）和验收标准（`--verify`）字段**必须使用 HTML 格式**
+- 不可使用 Markdown 格式（如 `# 标题`、`**粗体**`、`- 列表`）
+- 应使用 HTML 标签（如 `<h2>标题</h2>`、`<strong>粗体</strong>`、`<ul><li>列表</li></ul>`）
+
 ### 任务管理
 - "列出任务" / "任务列表" → `task list`
 - "任务详情" / "查看任务" → `task get <id>`
@@ -155,6 +160,11 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - "史诗详情" → `epic get`
 - "创建史诗" → `epic create`
 - "关闭史诗" → `epic close`
+
+**⚠️ 重要：spec/verify 字段格式要求**
+- 史诗描述（`--spec`）和验收标准（`--verify`）字段**必须使用 HTML 格式**
+- 不可使用 Markdown 格式（如 `# 标题`、`**粗体**`、`- 列表`）
+- 应使用 HTML 标签（如 `<h2>标题</h2>`、`<strong>粗体</strong>`、`<ul><li>列表</li></ul>`）
 
 ### 测试管理
 - "测试用例列表" → `testcase list`
@@ -225,6 +235,7 @@ chandao bug resolve <id> --resolution fixed --assigned-to <原指派人> --resol
 - ⚠️ 所有 `delete` 命令需要 `--yes` 确认
 - ⚠️ `user create` 必须传 `--password`
 - ⚠️ 403 错误可能是参数名错误、用户无角色、或角色缺少模块权限
+- ⚠️ **spec/verify 字段必须使用 HTML 格式**：需求描述（`--spec`）和验收标准（`--verify`）字段必须使用 HTML 格式，不可使用 Markdown
 
 ## References
 
