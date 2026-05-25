@@ -100,6 +100,9 @@ pub enum StoryCommands {
         /// Specification
         #[arg(short = 'S', long)]
         spec: Option<String>,
+        /// Verification criteria
+        #[arg(long)]
+        verify: Option<String>,
         #[arg(short = 'm', long)]
         module: Option<i64>,
         /// Parent story ID
@@ -230,12 +233,13 @@ pub fn handle_story(
                 Ok(())
             })
         }
-        StoryCommands::Update { id, title, spec, module, parent, pri, category, source, assigned, status, dry_run } => {
+        StoryCommands::Update { id, title, spec, verify, module, parent, pri, category, source, assigned, status, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 更新需求 #{}", id); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
                 if let Some(t) = title { body["title"] = json!(t); }
                 if let Some(s) = spec { body["spec"] = json!(markdown_to_html(&s)); }
+                if let Some(v) = verify { body["verify"] = json!(markdown_to_html(&v)); }
                 if let Some(m) = module { body["module"] = json!(m); }
                 if let Some(pa) = parent { body["parent"] = json!(pa); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
