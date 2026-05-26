@@ -6,8 +6,8 @@
 |------|------|
 | `/chandao product list [--browse-type <type>] [--order-by <field>] [--limit N] [--page N]` | 列出产品 |
 | `/chandao product get <id>` | 产品详情 |
-| `/chandao product create --name <name> --code <code> [--type <type>] [--program <id>] [--line <id>] [--status <status>] [--po <account>] [--qd <account>] [--rd <account>] [--reviewer <accounts>] [--desc <desc>] [--acl <acl>] [--whitelist <users>]` | 创建产品 |
-| `/chandao product update <id> [--name <name>] [--code <code>] [--type <type>] [--program <id>] [--line <id>] [--status <status>] [--po <account>] [--qd <account>] [--rd <account>] [--reviewer <accounts>] [--desc <desc>] [--acl <acl>] [--whitelist <users>]` | 更新产品 |
+| `/chandao product create --name <name> [--program <id>] [--line <id>] [--type <type>] [--po <account>] [--qd <account>] [--rd <account>] [--reviewer <accounts>] [--desc <desc>] [--acl <acl>]` | 创建产品 |
+| `/chandao product update <id> [--name <name>] [--program <id>] [--line <id>] [--type <type>] [--po <account>] [--qd <account>] [--rd <account>] [--reviewer <accounts>] [--desc <desc>] [--acl <acl>]` | 更新产品 |
 | `/chandao product delete <id>` | 删除产品 |
 | `/chandao product list-by-program --program <id> [--limit N] [--page N]` | 按项目集列出产品 |
 
@@ -18,18 +18,15 @@
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `--name` | string | ✅ | 产品名称 |
-| `--code` | string | ✅ | 产品代号 |
-| `--type` | string | ❌ | 产品类型：`normal`(默认) / `branch` / `platform` |
 | `--program` | int | ❌ | 所属项目集 ID |
 | `--line` | int | ❌ | 所属产品线 ID |
-| `--status` | string | ❌ | 状态：`normal`(默认) / `closed` |
+| `--type` | string | ❌ | 产品类型：`normal` / `branch` / `platform` |
 | `--po` | string | ❌ | 产品负责人账号 |
 | `--qd` | string | ❌ | 测试负责人账号 |
 | `--rd` | string | ❌ | 发布负责人账号 |
-| `--reviewer` | string | ❌ | 评审人账号（多个逗号分隔） |
+| `--reviewer` | string | ❌ | 评审人账号 |
 | `--desc` | string | ❌ | 产品描述 |
-| `--acl` | string | ❌ | 访问控制：`open`(默认) / `private` / `custom` |
-| `--whitelist` | array[string] | ❌ | 白名单用户（逗号分隔） |
+| `--acl` | string | ❌ | 访问控制：`open` / `private` |
 | `--dry-run` | flag | ❌ | 模拟运行 |
 
 ### `/chandao product update <id>`
@@ -38,18 +35,15 @@
 |------|------|------|------|
 | `id` | int | ✅ | 产品 ID |
 | `--name` | string | ❌ | 产品名称 |
-| `--code` | string | ❌ | 产品代号 |
-| `--type` | string | ❌ | 产品类型 |
 | `--program` | int | ❌ | 所属项目集 ID |
 | `--line` | int | ❌ | 所属产品线 ID |
-| `--status` | string | ❌ | 状态 |
+| `--type` | string | ❌ | 产品类型 |
 | `--po` | string | ❌ | 产品负责人 |
 | `--qd` | string | ❌ | 测试负责人 |
 | `--rd` | string | ❌ | 发布负责人 |
 | `--reviewer` | string | ❌ | 评审人 |
 | `--desc` | string | ❌ | 产品描述 |
 | `--acl` | string | ❌ | 访问控制 |
-| `--whitelist` | array[string] | ❌ | 白名单用户 |
 | `--dry-run` | flag | ❌ | 模拟运行 |
 
 ### `/chandao product list`

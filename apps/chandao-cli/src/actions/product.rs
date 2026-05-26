@@ -21,11 +21,11 @@ pub enum ProductCommands {
     /// List products
     List {
         /// Browse type (unclosed, all, etc.)
-        #[arg(short = 'b', long, default_value = "noclosed")]
-        browse_type: String,
+        #[arg(short = 'b', long)]
+        browse_type: Option<String>,
         /// Order by field (e.g., id_desc, name_asc)
-        #[arg(short = 'o', long, default_value = "id_desc")]
-        order_by: String,
+        #[arg(short = 'o', long)]
+        order_by: Option<String>,
         /// Page number
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -43,21 +43,15 @@ pub enum ProductCommands {
         /// Product name (required)
         #[arg(short, long)]
         name: String,
-        /// Product code (required)
-        #[arg(short, long)]
-        code: String,
         /// Program/Project ID
         #[arg(long)]
         program: Option<i64>,
         /// Line ID
         #[arg(long)]
         line: Option<i64>,
-        /// Product type (normal, multi-branch, platform, etc.)
-        #[arg(short = 'y', long, default_value = "normal")]
-        r#type: String,
-        /// Status (normal, closed)
-        #[arg(short, long, default_value = "normal")]
-        status: Option<String>,
+        /// Product type (normal, branch, platform)
+        #[arg(short = 'y', long)]
+        r#type: Option<String>,
         /// Product Owner
         #[arg(long)]
         po: Option<String>,
@@ -73,12 +67,9 @@ pub enum ProductCommands {
         /// Description
         #[arg(short, long)]
         desc: Option<String>,
-        /// ACL type (open, private, custom)
+        /// ACL type (open, private)
         #[arg(long)]
         acl: Option<String>,
-        /// Whitelist users (comma-separated)
-        #[arg(long, value_delimiter = ',')]
-        whitelist: Option<Vec<String>>,
         /// Dry run
         #[arg(long)]
         dry_run: bool,
@@ -90,21 +81,15 @@ pub enum ProductCommands {
         /// Product name
         #[arg(short, long)]
         name: Option<String>,
-        /// Product code
-        #[arg(short, long)]
-        code: Option<String>,
         /// Program/Project ID
         #[arg(long)]
         program: Option<i64>,
         /// Line ID
         #[arg(long)]
         line: Option<i64>,
-        /// Product type (normal, multi-branch, platform, etc.)
+        /// Product type (normal, branch, platform)
         #[arg(short = 'y', long)]
         r#type: Option<String>,
-        /// Status (normal, closed)
-        #[arg(short, long)]
-        status: Option<String>,
         /// Product Owner
         #[arg(long)]
         po: Option<String>,
@@ -120,12 +105,9 @@ pub enum ProductCommands {
         /// Description
         #[arg(short, long)]
         desc: Option<String>,
-        /// ACL type (open, private, custom)
+        /// ACL type (open, private)
         #[arg(long)]
         acl: Option<String>,
-        /// Whitelist users (comma-separated)
-        #[arg(long, value_delimiter = ',')]
-        whitelist: Option<Vec<String>>,
         /// Dry run
         #[arg(long)]
         dry_run: bool,
@@ -169,9 +151,11 @@ pub fn handle_product(
             limit,
         } => {
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let browse = browse_type.as_deref().unwrap_or("noclosed");
+                let order = order_by.as_deref().unwrap_or("id_desc");
                 let data = ac.get(&format!(
                     "/products?browseType={}&orderBy={}&recPerPage={}&pageID={}",
-                    browse_type, order_by, limit, page
+                    browse, order, limit, page
                 ))?;
                 utils::print_table(
                     &data,
@@ -189,31 +173,24 @@ pub fn handle_product(
         }
         ProductCommands::Create {
             name,
-            code,
             program,
             line,
             r#type,
-            status,
             po,
             qd,
             rd,
             reviewer,
             desc,
             acl,
-            whitelist,
             dry_run,
         } => {
             if *dry_run {
-                println!(
-                    "🔍 [DRY-RUN] 创建产品: name={}, code={}",
-                    name, code
-                );
+                println!("🔍 [DRY-RUN] 创建产品: name={}", name);
                 return Ok(());
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
                     "name": name,
-                    "code": code,
                 });
                 if let Some(v) = program {
                     body["program"] = json!(v);
@@ -221,9 +198,8 @@ pub fn handle_product(
                 if let Some(v) = line {
                     body["line"] = json!(v);
                 }
-                body["type"] = json!(r#type);
-                if let Some(v) = status {
-                    body["status"] = json!(v);
+                if let Some(v) = r#type {
+                    body["type"] = json!(v);
                 }
                 if let Some(v) = po {
                     body["PO"] = json!(v);
@@ -243,9 +219,6 @@ pub fn handle_product(
                 if let Some(v) = acl {
                     body["acl"] = json!(v);
                 }
-                if let Some(v) = whitelist {
-                    body["whitelist"] = json!(v);
-                }
                 let result = ac.post("/products", &body)?;
                 println!("✅ 产品创建成功");
                 utils::print_json(&result);
@@ -255,18 +228,15 @@ pub fn handle_product(
         ProductCommands::Update {
             id,
             name,
-            code,
             program,
             line,
             r#type,
-            status,
             po,
             qd,
             rd,
             reviewer,
             desc,
             acl,
-            whitelist,
             dry_run,
         } => {
             if *dry_run {
@@ -278,9 +248,6 @@ pub fn handle_product(
                 if let Some(v) = name {
                     body["name"] = json!(v);
                 }
-                if let Some(v) = code {
-                    body["code"] = json!(v);
-                }
                 if let Some(v) = program {
                     body["program"] = json!(v);
                 }
@@ -289,9 +256,6 @@ pub fn handle_product(
                 }
                 if let Some(v) = r#type {
                     body["type"] = json!(v);
-                }
-                if let Some(v) = status {
-                    body["status"] = json!(v);
                 }
                 if let Some(v) = po {
                     body["PO"] = json!(v);
@@ -310,9 +274,6 @@ pub fn handle_product(
                 }
                 if let Some(v) = acl {
                     body["acl"] = json!(v);
-                }
-                if let Some(v) = whitelist {
-                    body["whitelist"] = json!(v);
                 }
                 let result = ac.put(&format!("/products/{}", id), &body)?;
                 println!("✅ 产品 #{} 更新成功", id);
