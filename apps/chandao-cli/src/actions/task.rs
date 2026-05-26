@@ -34,39 +34,39 @@ pub enum TaskCommands {
     Get { id: i64 },
     /// Create task
     Create {
-        /// Execution ID
+        /// Execution ID (required)
         #[arg(short = 'e', long)]
         execution: i64,
-        /// Task name
+        /// Task name (required)
         #[arg(short, long)]
         name: String,
+        /// Type (devel/test/design/discuss/ui)
+        #[arg(short = 'y', long)]
+        r#type: Option<String>,
         /// Assigned to
         #[arg(short = 'a', long)]
         assigned: Option<String>,
-        /// Priority (1-4)
-        #[arg(short = 'i', long)]
-        pri: Option<u8>,
-        /// Estimate (hours)
-        #[arg(long)]
-        estimate: Option<f64>,
-        /// Description
-        #[arg(short, long)]
-        desc: Option<String>,
-        /// Type (devel/test/design/discuss/ui)
-        #[arg(short = 'y', long, default_value = "devel")]
-        r#type: String,
-        /// Story ID
-        #[arg(long)]
-        story: Option<i64>,
-        /// Module ID
-        #[arg(short = 'm', long)]
-        module: Option<i64>,
         /// Estimated start date (YYYY-MM-DD)
         #[arg(long)]
         est_started: Option<String>,
         /// Deadline (YYYY-MM-DD)
         #[arg(long)]
         deadline: Option<String>,
+        /// Priority (1-4)
+        #[arg(short = 'i', long)]
+        pri: Option<u8>,
+        /// Estimate (hours)
+        #[arg(long)]
+        estimate: Option<f64>,
+        /// Module ID
+        #[arg(short = 'm', long)]
+        module: Option<i64>,
+        /// Story ID
+        #[arg(long)]
+        story: Option<i64>,
+        /// Description
+        #[arg(short, long)]
+        desc: Option<String>,
         /// Dry run
         #[arg(long)]
         dry_run: bool,
@@ -172,8 +172,10 @@ pub fn handle_task(
                 let mut body = json!({
                     "executionID": execution,
                     "name": name,
-                    "type": r#type,
                 });
+                if let Some(t) = r#type {
+                    body["type"] = json!(t);
+                }
                 if let Some(a) = assigned { body["assignedTo"] = json!(a); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
                 if let Some(e) = estimate { body["estimate"] = json!(e); }
