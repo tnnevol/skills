@@ -233,36 +233,15 @@ pub fn handle_bug(
                 return Ok(());
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                // 如果指定了 status，使用专门的状态流转端点
-                if let Some(s) = status {
-                    match s.as_str() {
-                        "resolved" => {
-                            return Err("❌ Bug 状态不能通过 update 修改，请使用: bug resolve --resolution <type>".to_string());
-                        }
-                        "closed" => {
-                            return Err(
-                                "❌ Bug 状态不能通过 update 修改，请使用: bug close".to_string()
-                            );
-                        }
-                        "active" => {
-                            return Err(
-                                "❌ Bug 状态不能通过 update 修改，请使用: bug activate".to_string()
-                            );
-                        }
-                        _ => {
-                            return Err(format!(
-                                "❌ 无效的状态 '{}'，有效值: active, resolved, closed",
-                                s
-                            ));
-                        }
-                    }
-                }
                 let mut body = json!({});
                 if let Some(t) = title {
                     body["title"] = json!(t);
                 }
                 if let Some(a) = assigned {
                     body["assignedTo"] = json!(a);
+                }
+                if let Some(s) = status {
+                    body["status"] = json!(s);
                 }
                 if let Some(p) = pri {
                     body["pri"] = json!(p);
