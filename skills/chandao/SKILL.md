@@ -49,7 +49,7 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 | 用户 | `user list\|get\|create\|update\|delete` | [commands-user.md](references/commands-user.md) |
 | 产品 | `product list\|get\|create\|update\|delete\|list-by-program` | [commands-product.md](references/commands-product.md) |
 | 项目 | `project list\|get\|create\|update\|delete\|list-by-program` | [commands-project.md](references/commands-project.md) |
-| 需求 | `story list\|get\|create\|update\|review\|close\|activate\|delete\|change` | [commands-story.md](references/commands-story.md) |
+| 需求 | `story list\|get\|create\|update\|close\|activate\|delete\|change` | [commands-story.md](references/commands-story.md) |
 | 任务 | `task list\|get\|create\|update\|start\|finish\|close\|activate\|delete` | [commands-task.md](references/commands-task.md) |
 | 执行 | `execution list\|get\|create\|update\|start\|suspend\|close\|link-products\|delete` | [commands-execution.md](references/commands-execution.md) |
 | Bug | `bug list\|get\|create\|resolve\|close\|activate\|update\|delete` | [commands-bug.md](references/commands-bug.md) |
@@ -112,7 +112,6 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - "创建需求" / "新增需求" → `story create`
 - "更新需求" / "修改需求" → `story update`
 - "激活需求" / "重新打开需求" → `story activate`
-- "评审需求" → `story review`
 - "关闭需求" → `story close --reason done`
 - "变更需求" → `story change --reviewer <account>`
 

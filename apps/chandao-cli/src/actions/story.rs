@@ -123,19 +123,6 @@ pub enum StoryCommands {
         #[arg(long)]
         dry_run: bool,
     },
-    /// Review a story (approve/reject)
-    Review {
-        /// Story ID
-        id: i64,
-        /// Result: pass, reject, revert
-        #[arg(short, long)]
-        result: String,
-        /// Review comment
-        #[arg(short, long)]
-        comment: Option<String>,
-        #[arg(long)]
-        dry_run: bool,
-    },
     /// Close a story
     Close {
         id: i64,
@@ -229,7 +216,10 @@ pub fn handle_story(
                 if let Some(e) = estimate { body["estimate"] = json!(e); }
                 if let Some(j) = project { body["project"] = json!(j); }
                 if let Some(ex) = execution { body["execution"] = json!(ex); }
-                if let Some(r) = reviewer { body["reviewer"] = json!(r); }
+                if let Some(r) = reviewer { body["reviewer"] = json!(r.split(',').map(|s| s.trim()).collect::<Vec<&str>>()); } else {
+                    eprintln!("⚠️  创建需求需要提供评审人，请使用 --reviewer <account>（如 --reviewer admin）");
+                    return Ok(());
+                }
                 let result = ac.post("/stories", &body)?;
                 println!("✅ 需求创建成功");
                 utils::print_json(&result);
@@ -253,16 +243,6 @@ pub fn handle_story(
                 let result = ac.put(&format!("/stories/{}", id), &body)?;
                 println!("✅ 需求 #{} 更新成功", id);
                 utils::print_json(&result);
-                Ok(())
-            })
-        }
-        StoryCommands::Review { id, result, comment, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 评审需求 #{}: {}", id, result); return Ok(()); }
-            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                let mut body = json!({"result": result});
-                if let Some(c) = comment { body["comment"] = json!(c); }
-                ac.post(&format!("/stories/{}/review", id), &body)?;
-                println!("✅ 需求 #{} 评审完成: {}", id, result);
                 Ok(())
             })
         }
