@@ -29,7 +29,5 @@
     "directory": "apps/halo-cli"
   },
   "author": "tnnevol",
-  "devDependencies": {
-    "bumpp": "^11.0.1"
-  }
+  "devDependencies": {}
 }
