@@ -36,3 +36,12 @@
 | `/chandao story activate <id> [--assigned <user>] [--comment <text>]` | 激活已关闭的需求 |
 | `/chandao story delete <id>` | 删除需求 |
 | `/chandao story change <id> --reviewer <account> [--title <title>] [--spec <desc>] [--verify <criteria>]` | 变更需求（**必须**指定 `--reviewer`） |
+
+### 字段枚举值
+
+| 字段 | 枚举值 | 说明 |
+|------|--------|------|
+| `--category` | `feature` 功能 · `interface` 接口 · `performance` 性能 · `safe` 安全 · `experience` 体验 · `improve` 改进 · `other` 其他 | 需求类别 |
+| `--source` | `customer` 客户 · `user` 用户 · `po` 产品经理 · `market` 市场 · `service` 客服 · `operation` 运营 · `support` 技术支持 · `competitor` 竞争对手 · `partner` 合作伙伴 · `dev` 开发人员 · `tester` 测试人员 · `bug` · `forum` 论坛 · `other` 其他 | 需求来源 |
+| `--pri` | `1` 紧急 · `2` 高 · `3` 中 · `4` 低 | 优先级（默认 3） |
+| `--reason` | `done` 已完成 · `subdivided` 已细分 · `duplicate` 重复 · `postponed` 延期 · `willnotdo` 不做 · `cancel` 取消 · `bydesign` 设计如此 | 关闭原因（close 时必填） |

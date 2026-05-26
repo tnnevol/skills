@@ -20,3 +20,12 @@
 - **关联需求**：`bug update` 不支持 `--story`，需直接调用 API
 - **只关联一个主需求**：禅道 Bug 的 `story` 字段是单值
 - **`bug list` 没有 `--pri` 参数**：优先级过滤需在禅道 Web UI 操作
+
+### 字段枚举值
+
+| 字段 | 枚举值 | 说明 |
+|------|--------|------|
+| `--type` | `codeerror` 代码错误 · `config` 配置相关 · `install` 安装部署 · `security` 安全相关 · `performance` 性能问题 · `standard` 标准规范 · `automation` 测试脚本 · `designdefect` 设计缺陷 · `others` 其他 | Bug 类型（默认 `codeerror`） |
+| `--severity` | `1` 致命 · `2` 严重 · `3` 一般 · `4` 建议 | 严重程度（默认 3） |
+| `--pri` | `1` 紧急 · `2` 高 · `3` 中 · `4` 低 | 优先级（默认 3） |
+| `--resolution` | `fixed` 已修复 · `notrepro` 无法重现 · `bydesign` 设计如此 · `duplicate` 重复 Bug · `external` 外部原因 · `postponed` 延期处理 · `willnotfix` 不予解决 · `tostory` 转为需求 | 解决方案（resolve 时必填） |

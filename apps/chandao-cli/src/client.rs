@@ -187,7 +187,15 @@ impl AuthenticatedClient {
     pub fn put(&mut self, endpoint: &str, body: &Value) -> Result<Value, String> {
         let url = self.build_url(endpoint);
         let resp = self.do_request("PUT", &url, Some(body))?;
-        let body: Value = resp.into_json().map_err(|e| format!("JSON 解析失败: {}", e))?;
+        let status = resp.status();
+        if status == 204 {
+            return Ok(serde_json::json!({"status": "success"}));
+        }
+        let text = resp.into_string().map_err(|e| format!("读取响应失败: {}", e))?;
+        if text.trim().is_empty() {
+            return Ok(serde_json::json!({"status": "success"}));
+        }
+        let body: Value = serde_json::from_str(&text).map_err(|e| format!("JSON 解析失败: {} (响应: {})", e, text))?;
         Self::check_response(body)
     }
 
@@ -199,7 +207,11 @@ impl AuthenticatedClient {
         if status == 204 {
             return Ok(serde_json::json!({"deleted": true}));
         }
-        let body: Value = resp.into_json().map_err(|e| format!("JSON 解析失败: {}", e))?;
+        let text = resp.into_string().map_err(|e| format!("读取响应失败: {}", e))?;
+        if text.trim().is_empty() {
+            return Ok(serde_json::json!({"deleted": true}));
+        }
+        let body: Value = serde_json::from_str(&text).map_err(|e| format!("JSON 解析失败: {} (响应: {})", e, text))?;
         Self::check_response(body)
     }
 

@@ -152,6 +152,9 @@ pub enum BugCommands {
     /// Activate a bug
     Activate {
         id: i64,
+        /// Opened build (影响版本)
+        #[arg(short = 'b', long)]
+        opened_build: Option<String>,
         #[arg(short, long)]
         comment: Option<String>,
         #[arg(long)]
@@ -302,10 +305,11 @@ pub fn handle_bug(
                 Ok(())
             })
         }
-        BugCommands::Activate { id, comment, dry_run } => {
+        BugCommands::Activate { id, opened_build, comment, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 激活Bug #{}", id); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
+                if let Some(ob) = opened_build { body["openedBuild"] = json!([ob]); }
                 if let Some(c) = comment { body["comment"] = json!(c); }
                 ac.put(&format!("/bugs/{}/activate", id), &body)?;
                 println!("✅ Bug #{} 已激活", id);

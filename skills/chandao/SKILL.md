@@ -147,12 +147,11 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - "执行下的 Bug" / "迭代 Bug" / "执行 N 的 bug" → `bug list --execution <id>`
 - "Bug 详情" / "查看 Bug N" → `bug get <id>`
 - "创建 Bug" / "报 Bug" → `bug create`
+- "修改 Bug" / "编辑 Bug" / "更新 Bug" → `bug update`
 - "解决 Bug N" → `bug resolve`
 - "关闭 Bug N" → `bug close`
 - "重新打开 Bug N" / "激活 Bug N" → `bug activate`
 - "删除 Bug N" → `bug delete`（需用户确认）
-- "关闭 Bug" → `bug close`
-- "重新打开 Bug" → `bug activate`
 
 ### 史诗管理
 - "史诗列表" / "列出史诗" → `epic list-by-product`
