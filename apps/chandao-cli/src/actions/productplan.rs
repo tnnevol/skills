@@ -118,6 +118,7 @@ pub fn handle_productplan(
                 utils::print_list(
                     &data,
                     &["id", "title", "parent", "begin", "end", "status"],
+                    Some(*limit),
                 );
                 Ok(())
             })

@@ -140,6 +140,7 @@ pub fn handle_program(
                 utils::print_list(
                     &data,
                     &["id", "name", "code", "status", "PM", "begin", "end"],
+                    Some(*limit),
                 );
                 Ok(())
             })

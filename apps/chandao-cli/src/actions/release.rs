@@ -142,6 +142,7 @@ pub fn handle_release(
                         "date",
                         "desc",
                     ],
+                    Some(*limit),
                 );
                 Ok(())
             })
@@ -163,6 +164,7 @@ pub fn handle_release(
                         "date",
                         "desc",
                     ],
+                    Some(*limit),
                 );
                 Ok(())
             })

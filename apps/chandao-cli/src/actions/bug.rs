@@ -191,7 +191,7 @@ pub fn handle_bug(
                 format!("/bugs?pageID={}&recPerPage={}", page, limit)
             };
             let data = ac.get(&path)?;
-            utils::print_list(&data, &["id", "title", "status", "severity", "pri", "assignedTo"]);
+            utils::print_list(&data, &["id", "title", "status", "severity", "pri", "assignedTo"], Some(*limit));
             Ok(())
         }),
         BugCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {

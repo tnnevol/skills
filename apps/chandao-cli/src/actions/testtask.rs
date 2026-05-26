@@ -191,6 +191,7 @@ pub fn handle_testtask(
                     "end",
                     "productName",
                 ],
+                Some(*limit),
             );
             Ok(())
         }),
@@ -214,6 +215,7 @@ pub fn handle_testtask(
                     "end",
                     "productName",
                 ],
+                Some(*limit),
             );
             Ok(())
         }),
@@ -237,6 +239,7 @@ pub fn handle_testtask(
                     "end",
                     "productName",
                 ],
+                Some(*limit),
             );
             Ok(())
         }),

@@ -105,6 +105,7 @@ pub fn handle_user(
             utils::print_list(
                 &data,
                 &["id", "account", "realname", "email", "phone", "role", "status"],
+                Some(*limit),
             );
             Ok(())
         }),

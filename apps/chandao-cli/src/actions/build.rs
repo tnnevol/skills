@@ -160,6 +160,7 @@ pub fn handle_build(
                 utils::print_list(
                     &data,
                     &["id", "name", "projectName", "builder", "date", "desc"],
+                    Some(*limit),
                 );
                 Ok(())
             })
@@ -177,6 +178,7 @@ pub fn handle_build(
                 utils::print_list(
                     &data,
                     &["id", "name", "projectName", "builder", "date", "desc"],
+                    Some(*limit),
                 );
                 Ok(())
             })
@@ -194,6 +196,7 @@ pub fn handle_build(
                 utils::print_list(
                     &data,
                     &["id", "name", "projectName", "builder", "date", "desc"],
+                    Some(*limit),
                 );
                 Ok(())
             })

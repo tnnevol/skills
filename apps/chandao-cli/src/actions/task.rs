@@ -170,7 +170,7 @@ pub fn handle_task(
                 format!("/tasks?pageID={}&recPerPage={}", page, limit)
             };
             let data = ac.get(&path)?;
-            utils::print_list(&data, &["id", "name", "status", "assignedTo", "pri", "estimate", "consumed"]);
+            utils::print_list(&data, &["id", "name", "status", "assignedTo", "pri", "estimate", "consumed"], Some(*limit));
             Ok(())
         }),
         TaskCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {

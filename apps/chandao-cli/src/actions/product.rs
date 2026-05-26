@@ -160,6 +160,7 @@ pub fn handle_product(
                 utils::print_list(
                     &data,
                     &["id", "name", "code", "status", "PO", "QD", "RD", "type"],
+                    Some(*limit),
                 );
                 Ok(())
             })
@@ -310,6 +311,7 @@ pub fn handle_product(
                 utils::print_list(
                     &data,
                     &["id", "name", "code", "status", "PO", "type"],
+                    Some(*limit),
                 );
                 Ok(())
             })

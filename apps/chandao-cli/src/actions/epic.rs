@@ -166,6 +166,7 @@ pub fn handle_epic(
             utils::print_list(
                 &data,
                 &["id", "title", "status", "pri", "assignedTo", "openedDate"],
+                Some(*limit),
             );
             Ok(())
         }),

@@ -146,6 +146,7 @@ pub fn handle_project(
                 utils::print_list(
                     &data,
                     &["id", "name", "code", "status", "type", "begin", "end", "PM"],
+                    Some(*limit),
                 );
                 Ok(())
             })
@@ -163,6 +164,7 @@ pub fn handle_project(
                 utils::print_list(
                     &data,
                     &["id", "name", "code", "status", "type", "begin", "end", "PM"],
+                    Some(*limit),
                 );
                 Ok(())
             })

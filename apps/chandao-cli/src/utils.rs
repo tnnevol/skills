@@ -100,14 +100,11 @@ pub fn print_table(data: &Value, fields: &[&str]) {
     println!("\n共 {} 条", arr.len());
 }
 
-/// Print a list of items as a table with total count support.
+/// Print a list of items as a table with pagination hint.
 ///
-/// Expects `data` to be either:
-/// - An array of objects (same as print_table)
-/// - An object with a data field and total/total_rec field
-///
-/// Displays total count when available from API response.
-pub fn print_list(data: &Value, fields: &[&str]) {
+/// If `limit` is provided and the returned count equals or exceeds it,
+/// a hint is shown suggesting the user to query the next page.
+pub fn print_list(data: &Value, fields: &[&str], limit: Option<u32>) {
     // Extract array and total from response
     let (arr, total) = match data {
         Value::Array(a) => (a, None),
@@ -221,9 +218,16 @@ pub fn print_list(data: &Value, fields: &[&str]) {
         println!("| {} |", row_line.join(" | "));
     }
 
-    // Print count with total if available
+    // Print count with total and pagination hint
     match total {
-        Some(t) if t > arr.len() as u64 => println!("\n共 {} 条 (总数: {})", arr.len(), t),
+        Some(t) if t > arr.len() as u64 => {
+            println!("\n共 {} 条 (总数: {} 条，仅显示当前页)", arr.len(), t);
+            println!("💡 还有 {} 条未显示，请使用 --page 参数查看下一页", t - arr.len() as u64);
+        }
+        _ if limit.is_some() && (arr.len() as u32) >= limit.unwrap_or(u32::MAX) => {
+            println!("\n共 {} 条", arr.len());
+            println!("💡 结果数量已达上限 (limit={})，可能还有更多数据，请使用 --page 参数查看", limit.unwrap());
+        }
         _ => println!("\n共 {} 条", arr.len()),
     }
 }
