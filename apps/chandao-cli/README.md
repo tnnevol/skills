@@ -82,7 +82,7 @@ chandao-cli product delete <id>
 ```bash
 chandao-cli project list [--limit N]      # 列出项目
 chandao-cli project get <id>              # 项目详情
-chandao-cli project create --name <n> --code <c> --begin <d> --end <d>
+chandao-cli project create --name <n> --model <m> --begin <d> --end <d>
 chandao-cli project delete <id>
 ```
 

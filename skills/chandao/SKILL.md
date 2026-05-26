@@ -226,7 +226,7 @@ chandao bug resolve <id> --resolution fixed --assigned-to <原指派人> --resol
 - ⚠️ `execution create` 用 `--project`（不是 `--product`）
 - ⚠️ `bug list` 没有 `--pri` 参数
 - ⚠️ `system create` CLI 没有 `--product` 参数
-- ⚠️ `project create` 必填 `name` + `code` + `model` + `begin` + `end`，`model` 取值 `scrum` / `waterfall` / `kanban` / `agileplus` / `waterfallplus`
+- ⚠️ `project create` 必填 `name` + `model` + `begin` + `end`，`model` 取值 `scrum` / `waterfall` / `kanban` / `agileplus` / `waterfallplus`
 - ⚠️ `project create/update` 的 `model` 字段与 `execution` 的 `type` 是不同概念，不要混淆
 - ⚠️ `execution create` 必填 `project` + `name` + `begin` + `end`，支持 `lifetime`/`days`/`products`/`plans`/`PO`/`QD`/`PM`/`RD`/`acl` 等扩展字段
 - ⚠️ `execution update` 必填 `name` + `begin` + `end`，`--project` 用于修改所属项目
