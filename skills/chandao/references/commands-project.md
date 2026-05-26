@@ -6,8 +6,8 @@
 |------|------|
 | `/chandao project list [--browse-type <type>] [--order-by <field>] [--limit N] [--page N]` | 列出项目 |
 | `/chandao project get <id>` | 项目详情 |
-| `/chandao project create --name <name> --code <code> --model <model> --begin <date> --end <date> [--parent <id>] [--status <status>] [--desc <desc>] [--budget <hours>] [--products <ids>] [--pm <account>]` | 创建项目 |
-| `/chandao project update <id> [--name <name>] [--code <code>] [--model <model>] [--begin <date>] [--end <date>] [--parent <id>] [--status <status>] [--desc <desc>] [--budget <hours>] [--products <ids>] [--pm <account>]` | 更新项目 |
+| `/chandao project create --name <name> --model <model> --begin <date> --end <date> [--products <ids>] [--parent <id>] [--workflow-group <id>] [--pm <account>]` | 创建项目 |
+| `/chandao project update <id> --name <name> --model <model> --begin <date> --end <date> [--products <ids>] [--parent <id>] [--workflow-group <id>] [--pm <account>]` | 更新项目 |
 | `/chandao project delete <id>` | 删除项目 |
 | `/chandao project list-by-program --program <id> [--limit N] [--page N]` | 按项目集列出项目 |
 
@@ -18,21 +18,19 @@
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `--name` | string | ✅ | 项目名称 |
-| `--code` | string | ✅ | 项目代号 |
 | `--model` | string | ✅ | 管理方式：`scrum` / `waterfall` / `kanban` / `agileplus` / `waterfallplus` |
 | `--begin` | date | ✅ | 开始日期（YYYY-MM-DD） |
 | `--end` | date | ✅ | 结束日期（YYYY-MM-DD） |
-| `--parent` | int | ❌ | 所属项目集 ID |
-| `--status` | string | ❌ | 状态：`wait`(默认) / `doing` / `suspended` / `closed` |
-| `--desc` | string | ❌ | 项目描述 |
-| `--budget` | float | ❌ | 预算 |
 | `--products` | array[int] | ❌ | 关联产品 ID（逗号分隔） |
+| `--parent` | int | ❌ | 所属项目集 ID |
+| `--workflow-group` | int | ❌ | 项目流程分组（付费版必填，开源版可留空） |
 | `--pm` | string | ❌ | 项目负责人账号 |
 | `--dry-run` | flag | ❌ | 模拟运行，不实际执行 |
 
 **注意：**
 - `model` 是 ZenTao API v2 创建项目的必填字段，与执行（execution）的 `type` 字段概念不同
-- `缺省日期`是不可能的，必须指定 `begin` 和 `end`
+- `begin` 和 `end` 是必填字段，必须指定开始和结束日期
+- `workflowGroup` 在付费版中必填，开源版可留空
 
 ### `/chandao project update <id>`
 
@@ -43,12 +41,9 @@
 | `--model` | string | ✅ | 管理方式：`scrum` / `waterfall` / `kanban` / `agileplus` / `waterfallplus` |
 | `--begin` | date | ✅ | 开始日期（YYYY-MM-DD） |
 | `--end` | date | ✅ | 结束日期（YYYY-MM-DD） |
-| `--code` | string | ❌ | 项目代号 |
+| `--products` | array[int] | ❌ | 关联产品 ID（逗号分隔） |
 | `--parent` | int | ❌ | 所属项目集 ID |
-| `--status` | string | ❌ | 状态 |
-| `--desc` | string | ❌ | 项目描述 |
-| `--budget` | float | ❌ | 预算 |
-| `--products` | array[int] | ❌ | 关联产品 ID |
+| `--workflow-group` | int | ❌ | 项目流程分组（付费版必填，开源版可留空） |
 | `--pm` | string | ❌ | 项目负责人 |
 | `--dry-run` | flag | ❌ | 模拟运行 |
 

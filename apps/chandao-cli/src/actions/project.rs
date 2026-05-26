@@ -55,33 +55,24 @@ pub enum ProjectCommands {
         /// Project name (required)
         #[arg(short, long)]
         name: String,
-        /// Project code (required)
-        #[arg(short, long)]
-        code: String,
-        /// Project model (scrum, waterfall, kanban, agileplus, waterfallplus)
-        #[arg(short = 'm', long, default_value = "scrum")]
+        /// Project model (scrum, waterfall, kanban, agileplus, waterfallplus) (required)
+        #[arg(short = 'm', long)]
         model: String,
-        /// Begin date (YYYY-MM-DD)
+        /// Begin date (YYYY-MM-DD) (required)
         #[arg(long)]
         begin: String,
-        /// End date (YYYY-MM-DD)
+        /// End date (YYYY-MM-DD) (required)
         #[arg(long)]
         end: String,
-        /// Parent project ID
-        #[arg(long)]
-        parent: Option<i64>,
-        /// Status (wait, doing, suspended, closed)
-        #[arg(short, long, default_value = "wait")]
-        status: String,
-        /// Description
-        #[arg(short, long)]
-        desc: Option<String>,
-        /// Project budget (in hours)
-        #[arg(long)]
-        budget: Option<f64>,
         /// Product IDs (comma-separated)
         #[arg(long, value_delimiter = ',')]
         products: Option<Vec<i64>>,
+        /// Parent project ID
+        #[arg(long)]
+        parent: Option<i64>,
+        /// Workflow group (paid version required, open source can be empty)
+        #[arg(long)]
+        workflow_group: Option<i64>,
         /// PM (project manager account)
         #[arg(long)]
         pm: Option<String>,
@@ -96,33 +87,24 @@ pub enum ProjectCommands {
         /// Project name (required)
         #[arg(short, long)]
         name: String,
-        /// Project code
-        #[arg(short, long)]
-        code: Option<String>,
         /// Project model (scrum, waterfall, kanban, agileplus, waterfallplus) (required)
         #[arg(short = 'm', long)]
         model: String,
-        /// Parent project ID
-        #[arg(long)]
-        parent: Option<i64>,
         /// Begin date (YYYY-MM-DD) (required)
         #[arg(long)]
         begin: String,
         /// End date (YYYY-MM-DD) (required)
         #[arg(long)]
         end: String,
-        /// Status (wait, doing, suspended, closed)
-        #[arg(short, long)]
-        status: Option<String>,
-        /// Description
-        #[arg(short, long)]
-        desc: Option<String>,
-        /// Project budget (in hours)
-        #[arg(long)]
-        budget: Option<f64>,
         /// Product IDs (comma-separated)
         #[arg(long, value_delimiter = ',')]
         products: Option<Vec<i64>>,
+        /// Parent project ID
+        #[arg(long)]
+        parent: Option<i64>,
+        /// Workflow group (paid version required, open source can be empty)
+        #[arg(long)]
+        workflow_group: Option<i64>,
         /// PM (project manager account)
         #[arg(long)]
         pm: Option<String>,
@@ -194,45 +176,37 @@ pub fn handle_project(
         }
         ProjectCommands::Create {
             name,
-            code,
             model,
             begin,
             end,
-            parent,
-            status,
-            desc,
-            budget,
             products,
+            parent,
+            workflow_group,
             pm,
             dry_run,
         } => {
             if *dry_run {
                 println!(
-                    "🔍 [DRY-RUN] 创建项目: name={}, code={}, model={}",
-                    name, code, model
+                    "🔍 [DRY-RUN] 创建项目: name={}, model={}, begin={}, end={}",
+                    name, model, begin, end
                 );
                 return Ok(());
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
                     "name": name,
-                    "code": code,
                     "model": model,
                     "begin": begin,
                     "end": end,
                 });
-                body["status"] = json!(status);
+                if let Some(v) = products {
+                    body["products"] = json!(v);
+                }
                 if let Some(v) = parent {
                     body["parent"] = json!(v);
                 }
-                if let Some(v) = desc {
-                    body["desc"] = json!(v);
-                }
-                if let Some(v) = budget {
-                    body["budget"] = json!(v);
-                }
-                if let Some(v) = products {
-                    body["products"] = json!(v);
+                if let Some(v) = workflow_group {
+                    body["workflowGroup"] = json!(v);
                 }
                 if let Some(v) = pm {
                     body["PM"] = json!(v);
@@ -246,20 +220,20 @@ pub fn handle_project(
         ProjectCommands::Update {
             id,
             name,
-            code,
             model,
-            parent,
             begin,
             end,
-            status,
-            desc,
-            budget,
             products,
+            parent,
+            workflow_group,
             pm,
             dry_run,
         } => {
             if *dry_run {
-                println!("🔍 [DRY-RUN] 更新项目 #{}, name={}, model={}, begin={}, end={}", id, name, model, begin, end);
+                println!(
+                    "🔍 [DRY-RUN] 更新项目 #{}, name={}, model={}, begin={}, end={}",
+                    id, name, model, begin, end
+                );
                 return Ok(());
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
@@ -269,23 +243,14 @@ pub fn handle_project(
                     "begin": begin,
                     "end": end,
                 });
-                if let Some(v) = code {
-                    body["code"] = json!(v);
+                if let Some(v) = products {
+                    body["products"] = json!(v);
                 }
                 if let Some(v) = parent {
                     body["parent"] = json!(v);
                 }
-                if let Some(v) = status {
-                    body["status"] = json!(v);
-                }
-                if let Some(v) = desc {
-                    body["desc"] = json!(v);
-                }
-                if let Some(v) = budget {
-                    body["budget"] = json!(v);
-                }
-                if let Some(v) = products {
-                    body["products"] = json!(v);
+                if let Some(v) = workflow_group {
+                    body["workflowGroup"] = json!(v);
                 }
                 if let Some(v) = pm {
                     body["PM"] = json!(v);
