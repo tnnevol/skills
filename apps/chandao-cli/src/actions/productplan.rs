@@ -3,9 +3,9 @@ use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::utils;
 use crate::auth::AuthManager;
-use crate::client::{Client, AuthenticatedClient};
+use crate::client::{AuthenticatedClient, Client};
+use crate::utils;
 
 macro_rules! with_auth {
     ($client:expr, $auth:expr, $body:expr) => {{
@@ -13,8 +13,6 @@ macro_rules! with_auth {
         $body(&mut ac)
     }};
 }
-
-
 
 #[derive(Subcommand)]
 pub enum ProductplanCommands {
@@ -101,15 +99,22 @@ pub enum ProductplanCommands {
     },
 }
 
-
 pub fn handle_productplan(
     client: &Client,
     auth: &Rc<RefCell<AuthManager>>,
     cmd: &ProductplanCommands,
 ) -> Result<(), String> {
     match cmd {
-        ProductplanCommands::List { product, page, limit }
-        | ProductplanCommands::ListByProduct { product, page, limit } => {
+        ProductplanCommands::List {
+            product,
+            page,
+            limit,
+        }
+        | ProductplanCommands::ListByProduct {
+            product,
+            page,
+            limit,
+        } => {
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let data = ac.get(&format!(
                     "/products/{}/productplans?pageID={}&recPerPage={}",
@@ -215,4 +220,3 @@ pub fn handle_productplan(
         }
     }
 }
-

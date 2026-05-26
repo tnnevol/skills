@@ -3,9 +3,9 @@ use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::utils;
 use crate::auth::AuthManager;
-use crate::client::{Client, AuthenticatedClient};
+use crate::client::{AuthenticatedClient, Client};
+use crate::utils;
 
 macro_rules! with_auth {
     ($client:expr, $auth:expr, $body:expr) => {{
@@ -13,8 +13,6 @@ macro_rules! with_auth {
         $body(&mut ac)
     }};
 }
-
-
 
 #[derive(Subcommand)]
 pub enum TaskCommands {
@@ -156,21 +154,39 @@ pub enum TaskCommands {
     },
 }
 
-
 pub fn handle_task(
     client: &Client,
     auth: &Rc<RefCell<AuthManager>>,
     cmd: &TaskCommands,
 ) -> Result<(), String> {
     match cmd {
-        TaskCommands::List { execution, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+        TaskCommands::List {
+            execution,
+            page,
+            limit,
+        } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let path = if let Some(e) = execution {
-                format!("/executions/{}/tasks?pageID={}&recPerPage={}", e, page, limit)
+                format!(
+                    "/executions/{}/tasks?pageID={}&recPerPage={}",
+                    e, page, limit
+                )
             } else {
                 format!("/tasks?pageID={}&recPerPage={}", page, limit)
             };
             let data = ac.get(&path)?;
-            utils::print_list(&data, &["id", "name", "status", "assignedTo", "pri", "estimate", "consumed"], Some(*limit));
+            utils::print_list(
+                &data,
+                &[
+                    "id",
+                    "name",
+                    "status",
+                    "assignedTo",
+                    "pri",
+                    "estimate",
+                    "consumed",
+                ],
+                Some(*limit),
+            );
             Ok(())
         }),
         TaskCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
@@ -178,8 +194,24 @@ pub fn handle_task(
             utils::print_json(&data);
             Ok(())
         }),
-        TaskCommands::Create { execution, name, assigned, pri, estimate, desc, r#type, story, module, est_started, deadline, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 创建任务: {}", name); return Ok(()); }
+        TaskCommands::Create {
+            execution,
+            name,
+            assigned,
+            pri,
+            estimate,
+            desc,
+            r#type,
+            story,
+            module,
+            est_started,
+            deadline,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 创建任务: {}", name);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
                     "executionID": execution,
@@ -188,14 +220,30 @@ pub fn handle_task(
                 if let Some(t) = r#type {
                     body["type"] = json!(t);
                 }
-                if let Some(a) = assigned { body["assignedTo"] = json!(a); }
-                if let Some(p) = pri { body["pri"] = json!(p); }
-                if let Some(e) = estimate { body["estimate"] = json!(e); }
-                if let Some(d) = desc { body["desc"] = json!(d); }
-                if let Some(s) = story { body["story"] = json!(s); }
-                if let Some(m) = module { body["module"] = json!(m); }
-                if let Some(es) = est_started { body["estStarted"] = json!(es); }
-                if let Some(dl) = deadline { body["deadline"] = json!(dl); }
+                if let Some(a) = assigned {
+                    body["assignedTo"] = json!(a);
+                }
+                if let Some(p) = pri {
+                    body["pri"] = json!(p);
+                }
+                if let Some(e) = estimate {
+                    body["estimate"] = json!(e);
+                }
+                if let Some(d) = desc {
+                    body["desc"] = json!(d);
+                }
+                if let Some(s) = story {
+                    body["story"] = json!(s);
+                }
+                if let Some(m) = module {
+                    body["module"] = json!(m);
+                }
+                if let Some(es) = est_started {
+                    body["estStarted"] = json!(es);
+                }
+                if let Some(dl) = deadline {
+                    body["deadline"] = json!(dl);
+                }
                 let result = ac.post("/tasks", &body)?;
                 println!("✅ 任务创建成功");
                 utils::print_json(&result);
@@ -262,15 +310,35 @@ pub fn handle_task(
                 Ok(())
             })
         }
-        TaskCommands::Start { id, consumed, left, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 开始任务 #{} (consumed={}, left={})", id, consumed, left); return Ok(()); }
+        TaskCommands::Start {
+            id,
+            consumed,
+            left,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!(
+                    "🔍 [DRY-RUN] 开始任务 #{} (consumed={}, left={})",
+                    id, consumed, left
+                );
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                ac.put(&format!("/tasks/{}/start", id), &json!({"consumed": consumed, "left": left}))?;
+                ac.put(
+                    &format!("/tasks/{}/start", id),
+                    &json!({"consumed": consumed, "left": left}),
+                )?;
                 println!("✅ 任务 #{} 已开始", id);
                 Ok(())
             })
         }
-        TaskCommands::Finish { id, consumed, real_started, finished_date, dry_run } => {
+        TaskCommands::Finish {
+            id,
+            consumed,
+            real_started,
+            finished_date,
+            dry_run,
+        } => {
             if *dry_run {
                 println!("🔍 [DRY-RUN] 完成任务 #{} (consumed={:?}h)", id, consumed);
                 return Ok(());
@@ -288,7 +356,11 @@ pub fn handle_task(
                 Ok(())
             })
         }
-        TaskCommands::Close { id, reason, dry_run } => {
+        TaskCommands::Close {
+            id,
+            reason,
+            dry_run,
+        } => {
             if *dry_run {
                 println!("🔍 [DRY-RUN] 关闭任务 #{}", id);
                 return Ok(());
@@ -303,7 +375,11 @@ pub fn handle_task(
                 Ok(())
             })
         }
-        TaskCommands::Activate { id, comment, dry_run } => {
+        TaskCommands::Activate {
+            id,
+            comment,
+            dry_run,
+        } => {
             if *dry_run {
                 println!("🔍 [DRY-RUN] 激活任务 #{}", id);
                 return Ok(());
@@ -319,8 +395,14 @@ pub fn handle_task(
             })
         }
         TaskCommands::Delete { id, yes, dry_run } => {
-            if !yes && !dry_run { eprintln!("⚠️  确认删除任务 #{}？使用 --yes", id); return Ok(()); }
-            if *dry_run { println!("🔍 [DRY-RUN] 删除任务 #{}", id); return Ok(()); }
+            if !yes && !dry_run {
+                eprintln!("⚠️  确认删除任务 #{}？使用 --yes", id);
+                return Ok(());
+            }
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 删除任务 #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 ac.delete(&format!("/tasks/{}", id))?;
                 println!("✅ 任务 #{} 已删除", id);
@@ -329,4 +411,3 @@ pub fn handle_task(
         }
     }
 }
-

@@ -181,18 +181,42 @@ pub fn handle_story(
     cmd: &StoryCommands,
 ) -> Result<(), String> {
     match cmd {
-        StoryCommands::List { product, project, execution, browse_type, order_by, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+        StoryCommands::List {
+            product,
+            project,
+            execution,
+            browse_type,
+            order_by,
+            page,
+            limit,
+        } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let path = if let Some(e) = execution {
-                format!("/executions/{}/stories?browseType={}&orderBy={}&pageID={}&recPerPage={}", e, browse_type, order_by, page, limit)
+                format!(
+                    "/executions/{}/stories?browseType={}&orderBy={}&pageID={}&recPerPage={}",
+                    e, browse_type, order_by, page, limit
+                )
             } else if let Some(p) = project {
-                format!("/projects/{}/stories?browseType={}&orderBy={}&pageID={}&recPerPage={}", p, browse_type, order_by, page, limit)
+                format!(
+                    "/projects/{}/stories?browseType={}&orderBy={}&pageID={}&recPerPage={}",
+                    p, browse_type, order_by, page, limit
+                )
             } else if let Some(p) = product {
-                format!("/products/{}/stories?browseType={}&orderBy={}&pageID={}&recPerPage={}", p, browse_type, order_by, page, limit)
+                format!(
+                    "/products/{}/stories?browseType={}&orderBy={}&pageID={}&recPerPage={}",
+                    p, browse_type, order_by, page, limit
+                )
             } else {
-                format!("/stories?browseType={}&orderBy={}&pageID={}&recPerPage={}", browse_type, order_by, page, limit)
+                format!(
+                    "/stories?browseType={}&orderBy={}&pageID={}&recPerPage={}",
+                    browse_type, order_by, page, limit
+                )
             };
             let data = ac.get(&path)?;
-            utils::print_list(&data, &["id", "title", "status", "pri", "productName", "openedDate"], Some(*limit));
+            utils::print_list(
+                &data,
+                &["id", "title", "status", "pri", "productName", "openedDate"],
+                Some(*limit),
+            );
             Ok(())
         }),
         StoryCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
@@ -200,23 +224,68 @@ pub fn handle_story(
             utils::print_json(&data);
             Ok(())
         }),
-        StoryCommands::Create { product, title, spec, verify, module, parent, pri, category, source, assigned, reviewer, estimate, project, execution, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 创建需求: {}", title); return Ok(()); }
+        StoryCommands::Create {
+            product,
+            title,
+            spec,
+            verify,
+            module,
+            parent,
+            pri,
+            category,
+            source,
+            assigned,
+            reviewer,
+            estimate,
+            project,
+            execution,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 创建需求: {}", title);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({"productID": product, "title": title});
-                if let Some(d) = spec { body["spec"] = json!(d.clone()); }
-                if let Some(v) = verify { body["verify"] = json!(v.clone()); }
-                if let Some(m) = module { body["module"] = json!(m); }
-                if let Some(pa) = parent { body["parent"] = json!(pa); }
-                if let Some(p) = pri { body["pri"] = json!(p); }
-                if let Some(c) = category { body["category"] = json!(c); }
-                if let Some(s) = source { body["source"] = json!(s); }
-                if let Some(a) = assigned { body["assignedTo"] = json!(a); }
-                if let Some(e) = estimate { body["estimate"] = json!(e); }
-                if let Some(j) = project { body["project"] = json!(j); }
-                if let Some(ex) = execution { body["execution"] = json!(ex); }
-                if let Some(r) = reviewer { body["reviewer"] = json!(r.split(',').map(|s| s.trim()).collect::<Vec<&str>>()); } else {
-                    eprintln!("⚠️  创建需求需要提供评审人，请使用 --reviewer <account>（如 --reviewer admin）");
+                if let Some(d) = spec {
+                    body["spec"] = json!(d.clone());
+                }
+                if let Some(v) = verify {
+                    body["verify"] = json!(v.clone());
+                }
+                if let Some(m) = module {
+                    body["module"] = json!(m);
+                }
+                if let Some(pa) = parent {
+                    body["parent"] = json!(pa);
+                }
+                if let Some(p) = pri {
+                    body["pri"] = json!(p);
+                }
+                if let Some(c) = category {
+                    body["category"] = json!(c);
+                }
+                if let Some(s) = source {
+                    body["source"] = json!(s);
+                }
+                if let Some(a) = assigned {
+                    body["assignedTo"] = json!(a);
+                }
+                if let Some(e) = estimate {
+                    body["estimate"] = json!(e);
+                }
+                if let Some(j) = project {
+                    body["project"] = json!(j);
+                }
+                if let Some(ex) = execution {
+                    body["execution"] = json!(ex);
+                }
+                if let Some(r) = reviewer {
+                    body["reviewer"] = json!(r.split(',').map(|s| s.trim()).collect::<Vec<&str>>());
+                } else {
+                    eprintln!(
+                        "⚠️  创建需求需要提供评审人，请使用 --reviewer <account>（如 --reviewer admin）"
+                    );
                     return Ok(());
                 }
                 let result = ac.post("/stories", &body)?;
@@ -225,20 +294,56 @@ pub fn handle_story(
                 Ok(())
             })
         }
-        StoryCommands::Update { id, title, spec, verify, module, parent, pri, category, source, assigned, status, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 更新需求 #{}", id); return Ok(()); }
+        StoryCommands::Update {
+            id,
+            title,
+            spec,
+            verify,
+            module,
+            parent,
+            pri,
+            category,
+            source,
+            assigned,
+            status,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 更新需求 #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
-                if let Some(t) = title { body["title"] = json!(t); }
-                if let Some(s) = spec { body["spec"] = json!(s.clone()); }
-                if let Some(v) = verify { body["verify"] = json!(v.clone()); }
-                if let Some(m) = module { body["module"] = json!(m); }
-                if let Some(pa) = parent { body["parent"] = json!(pa); }
-                if let Some(p) = pri { body["pri"] = json!(p); }
-                if let Some(c) = category { body["category"] = json!(c); }
-                if let Some(s) = source { body["source"] = json!(s); }
-                if let Some(a) = assigned { body["assignedTo"] = json!(a); }
-                if let Some(s) = status { body["status"] = json!(s); }
+                if let Some(t) = title {
+                    body["title"] = json!(t);
+                }
+                if let Some(s) = spec {
+                    body["spec"] = json!(s.clone());
+                }
+                if let Some(v) = verify {
+                    body["verify"] = json!(v.clone());
+                }
+                if let Some(m) = module {
+                    body["module"] = json!(m);
+                }
+                if let Some(pa) = parent {
+                    body["parent"] = json!(pa);
+                }
+                if let Some(p) = pri {
+                    body["pri"] = json!(p);
+                }
+                if let Some(c) = category {
+                    body["category"] = json!(c);
+                }
+                if let Some(s) = source {
+                    body["source"] = json!(s);
+                }
+                if let Some(a) = assigned {
+                    body["assignedTo"] = json!(a);
+                }
+                if let Some(s) = status {
+                    body["status"] = json!(s);
+                }
                 let result = ac.put(&format!("/stories/{}", id), &body)?;
                 println!("✅ 需求 #{} 更新成功", id);
                 utils::print_json(&result);
@@ -265,33 +370,67 @@ pub fn handle_story(
                 Ok(())
             })
         }
-        StoryCommands::Activate { id, assigned, comment, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 激活需求 #{}", id); return Ok(()); }
+        StoryCommands::Activate {
+            id,
+            assigned,
+            comment,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 激活需求 #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
-                if let Some(a) = assigned { body["assignedTo"] = json!(a); }
-                if let Some(c) = comment { body["comment"] = json!(c); }
+                if let Some(a) = assigned {
+                    body["assignedTo"] = json!(a);
+                }
+                if let Some(c) = comment {
+                    body["comment"] = json!(c);
+                }
                 ac.put(&format!("/stories/{}/activate", id), &body)?;
                 println!("✅ 需求 #{} 已激活", id);
                 Ok(())
             })
         }
         StoryCommands::Delete { id, yes, dry_run } => {
-            if !yes && !dry_run { eprintln!("⚠️  确认删除需求 #{}？使用 --yes", id); return Ok(()); }
-            if *dry_run { println!("🔍 [DRY-RUN] 删除需求 #{}", id); return Ok(()); }
+            if !yes && !dry_run {
+                eprintln!("⚠️  确认删除需求 #{}？使用 --yes", id);
+                return Ok(());
+            }
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 删除需求 #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 ac.delete(&format!("/stories/{}", id))?;
                 println!("✅ 需求 #{} 已删除", id);
                 Ok(())
             })
         }
-        StoryCommands::Change { id, reviewer, title, spec, verify, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 变更需求 #{}: reviewer={:?}", id, reviewer); return Ok(()); }
+        StoryCommands::Change {
+            id,
+            reviewer,
+            title,
+            spec,
+            verify,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 变更需求 #{}: reviewer={:?}", id, reviewer);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({"reviewer": reviewer});
-                if let Some(t) = title { body["title"] = json!(t); }
-                if let Some(s) = spec { body["spec"] = json!(s.clone()); }
-                if let Some(v) = verify { body["verify"] = json!(v.clone()); }
+                if let Some(t) = title {
+                    body["title"] = json!(t);
+                }
+                if let Some(s) = spec {
+                    body["spec"] = json!(s.clone());
+                }
+                if let Some(v) = verify {
+                    body["verify"] = json!(v.clone());
+                }
                 let result = ac.put(&format!("/stories/{}/change", id), &body)?;
                 println!("✅ 需求 #{} 已提交变更", id);
                 utils::print_json(&result);

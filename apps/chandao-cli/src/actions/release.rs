@@ -3,9 +3,9 @@ use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::utils;
 use crate::auth::AuthManager;
-use crate::client::{Client, AuthenticatedClient};
+use crate::client::{AuthenticatedClient, Client};
+use crate::utils;
 
 macro_rules! with_auth {
     ($client:expr, $auth:expr, $body:expr) => {{
@@ -13,8 +13,6 @@ macro_rules! with_auth {
         $body(&mut ac)
     }};
 }
-
-
 
 #[derive(Subcommand)]
 pub enum ReleaseCommands {
@@ -114,7 +112,6 @@ pub enum ReleaseCommands {
     },
 }
 
-
 pub fn handle_release(
     client: &Client,
     auth: &Rc<RefCell<AuthManager>>,
@@ -149,10 +146,7 @@ pub fn handle_release(
         }
         ReleaseCommands::List { page, limit } => {
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                let data = ac.get(&format!(
-                    "/releases?pageID={}&recPerPage={}",
-                    page, limit
-                ))?;
+                let data = ac.get(&format!("/releases?pageID={}&recPerPage={}", page, limit))?;
                 utils::print_list(
                     &data,
                     &[
@@ -280,4 +274,3 @@ pub fn handle_release(
         }
     }
 }
-

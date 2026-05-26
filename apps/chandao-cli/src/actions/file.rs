@@ -2,9 +2,9 @@ use clap::Subcommand;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::utils;
 use crate::auth::AuthManager;
-use crate::client::{Client, AuthenticatedClient};
+use crate::client::{AuthenticatedClient, Client};
+use crate::utils;
 
 macro_rules! with_auth {
     ($client:expr, $auth:expr, $body:expr) => {{
@@ -12,8 +12,6 @@ macro_rules! with_auth {
         $body(&mut ac)
     }};
 }
-
-
 
 #[derive(Subcommand)]
 pub enum FileCommands {
@@ -52,7 +50,6 @@ pub enum FileCommands {
     },
 }
 
-
 pub fn handle_file(
     client: &Client,
     auth: &Rc<RefCell<AuthManager>>,
@@ -82,13 +79,15 @@ pub fn handle_file(
             utils::print_json(&result);
             Ok(())
         }),
-        FileCommands::Edit { id, title } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-            let body = serde_json::json!({ "title": title });
-            let result = ac.put(&format!("/files/{}", id), &body)?;
-            println!("✅ 文件 #{} 已重命名", id);
-            utils::print_json(&result);
-            Ok(())
-        }),
+        FileCommands::Edit { id, title } => {
+            with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+                let body = serde_json::json!({ "title": title });
+                let result = ac.put(&format!("/files/{}", id), &body)?;
+                println!("✅ 文件 #{} 已重命名", id);
+                utils::print_json(&result);
+                Ok(())
+            })
+        }
         FileCommands::Delete { id, yes } => {
             if !yes {
                 println!("⚠️  确认删除文件 #{}? 使用 --yes 确认", id);
@@ -103,4 +102,3 @@ pub fn handle_file(
         }
     }
 }
-

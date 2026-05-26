@@ -3,9 +3,9 @@ use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::utils;
 use crate::auth::AuthManager;
-use crate::client::{Client, AuthenticatedClient};
+use crate::client::{AuthenticatedClient, Client};
+use crate::utils;
 
 macro_rules! with_auth {
     ($client:expr, $auth:expr, $body:expr) => {{
@@ -13,8 +13,6 @@ macro_rules! with_auth {
         $body(&mut ac)
     }};
 }
-
-
 
 #[derive(Subcommand)]
 pub enum ProductCommands {
@@ -136,7 +134,6 @@ pub enum ProductCommands {
         limit: u32,
     },
 }
-
 
 pub fn handle_product(
     client: &Client,
@@ -318,4 +315,3 @@ pub fn handle_product(
         }
     }
 }
-

@@ -3,9 +3,9 @@ use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::utils;
 use crate::auth::AuthManager;
-use crate::client::{Client, AuthenticatedClient};
+use crate::client::{AuthenticatedClient, Client};
+use crate::utils;
 
 macro_rules! with_auth {
     ($client:expr, $auth:expr, $body:expr) => {{
@@ -13,8 +13,6 @@ macro_rules! with_auth {
         $body(&mut ac)
     }};
 }
-
-
 
 #[derive(Subcommand)]
 pub enum TestcaseCommands {
@@ -121,25 +119,43 @@ pub enum TestcaseCommands {
     },
 }
 
-
 pub fn handle_testcase(
     client: &Client,
     auth: &Rc<RefCell<AuthManager>>,
     cmd: &TestcaseCommands,
 ) -> Result<(), String> {
     match cmd {
-        TestcaseCommands::List { product, project, execution, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+        TestcaseCommands::List {
+            product,
+            project,
+            execution,
+            page,
+            limit,
+        } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let path = if let Some(e) = execution {
-                format!("/executions/{}/testcases?pageID={}&recPerPage={}", e, page, limit)
+                format!(
+                    "/executions/{}/testcases?pageID={}&recPerPage={}",
+                    e, page, limit
+                )
             } else if let Some(j) = project {
-                format!("/projects/{}/testcases?pageID={}&recPerPage={}", j, page, limit)
+                format!(
+                    "/projects/{}/testcases?pageID={}&recPerPage={}",
+                    j, page, limit
+                )
             } else if let Some(p) = product {
-                format!("/products/{}/testcases?pageID={}&recPerPage={}", p, page, limit)
+                format!(
+                    "/products/{}/testcases?pageID={}&recPerPage={}",
+                    p, page, limit
+                )
             } else {
                 format!("/testcases?pageID={}&recPerPage={}", page, limit)
             };
             let data = ac.get(&path)?;
-            utils::print_list(&data, &["id", "title", "status", "pri", "type", "stage"], Some(*limit));
+            utils::print_list(
+                &data,
+                &["id", "title", "status", "pri", "type", "stage"],
+                Some(*limit),
+            );
             Ok(())
         }),
         TestcaseCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
@@ -147,8 +163,26 @@ pub fn handle_testcase(
             utils::print_json(&data);
             Ok(())
         }),
-        TestcaseCommands::Create { product, module, title, r#type, stage, pri, precondition, steps, expect, step_type, story, project, execution, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 创建测试用例: {}", title); return Ok(()); }
+        TestcaseCommands::Create {
+            product,
+            module,
+            title,
+            r#type,
+            stage,
+            pri,
+            precondition,
+            steps,
+            expect,
+            step_type,
+            story,
+            project,
+            execution,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 创建测试用例: {}", title);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({
                     "productID": product,
@@ -156,24 +190,51 @@ pub fn handle_testcase(
                     "type": r#type,
                     "stage": stage,
                 });
-                if let Some(m) = module { body["module"] = json!(m); }
-                if let Some(p) = pri { body["pri"] = json!(p); }
-                if let Some(pc) = precondition { body["precondition"] = json!(pc); }
-                if let Some(s) = story { body["story"] = json!(s); }
-                if let Some(p) = project { body["project"] = json!(p); }
-                if let Some(e) = execution { body["execution"] = json!(e); }
+                if let Some(m) = module {
+                    body["module"] = json!(m);
+                }
+                if let Some(p) = pri {
+                    body["pri"] = json!(p);
+                }
+                if let Some(pc) = precondition {
+                    body["precondition"] = json!(pc);
+                }
+                if let Some(s) = story {
+                    body["story"] = json!(s);
+                }
+                if let Some(p) = project {
+                    body["project"] = json!(p);
+                }
+                if let Some(e) = execution {
+                    body["execution"] = json!(e);
+                }
                 // Parse steps JSON [{step, expect}] into parallel arrays
                 if let Some(s) = steps {
                     if let Ok(parsed) = serde_json::from_str::<Vec<serde_json::Value>>(&s) {
-                        let step_strs: Vec<String> = parsed.iter().map(|v| {
-                            v.get("step").and_then(|s| s.as_str()).unwrap_or("").to_string()
-                        }).collect();
-                        let expect_strs: Vec<String> = parsed.iter().map(|v| {
-                            v.get("expect").and_then(|s| s.as_str()).unwrap_or("").to_string()
-                        }).collect();
+                        let step_strs: Vec<String> = parsed
+                            .iter()
+                            .map(|v| {
+                                v.get("step")
+                                    .and_then(|s| s.as_str())
+                                    .unwrap_or("")
+                                    .to_string()
+                            })
+                            .collect();
+                        let expect_strs: Vec<String> = parsed
+                            .iter()
+                            .map(|v| {
+                                v.get("expect")
+                                    .and_then(|s| s.as_str())
+                                    .unwrap_or("")
+                                    .to_string()
+                            })
+                            .collect();
                         body["steps"] = json!(step_strs);
                         body["expects"] = json!(expect_strs);
-                        body["stepType"] = json!(vec![step_type.as_deref().unwrap_or("step"); step_strs.len()]);
+                        body["stepType"] = json!(vec![
+                            step_type.as_deref().unwrap_or("step");
+                            step_strs.len()
+                        ]);
                     } else {
                         body["steps"] = json!([s]);
                         body["expects"] = json!([expect.as_deref().unwrap_or("")]);
@@ -190,26 +251,66 @@ pub fn handle_testcase(
                 Ok(())
             })
         }
-        TestcaseCommands::Update { id, title, status, pri, r#type, module, precondition, steps, story, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 更新测试用例 #{}", id); return Ok(()); }
+        TestcaseCommands::Update {
+            id,
+            title,
+            status,
+            pri,
+            r#type,
+            module,
+            precondition,
+            steps,
+            story,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 更新测试用例 #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
-                if let Some(t) = title { body["title"] = json!(t); }
-                if let Some(s) = status { body["status"] = json!(s); }
-                if let Some(p) = pri { body["pri"] = json!(p); }
-                if let Some(t) = r#type { body["type"] = json!(t); }
-                if let Some(m) = module { body["module"] = json!(m); }
-                if let Some(pc) = precondition { body["precondition"] = json!(pc); }
-                if let Some(s) = story { body["story"] = json!(s); }
+                if let Some(t) = title {
+                    body["title"] = json!(t);
+                }
+                if let Some(s) = status {
+                    body["status"] = json!(s);
+                }
+                if let Some(p) = pri {
+                    body["pri"] = json!(p);
+                }
+                if let Some(t) = r#type {
+                    body["type"] = json!(t);
+                }
+                if let Some(m) = module {
+                    body["module"] = json!(m);
+                }
+                if let Some(pc) = precondition {
+                    body["precondition"] = json!(pc);
+                }
+                if let Some(s) = story {
+                    body["story"] = json!(s);
+                }
                 // Parse steps JSON [{step, expect}] into parallel arrays
                 if let Some(s) = steps {
                     if let Ok(parsed) = serde_json::from_str::<Vec<serde_json::Value>>(&s) {
-                        let step_strs: Vec<String> = parsed.iter().map(|v| {
-                            v.get("step").and_then(|s| s.as_str()).unwrap_or("").to_string()
-                        }).collect();
-                        let expect_strs: Vec<String> = parsed.iter().map(|v| {
-                            v.get("expect").and_then(|s| s.as_str()).unwrap_or("").to_string()
-                        }).collect();
+                        let step_strs: Vec<String> = parsed
+                            .iter()
+                            .map(|v| {
+                                v.get("step")
+                                    .and_then(|s| s.as_str())
+                                    .unwrap_or("")
+                                    .to_string()
+                            })
+                            .collect();
+                        let expect_strs: Vec<String> = parsed
+                            .iter()
+                            .map(|v| {
+                                v.get("expect")
+                                    .and_then(|s| s.as_str())
+                                    .unwrap_or("")
+                                    .to_string()
+                            })
+                            .collect();
                         body["steps"] = json!(step_strs);
                         body["expects"] = json!(expect_strs);
                         body["stepType"] = json!(vec!["step"; step_strs.len()]);
@@ -226,8 +327,14 @@ pub fn handle_testcase(
             })
         }
         TestcaseCommands::Delete { id, yes, dry_run } => {
-            if !yes && !dry_run { eprintln!("⚠️  确认删除测试用例 #{}？使用 --yes", id); return Ok(()); }
-            if *dry_run { println!("🔍 [DRY-RUN] 删除测试用例 #{}", id); return Ok(()); }
+            if !yes && !dry_run {
+                eprintln!("⚠️  确认删除测试用例 #{}？使用 --yes", id);
+                return Ok(());
+            }
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 删除测试用例 #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 ac.delete(&format!("/testcases/{}", id))?;
                 println!("✅ 测试用例 #{} 已删除", id);
@@ -236,4 +343,3 @@ pub fn handle_testcase(
         }
     }
 }
-

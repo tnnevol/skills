@@ -3,9 +3,9 @@ use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::utils;
 use crate::auth::AuthManager;
-use crate::client::{Client, AuthenticatedClient};
+use crate::client::{AuthenticatedClient, Client};
+use crate::utils;
 
 macro_rules! with_auth {
     ($client:expr, $auth:expr, $body:expr) => {{
@@ -13,8 +13,6 @@ macro_rules! with_auth {
         $body(&mut ac)
     }};
 }
-
-
 
 #[derive(Subcommand)]
 pub enum ProgramCommands {
@@ -119,7 +117,6 @@ pub enum ProgramCommands {
     },
 }
 
-
 pub fn handle_program(
     client: &Client,
     auth: &Rc<RefCell<AuthManager>>,
@@ -165,10 +162,7 @@ pub fn handle_program(
             dry_run,
         } => {
             if *dry_run {
-                println!(
-                    "🔍 [DRY-RUN] 创建项目集: name={}, code={}",
-                    name, code
-                );
+                println!("🔍 [DRY-RUN] 创建项目集: name={}, code={}", name, code);
                 return Ok(());
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
@@ -273,4 +267,3 @@ pub fn handle_program(
         }
     }
 }
-

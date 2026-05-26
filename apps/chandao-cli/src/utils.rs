@@ -55,11 +55,7 @@ pub fn print_table(data: &Value, fields: &[&str]) {
         .iter()
         .enumerate()
         .map(|(i, h)| {
-            let max_content = rows
-                .iter()
-                .map(|r| r[i].chars().count())
-                .max()
-                .unwrap_or(0);
+            let max_content = rows.iter().map(|r| r[i].chars().count()).max().unwrap_or(0);
             std::cmp::max(h.chars().count(), max_content)
         })
         .collect();
@@ -73,10 +69,7 @@ pub fn print_table(data: &Value, fields: &[&str]) {
     println!("| {} |", header_line.join(" | "));
 
     // Print separator
-    let sep_line: Vec<String> = col_widths
-        .iter()
-        .map(|w| "-".repeat(*w))
-        .collect();
+    let sep_line: Vec<String> = col_widths.iter().map(|w| "-".repeat(*w)).collect();
     println!("| {} |", sep_line.join(" | "));
 
     // Print rows
@@ -86,7 +79,8 @@ pub fn print_table(data: &Value, fields: &[&str]) {
             .enumerate()
             .map(|(i, cell)| {
                 let truncated = if cell.chars().count() > col_widths[i] {
-                    let truncated_chars: String = cell.chars().take(col_widths[i].saturating_sub(1)).collect();
+                    let truncated_chars: String =
+                        cell.chars().take(col_widths[i].saturating_sub(1)).collect();
                     format!("{}…", truncated_chars)
                 } else {
                     format!("{:width$}", cell, width = col_widths[i])
@@ -110,7 +104,8 @@ pub fn print_list(data: &Value, fields: &[&str], limit: Option<u32>) {
         Value::Array(a) => (a, None),
         Value::Object(obj) => {
             // Try to find array in common API response fields
-            let arr = obj.get("data")
+            let arr = obj
+                .get("data")
                 .or_else(|| obj.get("tasks"))
                 .or_else(|| obj.get("bugs"))
                 .or_else(|| obj.get("stories"))
@@ -128,7 +123,8 @@ pub fn print_list(data: &Value, fields: &[&str], limit: Option<u32>) {
                 .and_then(|v| v.as_array());
 
             // Try to find total in common API response fields
-            let total = obj.get("total")
+            let total = obj
+                .get("total")
                 .or_else(|| obj.get("total_rec"))
                 .or_else(|| obj.get("recTotal"))
                 .and_then(|v| v.as_u64());
@@ -176,11 +172,7 @@ pub fn print_list(data: &Value, fields: &[&str], limit: Option<u32>) {
         .iter()
         .enumerate()
         .map(|(i, h)| {
-            let max_content = rows
-                .iter()
-                .map(|r| r[i].chars().count())
-                .max()
-                .unwrap_or(0);
+            let max_content = rows.iter().map(|r| r[i].chars().count()).max().unwrap_or(0);
             std::cmp::max(h.chars().count(), max_content)
         })
         .collect();
@@ -194,10 +186,7 @@ pub fn print_list(data: &Value, fields: &[&str], limit: Option<u32>) {
     println!("| {} |", header_line.join(" | "));
 
     // Print separator
-    let sep_line: Vec<String> = col_widths
-        .iter()
-        .map(|w| "-".repeat(*w))
-        .collect();
+    let sep_line: Vec<String> = col_widths.iter().map(|w| "-".repeat(*w)).collect();
     println!("| {} |", sep_line.join(" | "));
 
     // Print rows
@@ -207,7 +196,8 @@ pub fn print_list(data: &Value, fields: &[&str], limit: Option<u32>) {
             .enumerate()
             .map(|(i, cell)| {
                 let truncated = if cell.chars().count() > col_widths[i] {
-                    let truncated_chars: String = cell.chars().take(col_widths[i].saturating_sub(1)).collect();
+                    let truncated_chars: String =
+                        cell.chars().take(col_widths[i].saturating_sub(1)).collect();
                     format!("{}…", truncated_chars)
                 } else {
                     format!("{:width$}", cell, width = col_widths[i])
@@ -222,11 +212,17 @@ pub fn print_list(data: &Value, fields: &[&str], limit: Option<u32>) {
     match total {
         Some(t) if t > arr.len() as u64 => {
             println!("\n共 {} 条 (总数: {} 条，仅显示当前页)", arr.len(), t);
-            println!("💡 还有 {} 条未显示，请使用 --page 参数查看下一页", t - arr.len() as u64);
+            println!(
+                "💡 还有 {} 条未显示，请使用 --page 参数查看下一页",
+                t - arr.len() as u64
+            );
         }
         _ if limit.is_some() && (arr.len() as u32) >= limit.unwrap_or(u32::MAX) => {
             println!("\n共 {} 条", arr.len());
-            println!("💡 结果数量已达上限 (limit={})，可能还有更多数据，请使用 --page 参数查看", limit.unwrap());
+            println!(
+                "💡 结果数量已达上限 (limit={})，可能还有更多数据，请使用 --page 参数查看",
+                limit.unwrap()
+            );
         }
         _ => println!("\n共 {} 条", arr.len()),
     }

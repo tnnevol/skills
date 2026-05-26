@@ -3,9 +3,9 @@ use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::utils;
 use crate::auth::AuthManager;
-use crate::client::{Client, AuthenticatedClient};
+use crate::client::{AuthenticatedClient, Client};
+use crate::utils;
 
 macro_rules! with_auth {
     ($client:expr, $auth:expr, $body:expr) => {{
@@ -13,8 +13,6 @@ macro_rules! with_auth {
         $body(&mut ac)
     }};
 }
-
-
 
 #[derive(Subcommand)]
 pub enum RequirementCommands {
@@ -149,15 +147,24 @@ pub enum RequirementCommands {
     },
 }
 
-
 pub fn handle_requirement(
     client: &Client,
     auth: &Rc<RefCell<AuthManager>>,
     cmd: &RequirementCommands,
 ) -> Result<(), String> {
     match cmd {
-        RequirementCommands::List { product, browse, page, limit }
-        | RequirementCommands::ListByProduct { product, browse, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+        RequirementCommands::List {
+            product,
+            browse,
+            page,
+            limit,
+        }
+        | RequirementCommands::ListByProduct {
+            product,
+            browse,
+            page,
+            limit,
+        } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let data = ac.get(&format!(
                 "/products/{}/requirements?browse={}&pageID={}&recPerPage={}",
                 product, browse, page, limit
@@ -276,10 +283,7 @@ pub fn handle_requirement(
             dry_run,
         } => {
             if *dry_run {
-                println!(
-                    "🔍 [DRY-RUN] 变更用户需求 #{}: reviewer={:?}",
-                    id, reviewer
-                );
+                println!("🔍 [DRY-RUN] 变更用户需求 #{}: reviewer={:?}", id, reviewer);
                 return Ok(());
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
@@ -299,7 +303,11 @@ pub fn handle_requirement(
                 Ok(())
             })
         }
-        RequirementCommands::Close { id, reason, dry_run } => {
+        RequirementCommands::Close {
+            id,
+            reason,
+            dry_run,
+        } => {
             if *dry_run {
                 println!("🔍 [DRY-RUN] 关闭用户需求 #{}", id);
                 return Ok(());
@@ -340,4 +348,3 @@ pub fn handle_requirement(
         }
     }
 }
-

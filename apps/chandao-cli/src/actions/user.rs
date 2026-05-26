@@ -3,9 +3,9 @@ use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::utils;
 use crate::auth::AuthManager;
-use crate::client::{Client, AuthenticatedClient};
+use crate::client::{AuthenticatedClient, Client};
+use crate::utils;
 
 macro_rules! with_auth {
     ($client:expr, $auth:expr, $body:expr) => {{
@@ -13,8 +13,6 @@ macro_rules! with_auth {
         $body(&mut ac)
     }};
 }
-
-
 
 #[derive(Subcommand)]
 pub enum UserCommands {
@@ -86,7 +84,6 @@ pub enum UserCommands {
     },
 }
 
-
 pub fn handle_user(
     client: &Client,
     auth: &Rc<RefCell<AuthManager>>,
@@ -104,7 +101,9 @@ pub fn handle_user(
             ))?;
             utils::print_list(
                 &data,
-                &["id", "account", "realname", "email", "phone", "role", "status"],
+                &[
+                    "id", "account", "realname", "email", "phone", "role", "status",
+                ],
                 Some(*limit),
             );
             Ok(())
@@ -195,4 +194,3 @@ pub fn handle_user(
         }
     }
 }
-
