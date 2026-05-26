@@ -5,7 +5,7 @@
 | `/chandao bug list [--product <id>] [--project <id>] [--execution <id>] [--limit N] [--page N]` | 列出 Bug（支持按产品/项目/执行筛选） |
 | `/chandao bug get <id>` | Bug 详情 |
 | `/chandao bug create --product <id> --title <title> [--assigned <user>] [--pri 1-4] [--severity 1-4] [--type <type>] [--opened-build <build>] [--desc <desc>] [--module <id>] [--execution <id>] [--task <id>] [--story <id>] [--os <os>] [--browser <browser>]` | 创建 Bug |
-| `/chandao bug update <id> [--title <title>] [--assigned <user>] [--pri 1-4] [--execution <id>]` | 编辑 Bug |
+| `/chandao bug update <id> [--title <title>] [--assigned <user>] [--pri 1-4] [--severity 1-4] [--type <type>] [--opened-build <build>] [--steps <desc>] [--project <id>] [--execution <id>] [--story <id>]` | 编辑 Bug |
 | `/chandao bug resolve <id> --resolution fixed\|bydesign\|external\|postponed\|willnotfix\|duplicate\|notrepro [--assigned-to <user>] [--resolved-build <build>] [--comment <text>]` | 解决 Bug |
 | `/chandao bug close <id> [--comment <text>]` | 关闭 Bug |
 | `/chandao bug activate <id>` | 激活 Bug |

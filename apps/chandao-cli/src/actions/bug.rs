@@ -97,9 +97,27 @@ pub enum BugCommands {
         status: Option<String>,
         #[arg(short = 'i', long)]
         pri: Option<u8>,
+        /// Severity (1-4)
+        #[arg(long)]
+        severity: Option<u8>,
+        /// Type (codeerror/config/install/security/performance/standard/automation/designdefect/others)
+        #[arg(short = 'y', long)]
+        r#type: Option<String>,
+        /// Opened build
+        #[arg(short = 'b', long)]
+        opened_build: Option<String>,
+        /// Steps to reproduce
+        #[arg(short = 'd', long)]
+        steps: Option<String>,
+        /// Project ID
+        #[arg(short = 'j', long)]
+        project: Option<i64>,
         /// Execution ID (关联到执行)
         #[arg(short = 'e', long)]
         execution: Option<i64>,
+        /// Story ID
+        #[arg(long)]
+        story: Option<i64>,
         #[arg(long)]
         dry_run: bool,
     },
@@ -195,8 +213,25 @@ pub fn handle_bug(
                 Ok(())
             })
         }
-        BugCommands::Update { id, title, assigned, status, pri, execution, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 更新Bug #{}", id); return Ok(()); }
+        BugCommands::Update {
+            id,
+            title,
+            assigned,
+            status,
+            pri,
+            severity,
+            r#type,
+            opened_build,
+            steps,
+            project,
+            execution,
+            story,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 更新Bug #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 // 如果指定了 status，使用专门的状态流转端点
                 if let Some(s) = status {
@@ -205,21 +240,54 @@ pub fn handle_bug(
                             return Err("❌ Bug 状态不能通过 update 修改，请使用: bug resolve --resolution <type>".to_string());
                         }
                         "closed" => {
-                            return Err("❌ Bug 状态不能通过 update 修改，请使用: bug close".to_string());
+                            return Err(
+                                "❌ Bug 状态不能通过 update 修改，请使用: bug close".to_string()
+                            );
                         }
                         "active" => {
-                            return Err("❌ Bug 状态不能通过 update 修改，请使用: bug activate".to_string());
+                            return Err(
+                                "❌ Bug 状态不能通过 update 修改，请使用: bug activate".to_string()
+                            );
                         }
                         _ => {
-                            return Err(format!("❌ 无效的状态 '{}'，有效值: active, resolved, closed", s));
+                            return Err(format!(
+                                "❌ 无效的状态 '{}'，有效值: active, resolved, closed",
+                                s
+                            ));
                         }
                     }
                 }
                 let mut body = json!({});
-                if let Some(t) = title { body["title"] = json!(t); }
-                if let Some(a) = assigned { body["assignedTo"] = json!(a); }
-                if let Some(p) = pri { body["pri"] = json!(p); }
-                if let Some(e) = execution { body["execution"] = json!(e); }
+                if let Some(t) = title {
+                    body["title"] = json!(t);
+                }
+                if let Some(a) = assigned {
+                    body["assignedTo"] = json!(a);
+                }
+                if let Some(p) = pri {
+                    body["pri"] = json!(p);
+                }
+                if let Some(s) = severity {
+                    body["severity"] = json!(s);
+                }
+                if let Some(ty) = r#type {
+                    body["type"] = json!(ty);
+                }
+                if let Some(ob) = opened_build {
+                    body["openedBuild"] = json!([ob]);
+                }
+                if let Some(st) = steps {
+                    body["steps"] = json!(st);
+                }
+                if let Some(j) = project {
+                    body["project"] = json!(j);
+                }
+                if let Some(e) = execution {
+                    body["execution"] = json!(e);
+                }
+                if let Some(s) = story {
+                    body["story"] = json!(s);
+                }
                 let result = ac.put(&format!("/bugs/{}", id), &body)?;
                 println!("✅ Bug #{} 更新成功", id);
                 utils::print_json(&result);
