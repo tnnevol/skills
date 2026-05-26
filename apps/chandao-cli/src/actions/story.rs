@@ -5,7 +5,6 @@ use std::rc::Rc;
 
 use crate::auth::AuthManager;
 use crate::client::{AuthenticatedClient, Client};
-use crate::markdown::markdown_to_html;
 use crate::utils;
 
 macro_rules! with_auth {
@@ -205,8 +204,8 @@ pub fn handle_story(
             if *dry_run { println!("🔍 [DRY-RUN] 创建需求: {}", title); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({"productID": product, "title": title});
-                if let Some(d) = spec { body["spec"] = json!(markdown_to_html(&d)); }
-                if let Some(v) = verify { body["verify"] = json!(markdown_to_html(&v)); }
+                if let Some(d) = spec { body["spec"] = json!(d.clone()); }
+                if let Some(v) = verify { body["verify"] = json!(v.clone()); }
                 if let Some(m) = module { body["module"] = json!(m); }
                 if let Some(pa) = parent { body["parent"] = json!(pa); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
@@ -231,8 +230,8 @@ pub fn handle_story(
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
                 if let Some(t) = title { body["title"] = json!(t); }
-                if let Some(s) = spec { body["spec"] = json!(markdown_to_html(&s)); }
-                if let Some(v) = verify { body["verify"] = json!(markdown_to_html(&v)); }
+                if let Some(s) = spec { body["spec"] = json!(s.clone()); }
+                if let Some(v) = verify { body["verify"] = json!(v.clone()); }
                 if let Some(m) = module { body["module"] = json!(m); }
                 if let Some(pa) = parent { body["parent"] = json!(pa); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
@@ -291,8 +290,8 @@ pub fn handle_story(
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({"reviewer": reviewer});
                 if let Some(t) = title { body["title"] = json!(t); }
-                if let Some(s) = spec { body["spec"] = json!(markdown_to_html(&s)); }
-                if let Some(v) = verify { body["verify"] = json!(markdown_to_html(&v)); }
+                if let Some(s) = spec { body["spec"] = json!(s.clone()); }
+                if let Some(v) = verify { body["verify"] = json!(v.clone()); }
                 let result = ac.put(&format!("/stories/{}/change", id), &body)?;
                 println!("✅ 需求 #{} 已提交变更", id);
                 utils::print_json(&result);

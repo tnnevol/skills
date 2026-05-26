@@ -3,7 +3,6 @@ use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::markdown::markdown_to_html;
 use crate::utils;
 use crate::auth::AuthManager;
 use crate::client::{Client, AuthenticatedClient};
@@ -202,10 +201,10 @@ pub fn handle_epic(
                     "title": title,
                 });
                 if let Some(v) = spec {
-                    body["spec"] = json!(markdown_to_html(&v));
+                    body["spec"] = json!(v.clone());
                 }
                 if let Some(v) = verify {
-                    body["verify"] = json!(markdown_to_html(&v));
+                    body["verify"] = json!(v.clone());
                 }
                 if let Some(m) = module {
                     body["module"] = json!(m);
@@ -289,10 +288,10 @@ pub fn handle_epic(
                     body["title"] = json!(t);
                 }
                 if let Some(s) = spec {
-                    body["spec"] = json!(markdown_to_html(&s));
+                    body["spec"] = json!(s.clone());
                 }
                 if let Some(v) = verify {
-                    body["verify"] = json!(markdown_to_html(&v));
+                    body["verify"] = json!(v.clone());
                 }
                 let result = ac.put(&format!("/epics/{}/change", id), &body)?;
                 println!("✅ 史诗需求 #{} 已提交变更", id);
