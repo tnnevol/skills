@@ -56,11 +56,11 @@ pub enum BugCommands {
         #[arg(short = 's', long)]
         severity: Option<u8>,
         /// Type (codeerror/config/install/security/performance/standard/automation/designdefect/others)
-        #[arg(short = 'y', long, default_value = "codeerror")]
-        r#type: String,
-        /// Opened build (默认 trunk)
-        #[arg(short = 'b', long, default_value = "trunk")]
-        opened_build: String,
+        #[arg(short = 'y', long)]
+        r#type: Option<String>,
+        /// Opened build
+        #[arg(short = 'b', long)]
+        opened_build: Option<String>,
         /// Steps to reproduce
         #[arg(short = 'd', long)]
         desc: Option<String>,
@@ -196,7 +196,13 @@ pub fn handle_bug(
         BugCommands::Create { product, title, assigned, pri, severity, r#type, opened_build, desc, module, execution, task, story, os, browser, dry_run } => {
             if *dry_run { println!("🔍 [DRY-RUN] 创建Bug: {}", title); return Ok(()); }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                let mut body = json!({"productID": product, "title": title, "type": r#type, "openedBuild": [opened_build]});
+                let mut body = json!({"productID": product, "title": title});
+                if let Some(t) = r#type {
+                    body["type"] = json!(t);
+                }
+                if let Some(ob) = opened_build {
+                    body["openedBuild"] = json!([ob]);
+                }
                 if let Some(a) = assigned { body["assignedTo"] = json!(a); }
                 if let Some(p) = pri { body["pri"] = json!(p); }
                 if let Some(s) = severity { body["severity"] = json!(s); }
