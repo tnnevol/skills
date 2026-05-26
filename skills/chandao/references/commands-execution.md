@@ -6,7 +6,7 @@
 |------|------|
 | `/chandao execution list [--project <id>] [--status <status>] [--order-by <field>] [--limit N] [--page N]` | 列出执行 |
 | `/chandao execution get <id>` | 获取执行详情 |
-| `/chandao execution create --project <id> --name <name> --begin <date> --end <date> [--code <code>] [--lifetime <type>] [--days <n>] [--products <ids>] [--plans <json>] [--po <account>] [--qd <account>] [--pm <account>] [--rd <account>] [--acl open\|private] [--desc <desc>]` | 创建执行 |
+| `/chandao execution create --project <id> --name <name> --begin <date> --end <date> [--lifetime <type>] [--days <n>] [--products <ids>] [--plans <json>] [--po <account>] [--qd <account>] [--pm <account>] [--rd <account>] [--acl open\|private]` | 创建执行 |
 | `/chandao execution update <id> --name <name> --begin <date> --end <date> [--project <id>] [--lifetime <type>] [--days <n>] [--products <ids>] [--plans <json>] [--po <account>] [--qd <account>] [--pm <account>] [--rd <account>] [--acl open\|private] [--desc <desc>] [--status <status>]` | 更新执行 |
 | `/chandao execution start <id>` | 启动执行 |
 | `/chandao execution suspend <id>` | 暂停执行 |
@@ -26,8 +26,7 @@
 | `--name` | string | ✅ | 执行名称 |
 | `--begin` | date | ✅ | 开始日期（YYYY-MM-DD） |
 | `--end` | date | ✅ | 结束日期（YYYY-MM-DD） |
-| `--code` | string | ❌ | 代号/前缀 |
-| `--lifetime` | string | ❌ | 执行类型：`short`(默认) / `long` / `ops` |
+| `--lifetime` | string | ❌ | 执行类型：`short` / `long` / `ops` |
 | `--days` | int | ❌ | 可用工作日 |
 | `--products` | array[int] | ❌ | 关联产品 ID（逗号分隔） |
 | `--plans` | JSON | ❌ | 关联计划映射，格式 `{"productId": [planId]}` |
@@ -35,8 +34,7 @@
 | `--qd` | string | ❌ | 测试负责人账号 |
 | `--pm` | string | ❌ | 执行负责人账号 |
 | `--rd` | string | ❌ | 发布负责人账号 |
-| `--acl` | string | ❌ | 访问控制：`open`(默认) / `private` |
-| `--desc` | string | ❌ | 描述 |
+| `--acl` | string | ❌ | 访问控制：`open` / `private` |
 | `--dry-run` | flag | ❌ | 模拟运行 |
 
 ### `/chandao execution update <id>`

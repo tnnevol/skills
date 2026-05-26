@@ -24,11 +24,11 @@ pub enum ExecutionCommands {
         #[arg(short = 'p', long)]
         project: Option<i64>,
         /// Status filter (all/undone/wait/doing)
-        #[arg(short = 's', long, default_value = "undone")]
-        status: String,
+        #[arg(short = 's', long)]
+        status: Option<String>,
         /// Order by field (rawID_asc/nameCol_asc/begin_asc/end_asc)
-        #[arg(short = 'o', long, default_value = "rawID_asc")]
-        order_by: String,
+        #[arg(short = 'o', long)]
+        order_by: Option<String>,
         /// Page number
         #[arg(short = 'g', long, default_value = "1")]
         page: u32,
@@ -43,24 +43,21 @@ pub enum ExecutionCommands {
     },
     /// Create an execution/sprint
     Create {
-        /// Project ID
+        /// Project ID (required)
         #[arg(short = 'p', long)]
         project: i64,
-        /// Name
+        /// Name (required)
         #[arg(short, long)]
         name: String,
-        /// Code/prefix
-        #[arg(short, long)]
-        code: Option<String>,
-        /// Begin date (YYYY-MM-DD)
+        /// Begin date (YYYY-MM-DD) (required)
         #[arg(long)]
         begin: String,
-        /// End date (YYYY-MM-DD)
+        /// End date (YYYY-MM-DD) (required)
         #[arg(long)]
         end: String,
         /// Lifetime (short/long/ops)
-        #[arg(short = 'l', long, default_value = "short")]
-        lifetime: String,
+        #[arg(short = 'l', long)]
+        lifetime: Option<String>,
         /// Available work days
         #[arg(short = 'y', long)]
         days: Option<i32>,
@@ -83,11 +80,8 @@ pub enum ExecutionCommands {
         #[arg(long)]
         rd: Option<String>,
         /// ACL (open/private)
-        #[arg(long, default_value = "open")]
-        acl: String,
-        /// Description
-        #[arg(short, long)]
-        desc: Option<String>,
+        #[arg(long)]
+        acl: Option<String>,
         /// Dry run
         #[arg(long)]
         dry_run: bool,
@@ -204,12 +198,14 @@ pub fn handle_execution(
 ) -> Result<(), String> {
     match cmd {
         ExecutionCommands::List { project, status, order_by, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+            let status_val = status.as_deref().unwrap_or("undone");
+            let order_val = order_by.as_deref().unwrap_or("rawID_asc");
             let mut path = format!(
                 "/executions?status={}&orderBy={}&pageID={}&recPerPage={}",
-                status, order_by, page, limit
+                status_val, order_val, page, limit
             );
             if let Some(p) = project {
-                path = format!("/projects/{}/executions?status={}&orderBy={}&pageID={}&recPerPage={}", p, status, order_by, page, limit);
+                path = format!("/projects/{}/executions?status={}&orderBy={}&pageID={}&recPerPage={}", p, status_val, order_val, page, limit);
             }
             let data = ac.get(&path)?;
             utils::print_table(&data, &["id", "name", "status", "begin", "end", "projectName"]);
@@ -220,7 +216,22 @@ pub fn handle_execution(
             utils::print_json(&data);
             Ok(())
         }),
-        ExecutionCommands::Create { project, name, code, begin, end, lifetime, days, products, plans, po, qd, pm, rd, acl, desc, dry_run } => {
+        ExecutionCommands::Create {
+            project,
+            name,
+            begin,
+            end,
+            lifetime,
+            days,
+            products,
+            plans,
+            po,
+            qd,
+            pm,
+            rd,
+            acl,
+            dry_run,
+        } => {
             if *dry_run {
                 println!("🔍 [DRY-RUN] 创建执行: name={}, project={}", name, project);
                 return Ok(());
@@ -231,24 +242,38 @@ pub fn handle_execution(
                     "name": name,
                     "begin": begin,
                     "end": end,
-                    "lifetime": lifetime,
-                    "acl": acl,
                 });
-                if let Some(c) = code { body["code"] = json!(c); }
-                if let Some(d) = days { body["days"] = json!(d); }
-                if let Some(p) = products { body["products"] = json!(p); }
+                if let Some(l) = lifetime {
+                    body["lifetime"] = json!(l);
+                }
+                if let Some(d) = days {
+                    body["days"] = json!(d);
+                }
+                if let Some(p) = products {
+                    body["products"] = json!(p);
+                }
                 if let Some(pl) = plans {
-                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(pl) {
+                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(&pl) {
                         body["plans"] = val;
                     } else {
                         return Err("plans 参数必须是有效的 JSON 对象".to_string());
                     }
                 }
-                if let Some(v) = po { body["PO"] = json!(v); }
-                if let Some(v) = qd { body["QD"] = json!(v); }
-                if let Some(v) = pm { body["PM"] = json!(v); }
-                if let Some(v) = rd { body["RD"] = json!(v); }
-                if let Some(d) = desc { body["desc"] = json!(d); }
+                if let Some(v) = po {
+                    body["PO"] = json!(v);
+                }
+                if let Some(v) = qd {
+                    body["QD"] = json!(v);
+                }
+                if let Some(v) = pm {
+                    body["PM"] = json!(v);
+                }
+                if let Some(v) = rd {
+                    body["RD"] = json!(v);
+                }
+                if let Some(a) = acl {
+                    body["acl"] = json!(a);
+                }
                 let result = ac.post("/executions", &body)?;
                 println!("✅ 执行创建成功");
                 utils::print_json(&result);
