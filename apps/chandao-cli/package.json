@@ -29,6 +29,10 @@
     "directory": "apps/chandao-cli"
   },
   "author": "tnnevol",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "devDependencies": {
     "bumpp": "^11.0.1"
   }

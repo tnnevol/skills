@@ -91,6 +91,6 @@ jobs:
 
       - name: Publish to npm
         working-directory: apps/chandao-cli
-        run: npm publish --access public
+        run: pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
