@@ -8,7 +8,7 @@
 | `/chandao bug update <id> [--title <title>] [--assigned <user>] [--pri 1-4] [--severity 1-4] [--type <type>] [--opened-build <build>] [--steps <desc>] [--project <id>] [--execution <id>] [--story <id>]` | 编辑 Bug |
 | `/chandao bug resolve <id> --resolution fixed\|bydesign\|external\|postponed\|willnotfix\|duplicate\|notrepro [--assigned-to <user>] [--resolved-build <build>] [--comment <text>]` | 解决 Bug |
 | `/chandao bug close <id> [--comment <text>]` | 关闭 Bug |
-| `/chandao bug activate <id>` | 激活 Bug |
+| `/chandao bug activate <id> [--opened-build <build>] [--assigned-to <user>] [--comment <text>]` | 激活 Bug |
 | `/chandao bug delete <id>` | 删除 Bug |
 
 ### 关键注意事项
@@ -17,7 +17,7 @@
 - **解决建议传 `--assigned-to`**：否则会清空指派人
 - **解决建议传 `--resolved-build`**：禅道可能要求「解决版本」不能为空
 - **按执行查 Bug**：`bug list --execution <id>`
-- **关联需求**：`bug update` 不支持 `--story`，需直接调用 API
+- **关联需求**：`bug update` 支持 `--story`，可关联需求 ID
 - **只关联一个主需求**：禅道 Bug 的 `story` 字段是单值
 - **`bug list` 没有 `--pri` 参数**：优先级过滤需在禅道 Web UI 操作
 
