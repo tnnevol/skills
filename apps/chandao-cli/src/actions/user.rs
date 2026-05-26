@@ -102,7 +102,7 @@ pub fn handle_user(
                 "/users?orderBy={}&recPerPage={}&pageID={}",
                 order_by, limit, page
             ))?;
-            utils::print_table(
+            utils::print_list(
                 &data,
                 &["id", "account", "realname", "email", "phone", "role", "status"],
             );

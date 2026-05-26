@@ -208,7 +208,7 @@ pub fn handle_execution(
                 path = format!("/projects/{}/executions?status={}&orderBy={}&pageID={}&recPerPage={}", p, status_val, order_val, page, limit);
             }
             let data = ac.get(&path)?;
-            utils::print_table(&data, &["id", "name", "status", "begin", "end", "projectName"]);
+            utils::print_list(&data, &["id", "name", "status", "begin", "end", "projectName"]);
             Ok(())
         }),
         ExecutionCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {

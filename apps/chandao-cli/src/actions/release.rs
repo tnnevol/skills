@@ -131,7 +131,7 @@ pub fn handle_release(
                     "/products/{}/releases?pageID={}&recPerPage={}",
                     product, page, limit
                 ))?;
-                utils::print_table(
+                utils::print_list(
                     &data,
                     &[
                         "id",
@@ -152,7 +152,7 @@ pub fn handle_release(
                     "/releases?pageID={}&recPerPage={}",
                     page, limit
                 ))?;
-                utils::print_table(
+                utils::print_list(
                     &data,
                     &[
                         "id",

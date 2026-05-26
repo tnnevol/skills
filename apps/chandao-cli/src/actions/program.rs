@@ -137,7 +137,7 @@ pub fn handle_program(
                     "/programs?browseType={}&orderBy={}&recPerPage={}&pageID={}",
                     browse_type, order_by, limit, page
                 ))?;
-                utils::print_table(
+                utils::print_list(
                     &data,
                     &["id", "name", "code", "status", "PM", "begin", "end"],
                 );

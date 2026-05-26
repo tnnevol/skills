@@ -143,7 +143,7 @@ pub fn handle_project(
                     "/projects?browseType={}&orderBy={}&recPerPage={}&pageID={}",
                     browse_type, order_by, limit, page
                 ))?;
-                utils::print_table(
+                utils::print_list(
                     &data,
                     &["id", "name", "code", "status", "type", "begin", "end", "PM"],
                 );
@@ -160,7 +160,7 @@ pub fn handle_project(
                     "/programs/{}/projects?pageID={}&recPerPage={}",
                     program, page, limit
                 ))?;
-                utils::print_table(
+                utils::print_list(
                     &data,
                     &["id", "name", "code", "status", "type", "begin", "end", "PM"],
                 );

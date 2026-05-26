@@ -98,7 +98,7 @@ pub fn handle_system(
                     "/products/{}/systems?pageID={}&recPerPage={}",
                     product, page, limit
                 ))?;
-                utils::print_table(&data, &["id", "name", "code", "type", "desc"]);
+                utils::print_list(&data, &["id", "name", "code", "type", "desc"]);
                 Ok(())
             })
         }

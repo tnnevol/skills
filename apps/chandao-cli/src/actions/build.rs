@@ -157,7 +157,7 @@ pub fn handle_build(
                 } else {
                     return Err("需要指定 --project 或 --execution".to_string());
                 };
-                utils::print_table(
+                utils::print_list(
                     &data,
                     &["id", "name", "projectName", "builder", "date", "desc"],
                 );
@@ -174,7 +174,7 @@ pub fn handle_build(
                     "/projects/{}/builds?pageID={}&recPerPage={}",
                     project, page, limit
                 ))?;
-                utils::print_table(
+                utils::print_list(
                     &data,
                     &["id", "name", "projectName", "builder", "date", "desc"],
                 );
@@ -191,7 +191,7 @@ pub fn handle_build(
                     "/executions/{}/builds?pageID={}&recPerPage={}",
                     execution, page, limit
                 ))?;
-                utils::print_table(
+                utils::print_list(
                     &data,
                     &["id", "name", "projectName", "builder", "date", "desc"],
                 );

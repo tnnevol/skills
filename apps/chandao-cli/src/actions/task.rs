@@ -88,6 +88,18 @@ pub enum TaskCommands {
         estimate: Option<f64>,
         #[arg(long)]
         consumed: Option<f64>,
+        /// Story ID (set to 0 to unlink)
+        #[arg(long)]
+        story: Option<i64>,
+        /// Finished by (set to empty string to clear)
+        #[arg(long)]
+        finished_by: Option<String>,
+        /// Closed by (set to empty string to clear)
+        #[arg(long)]
+        closed_by: Option<String>,
+        /// Closed reason (set to empty string to clear)
+        #[arg(long)]
+        closed_reason: Option<String>,
         #[arg(long)]
         dry_run: bool,
     },
@@ -158,7 +170,7 @@ pub fn handle_task(
                 format!("/tasks?pageID={}&recPerPage={}", page, limit)
             };
             let data = ac.get(&path)?;
-            utils::print_table(&data, &["id", "name", "status", "assignedTo", "pri", "estimate", "consumed"]);
+            utils::print_list(&data, &["id", "name", "status", "assignedTo", "pri", "estimate", "consumed"]);
             Ok(())
         }),
         TaskCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
@@ -199,6 +211,10 @@ pub fn handle_task(
             desc,
             estimate,
             consumed,
+            story,
+            finished_by,
+            closed_by,
+            closed_reason,
             dry_run,
         } => {
             if *dry_run {
@@ -227,6 +243,18 @@ pub fn handle_task(
                 }
                 if let Some(c) = consumed {
                     body["consumed"] = json!(c);
+                }
+                if let Some(s) = story {
+                    body["story"] = json!(s);
+                }
+                if let Some(fb) = finished_by {
+                    body["finishedBy"] = json!(fb);
+                }
+                if let Some(cb) = closed_by {
+                    body["closedBy"] = json!(cb);
+                }
+                if let Some(cr) = closed_reason {
+                    body["closedReason"] = json!(cr);
                 }
                 let result = ac.put(&format!("/tasks/{}", id), &body)?;
                 println!("✅ 任务 #{} 更新成功", id);

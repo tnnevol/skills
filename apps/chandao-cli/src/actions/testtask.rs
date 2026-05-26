@@ -179,7 +179,7 @@ pub fn handle_testtask(
             let data = ac.get(&format!(
                 "/products/{product}/testtasks?browseType={browse}&pageID={page}&recPerPage={limit}"
             ))?;
-            utils::print_table(
+            utils::print_list(
                 &data,
                 &[
                     "id",
@@ -202,7 +202,7 @@ pub fn handle_testtask(
             let data = ac.get(&format!(
                 "/projects/{project}/testtasks?pageID={page}&recPerPage={limit}"
             ))?;
-            utils::print_table(
+            utils::print_list(
                 &data,
                 &[
                     "id",
@@ -225,7 +225,7 @@ pub fn handle_testtask(
             let data = ac.get(&format!(
                 "/executions/{execution}/testtasks?pageID={page}&recPerPage={limit}"
             ))?;
-            utils::print_table(
+            utils::print_list(
                 &data,
                 &[
                     "id",

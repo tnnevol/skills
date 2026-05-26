@@ -163,7 +163,7 @@ pub fn handle_requirement(
                 "/products/{}/requirements?browse={}&pageID={}&recPerPage={}",
                 product, browse, page, limit
             ))?;
-            utils::print_table(
+            utils::print_list(
                 &data,
                 &["id", "title", "status", "pri", "assignedTo", "openedDate"],
             );

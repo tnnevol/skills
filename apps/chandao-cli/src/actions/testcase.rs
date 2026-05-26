@@ -139,7 +139,7 @@ pub fn handle_testcase(
                 format!("/testcases?pageID={}&recPerPage={}", page, limit)
             };
             let data = ac.get(&path)?;
-            utils::print_table(&data, &["id", "title", "status", "pri", "type", "stage"]);
+            utils::print_list(&data, &["id", "title", "status", "pri", "type", "stage"]);
             Ok(())
         }),
         TestcaseCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {

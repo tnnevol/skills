@@ -115,7 +115,7 @@ pub fn handle_productplan(
                     "/products/{}/productplans?pageID={}&recPerPage={}",
                     product, page, limit
                 ))?;
-                utils::print_table(
+                utils::print_list(
                     &data,
                     &["id", "title", "parent", "begin", "end", "status"],
                 );

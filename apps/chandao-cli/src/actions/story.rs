@@ -193,7 +193,7 @@ pub fn handle_story(
                 format!("/stories?browseType={}&orderBy={}&pageID={}&recPerPage={}", browse_type, order_by, page, limit)
             };
             let data = ac.get(&path)?;
-            utils::print_table(&data, &["id", "title", "status", "pri", "productName", "openedDate"]);
+            utils::print_list(&data, &["id", "title", "status", "pri", "productName", "openedDate"]);
             Ok(())
         }),
         StoryCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {

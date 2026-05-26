@@ -100,6 +100,134 @@ pub fn print_table(data: &Value, fields: &[&str]) {
     println!("\n共 {} 条", arr.len());
 }
 
+/// Print a list of items as a table with total count support.
+///
+/// Expects `data` to be either:
+/// - An array of objects (same as print_table)
+/// - An object with a data field and total/total_rec field
+///
+/// Displays total count when available from API response.
+pub fn print_list(data: &Value, fields: &[&str]) {
+    // Extract array and total from response
+    let (arr, total) = match data {
+        Value::Array(a) => (a, None),
+        Value::Object(obj) => {
+            // Try to find array in common API response fields
+            let arr = obj.get("data")
+                .or_else(|| obj.get("tasks"))
+                .or_else(|| obj.get("bugs"))
+                .or_else(|| obj.get("stories"))
+                .or_else(|| obj.get("executions"))
+                .or_else(|| obj.get("products"))
+                .or_else(|| obj.get("projects"))
+                .or_else(|| obj.get("users"))
+                .or_else(|| obj.get("testcases"))
+                .or_else(|| obj.get("testtasks"))
+                .or_else(|| obj.get("builds"))
+                .or_else(|| obj.get("releases"))
+                .or_else(|| obj.get("plans"))
+                .or_else(|| obj.get("programs"))
+                .or_else(|| obj.get("epics"))
+                .and_then(|v| v.as_array());
+
+            // Try to find total in common API response fields
+            let total = obj.get("total")
+                .or_else(|| obj.get("total_rec"))
+                .or_else(|| obj.get("recTotal"))
+                .and_then(|v| v.as_u64());
+
+            match arr {
+                Some(a) => (a, total),
+                None => {
+                    // Single object — treat as one-row table
+                    print_object_row(data, fields);
+                    return;
+                }
+            }
+        }
+        _ => {
+            println!("(no data)");
+            return;
+        }
+    };
+
+    if arr.is_empty() {
+        println!("📭 暂无数据");
+        return;
+    }
+
+    // Collect rows
+    let rows: Vec<Vec<String>> = arr
+        .iter()
+        .map(|item| {
+            fields
+                .iter()
+                .map(|f| {
+                    let val = item.get(f).and_then(|v| match v {
+                        Value::Null => None,
+                        other => Some(other.to_string().trim_matches('"').to_string()),
+                    });
+                    val.unwrap_or_else(|| "-".to_string())
+                })
+                .collect()
+        })
+        .collect();
+
+    // Calculate column widths
+    let headers: Vec<String> = fields.iter().map(|f| f.to_string()).collect();
+    let col_widths: Vec<usize> = headers
+        .iter()
+        .enumerate()
+        .map(|(i, h)| {
+            let max_content = rows
+                .iter()
+                .map(|r| r[i].chars().count())
+                .max()
+                .unwrap_or(0);
+            std::cmp::max(h.chars().count(), max_content)
+        })
+        .collect();
+
+    // Print header
+    let header_line: Vec<String> = headers
+        .iter()
+        .enumerate()
+        .map(|(i, h)| format!("{:^width$}", h, width = col_widths[i]))
+        .collect();
+    println!("| {} |", header_line.join(" | "));
+
+    // Print separator
+    let sep_line: Vec<String> = col_widths
+        .iter()
+        .map(|w| "-".repeat(*w))
+        .collect();
+    println!("| {} |", sep_line.join(" | "));
+
+    // Print rows
+    for row in &rows {
+        let row_line: Vec<String> = row
+            .iter()
+            .enumerate()
+            .map(|(i, cell)| {
+                let truncated = if cell.chars().count() > col_widths[i] {
+                    let truncated_chars: String = cell.chars().take(col_widths[i].saturating_sub(1)).collect();
+                    format!("{}…", truncated_chars)
+                } else {
+                    format!("{:width$}", cell, width = col_widths[i])
+                };
+                truncated
+            })
+            .collect();
+        println!("| {} |", row_line.join(" | "));
+    }
+
+    // Print count with total if available
+    match total {
+        Some(t) if t > arr.len() as u64 => println!("\n共 {} 条 (总数: {})", arr.len(), t),
+        _ => println!("\n共 {} 条", arr.len()),
+    }
+}
+
 fn print_object_row(obj: &Value, fields: &[&str]) {
     let row: Vec<String> = fields
         .iter()

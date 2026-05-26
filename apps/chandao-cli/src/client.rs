@@ -255,6 +255,7 @@ impl AuthenticatedClient {
 }
 
 /// Generate a random boundary string for multipart requests.
+#[allow(dead_code)]
 fn rand_boundary() -> u128 {
     use std::time::{SystemTime, UNIX_EPOCH};
     let ts = SystemTime::now()
@@ -268,12 +269,7 @@ fn rand_boundary() -> u128 {
 /// Build a multipart/form-data body containing text fields and one file.
 /// NOTE: This is kept as a reference but not currently used. The curl-based
 /// `post_multipart_curl` is used instead for file uploads.
-use std::fs;
-use std::path::Path;
-/// `fields` is a list of (field_name, value) pairs.
-/// `file_field` is the form field name for the file.
-/// `file_path` is the path to the file to upload.
-/// `file_name` is an optional override for the filename in the Content-Disposition.
+#[allow(dead_code)]
 fn build_multipart_body(
     boundary: &str,
     fields: &[(&str, &str)],

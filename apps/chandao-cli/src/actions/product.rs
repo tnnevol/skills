@@ -157,7 +157,7 @@ pub fn handle_product(
                     "/products?browseType={}&orderBy={}&recPerPage={}&pageID={}",
                     browse, order, limit, page
                 ))?;
-                utils::print_table(
+                utils::print_list(
                     &data,
                     &["id", "name", "code", "status", "PO", "QD", "RD", "type"],
                 );
@@ -307,7 +307,7 @@ pub fn handle_product(
                     "/programs/{}/products?pageID={}&recPerPage={}",
                     program, page, limit
                 ))?;
-                utils::print_table(
+                utils::print_list(
                     &data,
                     &["id", "name", "code", "status", "PO", "type"],
                 );
