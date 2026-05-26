@@ -19,7 +19,6 @@ pub struct Client {
 pub struct AuthenticatedClient {
     client: Client,
     auth: Rc<RefCell<AuthManager>>,
-    token: String,
 }
 
 impl Client {
@@ -27,14 +26,17 @@ impl Client {
         Client { base_url }
     }
 
-    pub fn authenticate(&self, auth: &Rc<RefCell<AuthManager>>) -> Result<AuthenticatedClient, String> {
-        let token = auth.borrow_mut().get_token(&self.base_url)?;
+    pub fn authenticate(
+        &self,
+        auth: &Rc<RefCell<AuthManager>>,
+    ) -> Result<AuthenticatedClient, String> {
+        // Validate token by getting it
+        auth.borrow_mut().get_token(&self.base_url)?;
         Ok(AuthenticatedClient {
             client: Client {
                 base_url: self.base_url.clone(),
             },
             auth: Rc::clone(auth),
-            token,
         })
     }
 }
@@ -49,15 +51,21 @@ impl AuthenticatedClient {
         format!("{}{}{}", self.client.base_url, API_PATH_PREFIX, clean)
     }
 
+    /// Get current token from AuthManager
+    fn get_token(&self) -> Result<String, String> {
+        self.auth.borrow_mut().get_token(&self.client.base_url)
+    }
+
     fn do_request(
         &mut self,
         method: &str,
         url: &str,
         body: Option<&Value>,
     ) -> Result<ureq::Response, String> {
+        let token = self.get_token()?;
         let req = ureq::request(method, url)
             .set("Content-Type", "application/json")
-            .set("token", &self.token);
+            .set("token", &token);
 
         let resp = match body {
             Some(b) => req.send_json(b),
@@ -68,14 +76,14 @@ impl AuthenticatedClient {
             Ok(r) => Ok(r),
             Err(ureq::Error::Status(401, _)) => {
                 // Token expired, refresh and retry
-                self.token = self
+                let new_token = self
                     .auth
                     .borrow_mut()
                     .refresh_token(&self.client.base_url)?;
 
                 let req2 = ureq::request(method, url)
                     .set("Content-Type", "application/json")
-                    .set("token", &self.token);
+                    .set("token", &new_token);
 
                 let resp2 = match body {
                     Some(b) => req2.send_json(b),
@@ -102,18 +110,23 @@ impl AuthenticatedClient {
     pub fn get(&mut self, endpoint: &str) -> Result<Value, String> {
         let url = self.build_url(endpoint);
         let resp = self.do_request("GET", &url, None)?;
-        let text = resp.into_string().map_err(|e| format!("读取响应失败: {}", e))?;
+        let text = resp
+            .into_string()
+            .map_err(|e| format!("读取响应失败: {}", e))?;
         if text.trim().is_empty() {
             return Ok(serde_json::json!([]));
         }
-        let body: Value = serde_json::from_str(&text).map_err(|e| format!("JSON 解析失败: {} (body: {:.200})", e, text))?;
+        let body: Value = serde_json::from_str(&text)
+            .map_err(|e| format!("JSON 解析失败: {} (body: {:.200})", e, text))?;
         Self::check_response(body)
     }
 
     pub fn post(&mut self, endpoint: &str, body: &Value) -> Result<Value, String> {
         let url = self.build_url(endpoint);
         let resp = self.do_request("POST", &url, Some(body))?;
-        let text = resp.into_string().map_err(|e| format!("读取响应失败: {}", e))?;
+        let text = resp
+            .into_string()
+            .map_err(|e| format!("读取响应失败: {}", e))?;
         if text.trim().is_empty() {
             return Ok(serde_json::json!({"status": "success"}));
         }
@@ -144,22 +157,20 @@ impl AuthenticatedClient {
         file_path: &str,
     ) -> Result<Value, String> {
         let url = self.build_url(endpoint);
+        let token = self.get_token()?;
         let mut cmd = std::process::Command::new("curl");
         cmd.arg("-s")
             .arg("-X")
             .arg("POST")
             .arg("-H")
-            .arg(format!("token: {}", self.token));
+            .arg(format!("token: {}", token));
         for (name, value) in fields {
             cmd.arg("-F").arg(format!("{}={}", name, value));
         }
-        cmd.arg("-F")
-            .arg(format!("{}@{}", file_field, file_path));
+        cmd.arg("-F").arg(format!("{}@{}", file_field, file_path));
         cmd.arg(&url);
 
-        let output = cmd
-            .output()
-            .map_err(|e| format!("curl 执行失败: {e}"))?;
+        let output = cmd.output().map_err(|e| format!("curl 执行失败: {e}"))?;
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -168,8 +179,7 @@ impl AuthenticatedClient {
             let code = output.status.code().unwrap_or(-1);
             // 401 → refresh token and retry once
             if code == 401 || stdout.contains("Not allowed") {
-                self.token = self
-                    .auth
+                self.auth
                     .borrow_mut()
                     .refresh_token(&self.client.base_url)?;
                 // Recursive retry (at most once, since retry won't 401 again)
@@ -191,11 +201,14 @@ impl AuthenticatedClient {
         if status == 204 {
             return Ok(serde_json::json!({"status": "success"}));
         }
-        let text = resp.into_string().map_err(|e| format!("读取响应失败: {}", e))?;
+        let text = resp
+            .into_string()
+            .map_err(|e| format!("读取响应失败: {}", e))?;
         if text.trim().is_empty() {
             return Ok(serde_json::json!({"status": "success"}));
         }
-        let body: Value = serde_json::from_str(&text).map_err(|e| format!("JSON 解析失败: {} (响应: {})", e, text))?;
+        let body: Value = serde_json::from_str(&text)
+            .map_err(|e| format!("JSON 解析失败: {} (响应: {})", e, text))?;
         Self::check_response(body)
     }
 
@@ -207,11 +220,14 @@ impl AuthenticatedClient {
         if status == 204 {
             return Ok(serde_json::json!({"deleted": true}));
         }
-        let text = resp.into_string().map_err(|e| format!("读取响应失败: {}", e))?;
+        let text = resp
+            .into_string()
+            .map_err(|e| format!("读取响应失败: {}", e))?;
         if text.trim().is_empty() {
             return Ok(serde_json::json!({"deleted": true}));
         }
-        let body: Value = serde_json::from_str(&text).map_err(|e| format!("JSON 解析失败: {} (响应: {})", e, text))?;
+        let body: Value = serde_json::from_str(&text)
+            .map_err(|e| format!("JSON 解析失败: {} (响应: {})", e, text))?;
         Self::check_response(body)
     }
 
@@ -238,13 +254,51 @@ impl AuthenticatedClient {
             return Ok(data.clone());
         }
         // Try entity-specific array keys (format: { status, <entity>s: [...] })
-        for key in &["executions", "tasks", "stories", "bugs", "testcases", "users", "products", "projects", "programs", "builds", "releases", "plans", "productplans", "requirements", "epics", "testtasks", "files", "systems"] {
+        for key in &[
+            "executions",
+            "tasks",
+            "stories",
+            "bugs",
+            "testcases",
+            "users",
+            "products",
+            "projects",
+            "programs",
+            "builds",
+            "releases",
+            "plans",
+            "productplans",
+            "requirements",
+            "epics",
+            "testtasks",
+            "files",
+            "systems",
+        ] {
             if let Some(items) = body.get(*key) {
                 return Ok(items.clone());
             }
         }
         // Also try single entity keys (format: { status, <entity>: {...} })
-        for key in &["execution", "task", "story", "bug", "testcase", "user", "product", "project", "program", "build", "release", "plan", "productplan", "requirement", "epic", "testtask", "file", "system"] {
+        for key in &[
+            "execution",
+            "task",
+            "story",
+            "bug",
+            "testcase",
+            "user",
+            "product",
+            "project",
+            "program",
+            "build",
+            "release",
+            "plan",
+            "productplan",
+            "requirement",
+            "epic",
+            "testtask",
+            "file",
+            "system",
+        ] {
             if let Some(item) = body.get(*key) {
                 return Ok(item.clone());
             }
@@ -263,7 +317,8 @@ fn rand_boundary() -> u128 {
         .unwrap_or_default()
         .as_nanos();
     // Mix in some pointer address for extra entropy
-    ts.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407)
+    ts.wrapping_mul(6364136223846793005)
+        .wrapping_add(1442695040888963407)
 }
 
 /// Build a multipart/form-data body containing text fields and one file.
@@ -290,8 +345,7 @@ fn build_multipart_body(
         body.extend_from_slice(dash_boundary.as_bytes());
         body.extend_from_slice(crlf.as_bytes());
         body.extend_from_slice(
-            format!("Content-Disposition: form-data; name=\"{name}\"{crlf}")
-                .as_bytes(),
+            format!("Content-Disposition: form-data; name=\"{name}\"{crlf}").as_bytes(),
         );
         body.extend_from_slice(crlf.as_bytes());
         body.extend_from_slice(value.as_bytes());
@@ -299,17 +353,14 @@ fn build_multipart_body(
     }
 
     // File field
-    let file_bytes = fs::read(file_path)
-        .map_err(|e| format!("无法读取文件 {file_path}: {e}"))?;
-    let actual_file_name = file_name
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| {
-            Path::new(file_path)
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("file")
-                .to_string()
-        });
+    let file_bytes = fs::read(file_path).map_err(|e| format!("无法读取文件 {file_path}: {e}"))?;
+    let actual_file_name = file_name.map(|s| s.to_string()).unwrap_or_else(|| {
+        Path::new(file_path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("file")
+            .to_string()
+    });
 
     body.extend_from_slice(dash_boundary.as_bytes());
     body.extend_from_slice(crlf.as_bytes());
@@ -346,7 +397,6 @@ mod tests {
                 base_url: "https://zentao.example.com".to_string(),
             },
             auth,
-            token: "test-token".to_string(),
         };
         let url = client.build_url("/users");
         assert_eq!(url, "https://zentao.example.com/api.php/v2/users");
