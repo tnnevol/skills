@@ -207,7 +207,7 @@ chandao bug resolve <id> --resolution fixed --assigned-to <原指派人> --resol
 | 情况 | 处理 |
 |------|------|
 | `command not found: chandao-cli` | 提示用户：`npm i -g @tnnevol/chandao-cli` |
-| 登录失败 | 提示检查 `~/.config/chandao/.env` 中的账号密码 |
+| 登录失败 | 提示检查环境变量 `CHANDAO_ACCOUNT` / `CHANDAO_PASSWORD` 是否正确 |
 | 无数据 | "📭 暂无数据" |
 | 网络错误 | 友好提示，不暴露内部细节 |
 | `--dry-run` 输出 | 展示将要执行的操作，询问用户是否确认 |

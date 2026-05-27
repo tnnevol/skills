@@ -40,14 +40,6 @@ export CHANDAO_ACCOUNT=your-username
 export CHANDAO_PASSWORD=***
 ```
 
-或在 `~/.config/chandao/.env` 创建配置文件：
-
-```
-CHANDAO_URL=https://your-zentao.com
-CHANDAO_ACCOUNT=your-username
-CHANDAO_PASSWORD=***
-```
-
 ## 功能与使用
 
 ### 帮助

@@ -16,17 +16,14 @@ impl Config {
     pub fn load() -> Result<Self, String> {
         let _ = dotenv();
 
-        let base_url = env::var("CHANDAO_URL").map_err(|_| {
-            "[CONFIG_MISSING] 缺少 CHANDAO_URL\n请设置环境变量或在 .env 文件中配置".to_string()
-        })?;
+        let base_url = env::var("CHANDAO_URL")
+            .map_err(|_| "缺少 CHANDAO_URL，请在环境变量中配置".to_string())?;
 
-        let account = env::var("CHANDAO_ACCOUNT").map_err(|_| {
-            "[CONFIG_MISSING] 缺少 CHANDAO_ACCOUNT\n请设置环境变量或在 .env 文件中配置".to_string()
-        })?;
+        let account = env::var("CHANDAO_ACCOUNT")
+            .map_err(|_| "缺少 CHANDAO_ACCOUNT，请在环境变量中配置".to_string())?;
 
-        let password = env::var("CHANDAO_PASSWORD").map_err(|_| {
-            "[CONFIG_MISSING] 缺少 CHANDAO_PASSWORD\n请设置环境变量或在 .env 文件中配置".to_string()
-        })?;
+        let password = env::var("CHANDAO_PASSWORD")
+            .map_err(|_| "缺少 CHANDAO_PASSWORD，请在环境变量中配置".to_string())?;
 
         Ok(Config {
             base_url: base_url.trim_end_matches('/').to_string(),

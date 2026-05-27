@@ -14,7 +14,7 @@
 npm i -g @tnnevol/chandao-cli
 ```
 
-配置禅道连接信息到 `~/.config/chandao/.env`：
+配置禅道连接信息（设置环境变量）：
 
 ```ini
 CHANDAO_URL=https://your-chandao.com
@@ -73,7 +73,7 @@ chandao-cli <module> <action> --help
 A: 运行 `npm i -g @tnnevol/chandao-cli` 安装。
 
 ### Q: 如何配置禅道连接？
-A: 创建 `~/.config/chandao/.env` 文件，填写 `CHANDAO_URL`、`CHANDAO_ACCOUNT`、`CHANDAO_PASSWORD` 三项。
+A: 设置环境变量 `CHANDAO_URL`、`CHANDAO_ACCOUNT`、`CHANDAO_PASSWORD`。
 
 ### Q: 支持哪些操作？
 A: 19 个模块的查询、创建、更新、删除及业务状态流转操作。详见命令表。

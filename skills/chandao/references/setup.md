@@ -17,38 +17,15 @@ chandao-cli version
 
 CLI 自动从以下位置加载配置（优先级从高到低）：
 
-1. **环境变量**（最高优先级）
-2. **`~/.config/chandao/.env`**（推荐方式）
-3. **当前目录 `.env`**
+1. **环境变量**
+2. **当前目录 `.env`**
 
-### 方式一：环境变量（推荐 CI/临时使用）
+### 环境变量
 
 ```bash
 export CHANDAO_URL=https://your-chandao.com
 export CHANDAO_ACCOUNT=your-username
 export CHANDAO_PASSWORD=***
-```
-
-### 方式二：配置文件（推荐日常使用）
-
-创建 `~/.config/chandao/.env`：
-
-```bash
-mkdir -p ~/.config/chandao
-```
-
-写入配置：
-
-```ini
-CHANDAO_URL=https://your-chandao.com
-CHANDAO_ACCOUNT=your-username
-CHANDAO_PASSWORD=***
-```
-
-**注意：** 配置文件包含敏感信息，请确保文件权限安全：
-
-```bash
-chmod 600 ~/.config/chandao/.env
 ```
 
 ## 认证机制

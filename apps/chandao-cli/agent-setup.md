@@ -25,18 +25,7 @@ chandao-cli version
 
 ### 2. 配置环境变量
 
-创建配置文件 `~/.config/chandao/.env`：
-
-```bash
-mkdir -p ~/.config/chandao
-cat > ~/.config/chandao/.env << 'EOF'
-CHANDAO_URL=https://your-zentao-instance.com
-CHANDAO_ACCOUNT=your-username
-CHANDAO_PASSWORD=your-password
-EOF
-```
-
-或导出环境变量：
+导出环境变量：
 
 ```bash
 export CHANDAO_URL=https://your-zentao-instance.com
@@ -127,11 +116,12 @@ npm install -g @tnnevol/chandao-cli
 Error: 登录失败
 ```
 
-**解决方案**：检查配置文件
+**解决方案**：检查环境变量是否已正确设置
 
 ```bash
-cat ~/.config/chandao/.env
-# 确认 CHANDAO_URL、CHANDAO_ACCOUNT、CHANDAO_PASSWORD 正确
+echo $CHANDAO_URL
+echo $CHANDAO_ACCOUNT
+# 确认配置正确
 ```
 
 ### Skill 未加载
