@@ -1,5 +1,8 @@
 {
   "name": "halo-skill-scripts",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "bin": {
+    "halo": "./halo.mjs"
+  }
 }

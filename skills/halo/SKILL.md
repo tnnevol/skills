@@ -12,7 +12,7 @@ Use this skill to manage blog posts via the Halo RESTful API — list, view, cre
 ## Security Guidelines
 
 1. **Never expose** the `HALO_PAT` (Personal Access Token) value in chat, files, code, or logs.
-2. **All API calls** must go through `node scripts/halo.mjs` in this skill directory — never use `curl`, `wget`, `fetch`, or other HTTP clients directly.
+2. **All API calls** must go through `node scripts/halo.mjs` in this skill directory.
 3. **Never read** `.env` files or echo credential values in conversation output.
 4. Sensitive values in API responses are automatically sanitized.
 
@@ -65,10 +65,9 @@ All API calls go through the JS scripts in `scripts/` directory:
 3. **Optimistic Locking** — Updates require `metadata.version`. The script auto-fetches the latest version and retries on 409 conflict.
 4. **metadata.name Rules** — ≤253 characters, only lowercase letters, digits, and hyphens. The `create` action auto-generates a name as `{slug}-{timestamp}`.
 5. **Search Tip** — When searching Halo documentation online, use `site:docs.halo.run` to avoid game-related content pollution.
-6. **Content Format** — Fixed to `rawType: HTML`. The Agent outputs HTML directly — no Markdown conversion.
-7. **Visibility** — Default is `PRIVATE`. Use `--public` to set to PUBLIC.
-8. **Slug Auto-generation** — CJK characters are preserved in slugs (Halo supports Unicode). Special characters are replaced with hyphens.
-9. **Error Handling** — The script provides localized error messages: 401 → 认证失败, 403 → 无权限, 404 → 资源不存在, 409 → 版本冲突已重试.
+6. **Visibility** — Default is `PRIVATE`. Use `--public` to set to PUBLIC.
+7. **Slug Auto-generation** — CJK characters are preserved in slugs (Halo supports Unicode). Special characters are replaced with hyphens.
+8. **Error Handling** — The script provides localized error messages: 401 → 认证失败, 403 → 无权限, 404 → 资源不存在, 409 → 版本冲突已重试.
 
 ## Environment Variables
 
