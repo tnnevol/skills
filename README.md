@@ -25,7 +25,6 @@ CLI 工具可直接被 AI Agent 调用，实现自动化管理。
 | CLI 工具 | 说明 | 接入指南 |
 |----------|------|----------|
 | chandao-cli | 禅道项目管理 | [Agent Setup Guide](apps/chandao-cli/agent-setup.md) |
-| halo-cli | Halo 博客管理 | [Agent Setup Guide](apps/halo-cli/agent-setup.md) |
 
 ## 技能列表
 
