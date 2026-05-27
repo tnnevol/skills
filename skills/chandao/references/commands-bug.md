@@ -29,3 +29,15 @@
 | `--severity` | `1` 致命 · `2` 严重 · `3` 一般 · `4` 建议 | 严重程度（默认 3） |
 | `--pri` | `1` 紧急 · `2` 高 · `3` 中 · `4` 低 | 优先级（默认 3） |
 | `--resolution` | `fixed` 已修复 · `notrepro` 无法重现 · `bydesign` 设计如此 · `duplicate` 重复 Bug · `external` 外部原因 · `postponed` 延期处理 · `willnotfix` 不予解决 · `tostory` 转为需求 | 解决方案（resolve 时必填） |
+
+### ⚠️ 更新操作前必须先获取当前值
+
+**问题**：禅道 API 的 PUT 请求会将未包含的字段重置为默认值。
+
+**正确流程**：
+1. 先执行 `<module> get <id>` 获取当前值
+2. 保留需要保持不变的字段值
+3. 只修改需要更新的字段
+4. 将所有字段一起发送更新请求
+
+**详见**：`references/pitfalls.md` 第 23 条

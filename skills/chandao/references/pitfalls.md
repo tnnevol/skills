@@ -204,6 +204,54 @@ chandao-cli 子项目**不应**有自己的 `.gitignore`。skills 根目录的 `
 
 同一个角色在不同产品下可能有不同的权限。测试 API 时应指定目标产品 ID。
 
+## 23. PUT 请求会重置未包含字段为默认值
+
+**这是最重要的踩坑记录**。禅道 API 的 PUT 请求行为：**未包含在请求体中的字段会被重置为默认值**。
+
+### 问题复现
+
+```bash
+# 1. 需求优先级为 2
+chandao-cli story get 38 | grep '"pri"'
+# 输出: "pri": 2
+
+# 2. 更新标题（不带 --pri）
+chandao-cli story update 38 --title "新标题"
+
+# 3. 检查优先级
+chandao-cli story get 38 | grep '"pri"'
+# 输出: "pri": 3  ← 被重置为默认值了！
+```
+
+### 根因
+
+禅道 API 的 PUT `/stories/{id}` 接口，当请求体不包含某个字段时，会将该字段重置为默认值（如 `pri` 默认为 3）。
+
+### 解决方案
+
+**更新前必须先获取当前值**，将所有现有字段包含在更新请求中：
+
+```bash
+# 1. 获取当前需求
+chandao story get 38
+# 返回: {"pri": 2, "title": "原标题", "category": "feature", ...}
+
+# 2. 更新标题时，保留优先级等其他字段
+chandao story update 38 --title "新标题" --pri 2 --category feature
+```
+
+### 影响范围
+
+此问题可能影响所有实体的 update 操作：
+- `story update` — ✅ 已确认存在
+- `bug update` — 可能存在
+- `task update` — 可能存在
+- `execution update` — 可能存在
+- `project update` — 可能存在
+- `product update` — 可能存在
+
+**建议**：所有 update 操作都应先获取当前值，再合并用户指定的字段。
+
 ## 开发与发布
 
 chandao-cli 是 skills monorepo (`github.com:tnnevol/skills`) 下的应用，与 halo-cli 框架对齐。

@@ -65,15 +65,9 @@ pub enum TestcaseCommands {
         /// Preconditions
         #[arg(long)]
         precondition: Option<String>,
-        /// Steps (JSON array of {step,expect})
+        /// Steps (JSON array of {step, expect, type})
         #[arg(long)]
         steps: Option<String>,
-        /// Expected results (overrides expect from steps JSON)
-        #[arg(long)]
-        expect: Option<String>,
-        /// Step type (step/group)
-        #[arg(long, default_value = "step")]
-        step_type: Option<String>,
         /// Story ID
         #[arg(long)]
         story: Option<i64>,
@@ -100,7 +94,7 @@ pub enum TestcaseCommands {
         /// Preconditions
         #[arg(long)]
         precondition: Option<String>,
-        /// Steps (JSON array of {step,expect})
+        /// Steps (JSON array of {step, expect, type})
         #[arg(long)]
         steps: Option<String>,
         /// Story ID
@@ -172,8 +166,6 @@ pub fn handle_testcase(
             pri,
             precondition,
             steps,
-            expect,
-            step_type,
             story,
             project,
             execution,
@@ -208,7 +200,7 @@ pub fn handle_testcase(
                 if let Some(e) = execution {
                     body["execution"] = json!(e);
                 }
-                // Parse steps JSON [{step, expect}] into parallel arrays
+                // Parse steps JSON [{step, expect, type}] into parallel arrays
                 if let Some(s) = steps {
                     if let Ok(parsed) = serde_json::from_str::<Vec<serde_json::Value>>(&s) {
                         let step_strs: Vec<String> = parsed
@@ -229,21 +221,27 @@ pub fn handle_testcase(
                                     .to_string()
                             })
                             .collect();
+                        let type_strs: Vec<String> = parsed
+                            .iter()
+                            .map(|v| {
+                                v.get("type")
+                                    .and_then(|s| s.as_str())
+                                    .unwrap_or("step")
+                                    .to_string()
+                            })
+                            .collect();
+                        // Validate: step type requires expect
+                        for (i, (t, e)) in type_strs.iter().zip(expect_strs.iter()).enumerate() {
+                            if t == "step" && e.is_empty() {
+                                return Err(format!("步骤 {} (type=step) 必须传入 expect", i + 1));
+                            }
+                        }
                         body["steps"] = json!(step_strs);
                         body["expects"] = json!(expect_strs);
-                        body["stepType"] = json!(vec![
-                            step_type.as_deref().unwrap_or("step");
-                            step_strs.len()
-                        ]);
+                        body["stepType"] = json!(type_strs);
                     } else {
-                        body["steps"] = json!([s]);
-                        body["expects"] = json!([expect.as_deref().unwrap_or("")]);
-                        body["stepType"] = json!([step_type.as_deref().unwrap_or("step")]);
+                        return Err("steps 参数必须是 JSON 数组，格式: [{\"step\": \"步骤\", \"expect\": \"期望\", \"type\": \"step\"}]".to_string());
                     }
-                } else if let Some(e) = expect {
-                    body["steps"] = json!([""]);
-                    body["expects"] = json!([e]);
-                    body["stepType"] = json!([step_type.as_deref().unwrap_or("step")]);
                 }
                 let result = ac.post("/testcases", &body)?;
                 println!("✅ 测试用例创建成功");
@@ -290,7 +288,7 @@ pub fn handle_testcase(
                 if let Some(s) = story {
                     body["story"] = json!(s);
                 }
-                // Parse steps JSON [{step, expect}] into parallel arrays
+                // Parse steps JSON [{step, expect, type}] into parallel arrays
                 if let Some(s) = steps {
                     if let Ok(parsed) = serde_json::from_str::<Vec<serde_json::Value>>(&s) {
                         let step_strs: Vec<String> = parsed
@@ -311,13 +309,26 @@ pub fn handle_testcase(
                                     .to_string()
                             })
                             .collect();
+                        let type_strs: Vec<String> = parsed
+                            .iter()
+                            .map(|v| {
+                                v.get("type")
+                                    .and_then(|s| s.as_str())
+                                    .unwrap_or("step")
+                                    .to_string()
+                            })
+                            .collect();
+                        // Validate: step type requires expect
+                        for (i, (t, e)) in type_strs.iter().zip(expect_strs.iter()).enumerate() {
+                            if t == "step" && e.is_empty() {
+                                return Err(format!("步骤 {} (type=step) 必须传入 expect", i + 1));
+                            }
+                        }
                         body["steps"] = json!(step_strs);
                         body["expects"] = json!(expect_strs);
-                        body["stepType"] = json!(vec!["step"; step_strs.len()]);
+                        body["stepType"] = json!(type_strs);
                     } else {
-                        body["steps"] = json!([s]);
-                        body["expects"] = json!([""]);
-                        body["stepType"] = json!(["step"]);
+                        return Err("steps 参数必须是 JSON 数组，格式: [{\"step\": \"步骤\", \"expect\": \"期望\", \"type\": \"step\"}]".to_string());
                     }
                 }
                 let result = ac.put(&format!("/testcases/{}", id), &body)?;

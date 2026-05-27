@@ -80,3 +80,15 @@
 | `link-products <id>` | `id`, `--products` | ✅ | 关联产品 ID（逗号分隔） |
 | `link-products <id>` | `--plans` | ❌ | 计划映射 JSON |
 | `delete <id>` | `id`, `--yes` | ✅ | 删除，需 `--yes` 确认 |
+
+### ⚠️ 更新操作前必须先获取当前值
+
+**问题**：禅道 API 的 PUT 请求会将未包含的字段重置为默认值。
+
+**正确流程**：
+1. 先执行 `<module> get <id>` 获取当前值
+2. 保留需要保持不变的字段值
+3. 只修改需要更新的字段
+4. 将所有字段一起发送更新请求
+
+**详见**：`references/pitfalls.md` 第 23 条

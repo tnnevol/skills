@@ -37,6 +37,32 @@
 | `/chandao story delete <id>` | 删除需求 |
 | `/chandao story change <id> --reviewer <account> [--title <title>] [--spec <desc>] [--verify <criteria>]` | 变更需求（**必须**指定 `--reviewer`） |
 
+### ⚠️ 更新需求前必须先获取当前值
+
+**问题**：禅道 API 的 PUT 请求会将未包含的字段重置为默认值。例如：需求优先级为2，只更新标题后优先级会变成默认值3。
+
+**正确流程**：
+1. 先执行 `story get <id>` 获取当前需求的所有字段值
+2. 保留需要保持不变的字段值
+3. 只修改需要更新的字段
+4. 将所有字段一起发送更新请求
+
+**示例**：
+```bash
+# 1. 获取当前需求
+chandao story get 38
+# 返回: {"pri": 2, "title": "原标题", "category": "feature", ...}
+
+# 2. 更新标题时，保留优先级等其他字段
+chandao story update 38 --title "新标题" --pri 2 --category feature
+```
+
+**错误示例（会导致字段被覆盖）**：
+```bash
+# ❌ 只更新标题，优先级会被重置为默认值3
+chandao story update 38 --title "新标题"
+```
+
 ### 字段枚举值
 
 | 字段 | 枚举值 | 说明 |

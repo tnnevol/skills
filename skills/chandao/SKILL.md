@@ -98,6 +98,22 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 | 融合敏捷 / Agile Plus | `--model` | `agileplus` |
 | 融合瀑布 / Waterfall Plus | `--model` | `waterfallplus` |
 
+
+### 通用更新规则
+
+**⚠️ 所有更新操作前必须先获取当前值**
+禅道 API 的 PUT 请求会将未包含的字段重置为默认值（如优先级会从2变成3）。
+
+**正确流程**：
+1. 先执行 `<module> get <id>` 获取当前值
+2. 保留需要保持不变的字段值
+3. 只修改需要更新的字段
+4. 将所有字段一起发送更新请求
+
+**影响范围**：`story update`、`task update`、`execution update`、`bug update`、`epic update` 等所有 update 操作。
+
+**详见**：`references/pitfalls.md` 第 23 条
+
 ### 模糊指令处理
 
 - "看下项目" / "查看项目" / "项目详情" **未提供 ID** → 追问用户："请提供项目 ID"
@@ -119,7 +135,6 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - 需求描述（`--spec`）和验收标准（`--verify`）字段**必须使用 HTML 格式**
 - 不可使用 Markdown 格式（如 `# 标题`、`**粗体**`、`- 列表`）
 - 应使用 HTML 标签（如 `<h2>标题</h2>`、`<strong>粗体</strong>`、`<ul><li>列表</li></ul>`）
-
 ### 任务管理
 - "列出任务" / "任务列表" → `task list`
 - "任务详情" / "查看任务" → `task get <id>`
@@ -128,7 +143,6 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - "完成任务" → `task finish`
 - "关闭任务" → `task close`
 - "删除任务" → `task delete`
-
 ### 迭代/执行管理
 - "列出执行" / "迭代列表" → `execution list`
 - "执行详情" / "查看迭代" → `execution get <id>`
@@ -139,7 +153,6 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - "关闭执行" / "关闭迭代" → `execution close`
 - "关联产品" / "绑定产品" → `execution link-products`
 - "删除执行" / "删除迭代" → `execution delete`
-
 ### Bug 管理
 - "Bug 列表" / "列出 Bug" → `bug list`
 - "产品 N 的 Bug" → `bug list --product N`
@@ -152,7 +165,6 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - "关闭 Bug N" → `bug close`
 - "重新打开 Bug N" / "激活 Bug N" → `bug activate`
 - "删除 Bug N" → `bug delete`（需用户确认）
-
 ### 史诗管理
 - "史诗列表" / "列出史诗" → `epic list-by-product`
 - "史诗详情" → `epic get`
@@ -163,7 +175,6 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - 史诗描述（`--spec`）和验收标准（`--verify`）字段**必须使用 HTML 格式**
 - 不可使用 Markdown 格式（如 `# 标题`、`**粗体**`、`- 列表`）
 - 应使用 HTML 标签（如 `<h2>标题</h2>`、`<strong>粗体</strong>`、`<ul><li>列表</li></ul>`）
-
 ### 测试管理
 - "测试用例列表" → `testcase list`
 - "产品 N 的用例" → `testcase list --product N`
@@ -175,6 +186,13 @@ which chandao-cli || npm i -g @tnnevol/chandao-cli
 - "删除测试用例" / "删除用例 N" → `testcase delete`（需用户确认）
 - "测试单列表" → `testtask list-by-product`
 - "创建测试单" → `testtask create`
+
+**⚠️ 重要：测试用例步骤与预期格式要求**
+- 测试用例**必须包含步骤（`--steps`）**，步骤中通过 `expect` 字段指定预期
+- 步骤和预期均使用**纯文本**，**禁止使用 HTML 和 Markdown**
+- API 期望平行数组格式：`steps: ["步骤1", "步骤2"]`, `expects: ["期望1", "期望2"]`
+- CLI `--steps` 格式：`[{"step": "步骤1", "expect": "期望1", "type": "step"}, ...]`
+- `type` 仅支持 `step`
 
 ### 项目集管理
 - "项目集列表" / "有哪些项目集" → `program list`
@@ -234,13 +252,14 @@ chandao bug resolve <id> --resolution fixed --assigned-to <原指派人> --resol
 - ⚠️ `user create` 必须传 `--password`
 - ⚠️ 403 错误可能是参数名错误、用户无角色、或角色缺少模块权限
 - ⚠️ **spec/verify 字段必须使用 HTML 格式**：需求描述（`--spec`）和验收标准（`--verify`）字段必须使用 HTML 格式，不可使用 Markdown
+- ⚠️ **PUT 请求会重置未包含字段为默认值**：禅道 API 的 PUT 请求会将未包含在请求体中的字段重置为默认值。更新操作前必须先获取当前值，再合并用户指定的字段。详见 `references/pitfalls.md` 第 23 条
 
 ## References
 
 | 文件 | 说明 |
 |------|------|
 | [references/commands-*.md](references/) | 按模块拆分的命令详情（14 个文件） |
-| [references/pitfalls.md](references/pitfalls.md) | 完整踩坑记录（22 条） |
+| [references/pitfalls.md](references/pitfalls.md) | 完整踩坑记录（23 条） |
 | [references/setup.md](references/setup.md) | 安装与配置 |
 | [references/help.md](references/help.md) | 常见问题 |
 | [references/zentao-v2-api-fields.md](references/zentao-v2-api-fields.md) | v2 API 必填参数速查 |
