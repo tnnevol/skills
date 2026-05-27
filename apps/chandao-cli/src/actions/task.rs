@@ -139,6 +139,9 @@ pub enum TaskCommands {
     /// Activate task (reactivate a task)
     Activate {
         id: i64,
+        /// Hours remaining (required by ZenTao API)
+        #[arg(long)]
+        left: f64,
         #[arg(short, long)]
         comment: Option<String>,
         #[arg(long)]
@@ -377,6 +380,7 @@ pub fn handle_task(
         }
         TaskCommands::Activate {
             id,
+            left,
             comment,
             dry_run,
         } => {
@@ -385,7 +389,7 @@ pub fn handle_task(
                 return Ok(());
             }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
-                let mut body = json!({});
+                let mut body = json!({"left": left});
                 if let Some(c) = comment {
                     body["comment"] = json!(c);
                 }
