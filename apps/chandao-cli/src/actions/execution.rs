@@ -80,6 +80,9 @@ pub enum ExecutionCommands {
         /// ACL (open/private)
         #[arg(long)]
         acl: Option<String>,
+        /// Description
+        #[arg(short = 'd', long)]
+        desc: Option<String>,
         /// Dry run
         #[arg(long)]
         dry_run: bool,
@@ -242,6 +245,7 @@ pub fn handle_execution(
             pm,
             rd,
             acl,
+            desc,
             dry_run,
         } => {
             if *dry_run {
@@ -285,6 +289,9 @@ pub fn handle_execution(
                 }
                 if let Some(a) = acl {
                     body["acl"] = json!(a);
+                }
+                if let Some(d) = desc {
+                    body["desc"] = json!(d);
                 }
                 let result = ac.post("/executions", &body)?;
                 println!("✅ 执行创建成功");
