@@ -1,6 +1,6 @@
 [package]
 name = "chandao-cli"
-version = "2.1.0"
+version = "2.1.1"
 description = "CLI tool for 禅道 (ZenTao) project management system via RESTful API v2"
 license = "MIT"
 repository = "https://github.com/tnnevol/skills"
