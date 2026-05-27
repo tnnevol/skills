@@ -47,7 +47,15 @@ export async function actionList(clients, { page = 1, limit = 20, keyword } = {}
 }
 
 export async function actionGet(clients, name) {
-  const res = await clients.ext.get(`/posts/${name}`);
+  let res;
+  try {
+    res = await clients.ext.get(`/posts/${name}`);
+  } catch (err) {
+    if (err.status === 404) {
+      throw new HaloError(`文章不存在: ${name}`);
+    }
+    throw err;
+  }
   const meta = res.metadata || {};
   const spec = res.spec || {};
   const slug = spec.slug || name;
@@ -85,18 +93,17 @@ export async function actionCreate(clients, { title, content, contentFile, slug,
     post: {
       metadata: {
         name,
-        annotations: {},
       },
       spec: {
         title,
         slug: resolvedSlug,
         visible: isPublic ? 'PUBLIC' : 'PRIVATE',
-        publishTime: null,
         pinned: false,
         allowComment: true,
-        template: '',
-        cover: [],
-        htmlMetas: [],
+        deleted: false,
+        excerpt: { raw: '', autoGenerate: true },
+        priority: 0,
+        publish: !!publish,
       },
       apiVersion: 'content.halo.run/v1alpha1',
       kind: 'Post',
@@ -206,9 +213,6 @@ export async function actionUpdate(clients, name, { title, content, contentFile,
 
   if (Object.keys(updatedSpec).length > 0 || Object.keys(updatedPost.metadata).length > 0) {
     updatedSpec.slug = updatedSpec.slug || '';
-    updatedSpec.template = updatedSpec.template || '';
-    updatedSpec.cover = updatedSpec.cover || [];
-    updatedSpec.htmlMetas = updatedSpec.htmlMetas || [];
 
     updatedPost.metadata.version = newVersion;
 
