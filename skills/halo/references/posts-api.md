@@ -66,5 +66,5 @@ Halo 有两套文章相关 API：
 
 | API | 基地址 | 用途 |
 |-----|--------|------|
-| **Console API** | `/apis/api.console.halo.run/v1alpha1/posts` | 管理操作（创建、发布） |
-| **Extension API** | `/apis/content.halo.run/v1alpha1/posts` | 内容查询（列表、详情、删除） |
+| **Console API** | `/apis/api.console.halo.run/v1alpha1/posts` | 创建、发布、取消发布、内容更新 |
+| **Extension API** | `/apis/content.halo.run/v1alpha1/posts` | 内容查询、更新、删除 |
