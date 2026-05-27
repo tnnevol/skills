@@ -12,26 +12,26 @@ Use this skill to manage blog posts via the Halo RESTful API — list, view, cre
 ## Security Guidelines
 
 1. **Never expose** the `HALO_PAT` (Personal Access Token) value in chat, files, code, or logs.
-2. **All API calls** must go through `npx -y @tnnevol/halo-cli` — never use `curl`, `wget`, `fetch`, or other HTTP clients directly.
+2. **All API calls** must go through `node scripts/halo.mjs` in this skill directory — never use `curl`, `wget`, `fetch`, or other HTTP clients directly.
 3. **Never read** `.env` files or echo credential values in conversation output.
 4. Sensitive values in API responses are automatically sanitized.
 
 ## How to Execute
 
-Match the action from the table below.
-If no arguments or unrecognized action, show the help table.
-
-### Calling Convention
-
-When the user types `/halo <action>`, execute via npm package:
+When the user types `/halo <action>`, execute via Node.js script:
 
 ```
-/halo list  →  npx -y @tnnevol/halo-cli list
-/halo get my-post  →  npx -y @tnnevol/halo-cli get my-post
-/halo create --title=标题 --raw=内容  →  npx -y @tnnevol/halo-cli create --title=标题 --raw=内容
+/halo list                          →  node scripts/halo.mjs list
+/halo get my-post                   →  node scripts/halo.mjs get my-post
+/halo create --title=标题 --content=内容  →  node scripts/halo.mjs create --title=标题 --content=内容
 ```
 
-Alternatively, install globally: `npm install -g @tnnevol/halo-cli` then use `halo-cli <action>`.
+All API calls go through the JS scripts in `scripts/` directory:
+- `scripts/halo.mjs` — CLI entry point
+- `scripts/lib/client.mjs` — HTTP client (Extension API + Console API)
+- `scripts/lib/config.mjs` — environment variable loading
+- `scripts/lib/actions.mjs` — business logic (list/get/create/update/delete/publish/unpublish)
+- `scripts/lib/utils.mjs` — utilities (slugify, time formatting, link building)
 
 ## Actions
 
@@ -40,28 +40,30 @@ Alternatively, install globally: `npm install -g @tnnevol/halo-cli` then use `ha
 | `help` | `/halo help` | 显示帮助信息 |
 | `list` | `/halo list [--limit=N] [--page=N] [--keyword=xxx]` | 列出文章 |
 | `get` | `/halo get <name>` | 获取文章详情 |
-| `create` | `/halo create --title=标题 --raw=内容 [--slug=xxx] [--publish] [--public]` | 创建文章（默认 PRIVATE + HTML 格式） |
-| `update` | `/halo update <name> [--title=xxx] [--raw=xxx] [--content=xxx]` | 更新文章 |
+| `create` | `/halo create --title=标题 --content=内容 [--slug=xxx] [--publish] [--public]` | 创建文章（默认 PRIVATE，HTML 格式） |
+| `update` | `/halo update <name> [--title=xxx] [--content=xxx] [--content-file=xxx]` | 更新文章 |
 | `delete` | `/halo delete <name>` | 删除文章 |
 | `publish` | `/halo publish <name>` | 发布文章 |
 | `unpublish` | `/halo unpublish <name>` | 取消发布 |
 
 ### Parameter Details
 
-- `--raw`: Accepts Markdown content, which is converted to HTML using goldmark before sending to Halo API
-- `--content`: Accepts pre-rendered HTML content, sent directly to Halo API without conversion
+- `--content`: HTML content, sent directly to Halo API without conversion
+- `--content-file`: local HTML file path, content is read and sent as `--content`
 - `--publish`: Publish the article immediately after creation
 - `--public`: Set visibility to PUBLIC (default is PRIVATE)
 
 ## ⚠️ Important Notes
 
 1. **Console API vs Extension API** — create/publish/unpublish use **Console API** which triggers snapshot creation. list/get/update/delete use **Extension API**.
-2. **Request Body Format** — Console API requires **nested format**, Extension API uses flat format.
-3. **Optimistic Locking** — Updates require `metadata.version`. The binary auto-fetches the latest version before updating.
-4. **metadata.name Rules** — ≤253 characters, only lowercase letters, digits, and hyphens. The `create` action auto-generates a valid slug from the title if `--slug` is not provided.
+2. **Request Body Format** — Console API create requires **nested format** (`{ post: {...}, content: { raw, rawType } }`). Extension API update uses flat Post object.
+3. **Optimistic Locking** — Updates require `metadata.version`. The script auto-fetches the latest version and retries on 409 conflict.
+4. **metadata.name Rules** — ≤253 characters, only lowercase letters, digits, and hyphens. The `create` action auto-generates a name as `{slug}-{timestamp}`.
 5. **Search Tip** — When searching Halo documentation online, use `site:docs.halo.run` to avoid game-related content pollution.
-6. **Content Format** — Fixed to `rawType: HTML` (Halo only uses HTML format). Markdown content will be converted to HTML via goldmark.
+6. **Content Format** — Fixed to `rawType: HTML`. The Agent outputs HTML directly — no Markdown conversion.
 7. **Visibility** — Default is `PRIVATE`. Use `--public` to set to PUBLIC.
+8. **Slug Auto-generation** — CJK characters are preserved in slugs (Halo supports Unicode). Special characters are replaced with hyphens.
+9. **Error Handling** — The script provides localized error messages: 401 → 认证失败, 403 → 无权限, 404 → 资源不存在, 409 → 版本冲突已重试.
 
 ## Environment Variables
 
@@ -70,4 +72,4 @@ HALO_BASE_URL=https://your-halo-instance.com
 HALO_PAT=pat_your-personal-access-token
 ```
 
-These are loaded from `.env` in the skill directory or project root. See `references/setup.md` for details.
+These are loaded with priority order: process environment variables > skill directory `.env` > project root `.env`. See `references/setup.md` for details.
