@@ -3,9 +3,9 @@ use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::utils;
 use crate::auth::AuthManager;
-use crate::client::{Client, AuthenticatedClient};
+use crate::client::{AuthenticatedClient, Client};
+use crate::utils;
 
 macro_rules! with_auth {
     ($client:expr, $auth:expr, $body:expr) => {{
@@ -13,8 +13,6 @@ macro_rules! with_auth {
         $body(&mut ac)
     }};
 }
-
-
 
 #[derive(Subcommand)]
 pub enum BugCommands {
@@ -82,6 +80,9 @@ pub enum BugCommands {
         /// Browser
         #[arg(long)]
         browser: Option<String>,
+        /// Test Case ID
+        #[arg(long)]
+        case: Option<i64>,
         /// Dry run
         #[arg(long)]
         dry_run: bool,
@@ -118,6 +119,9 @@ pub enum BugCommands {
         /// Story ID
         #[arg(long)]
         story: Option<i64>,
+        /// Test Case ID
+        #[arg(long)]
+        case: Option<i64>,
         #[arg(long)]
         dry_run: bool,
     },
@@ -173,16 +177,24 @@ pub enum BugCommands {
     },
 }
 
-
 pub fn handle_bug(
     client: &Client,
     auth: &Rc<RefCell<AuthManager>>,
     cmd: &BugCommands,
 ) -> Result<(), String> {
     match cmd {
-        BugCommands::List { product, project, execution, page, limit } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
+        BugCommands::List {
+            product,
+            project,
+            execution,
+            page,
+            limit,
+        } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
             let path = if let Some(e) = execution {
-                format!("/executions/{}/bugs?pageID={}&recPerPage={}", e, page, limit)
+                format!(
+                    "/executions/{}/bugs?pageID={}&recPerPage={}",
+                    e, page, limit
+                )
             } else if let Some(j) = project {
                 format!("/projects/{}/bugs?pageID={}&recPerPage={}", j, page, limit)
             } else if let Some(p) = product {
@@ -191,7 +203,11 @@ pub fn handle_bug(
                 format!("/bugs?pageID={}&recPerPage={}", page, limit)
             };
             let data = ac.get(&path)?;
-            utils::print_list(&data, &["id", "title", "status", "severity", "pri", "assignedTo"], Some(*limit));
+            utils::print_list(
+                &data,
+                &["id", "title", "status", "severity", "pri", "assignedTo"],
+                Some(*limit),
+            );
             Ok(())
         }),
         BugCommands::Get { id } => with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
@@ -199,8 +215,28 @@ pub fn handle_bug(
             utils::print_json(&data);
             Ok(())
         }),
-        BugCommands::Create { product, title, assigned, pri, severity, r#type, opened_build, desc, module, execution, task, story, os, browser, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 创建Bug: {}", title); return Ok(()); }
+        BugCommands::Create {
+            product,
+            title,
+            assigned,
+            pri,
+            severity,
+            r#type,
+            opened_build,
+            desc,
+            module,
+            execution,
+            task,
+            story,
+            os,
+            browser,
+            case,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 创建Bug: {}", title);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({"productID": product, "title": title});
                 if let Some(t) = r#type {
@@ -209,16 +245,39 @@ pub fn handle_bug(
                 if let Some(ob) = opened_build {
                     body["openedBuild"] = json!([ob]);
                 }
-                if let Some(a) = assigned { body["assignedTo"] = json!(a); }
-                if let Some(p) = pri { body["pri"] = json!(p); }
-                if let Some(s) = severity { body["severity"] = json!(s); }
-                if let Some(d) = desc { body["steps"] = json!(d); }
-                if let Some(m) = module { body["module"] = json!(m); }
-                if let Some(e) = execution { body["execution"] = json!(e); }
-                if let Some(t) = task { body["task"] = json!(t); }
-                if let Some(s) = story { body["story"] = json!(s); }
-                if let Some(o) = os { body["os"] = json!(o); }
-                if let Some(b) = browser { body["browser"] = json!(b); }
+                if let Some(a) = assigned {
+                    body["assignedTo"] = json!(a);
+                }
+                if let Some(p) = pri {
+                    body["pri"] = json!(p);
+                }
+                if let Some(s) = severity {
+                    body["severity"] = json!(s);
+                }
+                if let Some(d) = desc {
+                    body["steps"] = json!(d);
+                }
+                if let Some(m) = module {
+                    body["module"] = json!(m);
+                }
+                if let Some(e) = execution {
+                    body["execution"] = json!(e);
+                }
+                if let Some(t) = task {
+                    body["task"] = json!(t);
+                }
+                if let Some(s) = story {
+                    body["story"] = json!(s);
+                }
+                if let Some(o) = os {
+                    body["os"] = json!(o);
+                }
+                if let Some(b) = browser {
+                    body["browser"] = json!(b);
+                }
+                if let Some(c) = case {
+                    body["case"] = json!(c);
+                }
                 let result = ac.post("/bugs", &body)?;
                 println!("✅ Bug创建成功");
                 utils::print_json(&result);
@@ -238,6 +297,7 @@ pub fn handle_bug(
             project,
             execution,
             story,
+            case,
             dry_run,
         } => {
             if *dry_run {
@@ -279,50 +339,102 @@ pub fn handle_bug(
                 if let Some(s) = story {
                     body["story"] = json!(s);
                 }
+                if let Some(c) = case {
+                    body["case"] = json!(c);
+                }
                 let result = ac.put(&format!("/bugs/{}", id), &body)?;
                 println!("✅ Bug #{} 更新成功", id);
                 utils::print_json(&result);
                 Ok(())
             })
         }
-        BugCommands::Resolve { id, resolution, comment, resolved_date, resolved_build, assigned_to, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 解决Bug #{}: {}", id, resolution); return Ok(()); }
+        BugCommands::Resolve {
+            id,
+            resolution,
+            comment,
+            resolved_date,
+            resolved_build,
+            assigned_to,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 解决Bug #{}: {}", id, resolution);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({"resolution": resolution});
-                if let Some(c) = comment { body["comment"] = json!(c); }
-                if let Some(d) = resolved_date { body["resolvedDate"] = json!(d); }
-                if let Some(b) = resolved_build { body["resolvedBuild"] = json!(b); }
-                if let Some(a) = assigned_to { body["assignedTo"] = json!(a); }
+                if let Some(c) = comment {
+                    body["comment"] = json!(c);
+                }
+                if let Some(d) = resolved_date {
+                    body["resolvedDate"] = json!(d);
+                }
+                if let Some(b) = resolved_build {
+                    body["resolvedBuild"] = json!(b);
+                }
+                if let Some(a) = assigned_to {
+                    body["assignedTo"] = json!(a);
+                }
                 ac.put(&format!("/bugs/{}/resolve", id), &body)?;
                 println!("✅ Bug #{} 已解决: {}", id, resolution);
                 Ok(())
             })
         }
-        BugCommands::Close { id, comment, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 关闭Bug #{}", id); return Ok(()); }
+        BugCommands::Close {
+            id,
+            comment,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 关闭Bug #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
-                if let Some(c) = comment { body["comment"] = json!(c); }
+                if let Some(c) = comment {
+                    body["comment"] = json!(c);
+                }
                 ac.put(&format!("/bugs/{}/close", id), &body)?;
                 println!("✅ Bug #{} 已关闭", id);
                 Ok(())
             })
         }
-        BugCommands::Activate { id, opened_build, assigned_to, comment, dry_run } => {
-            if *dry_run { println!("🔍 [DRY-RUN] 激活Bug #{}", id); return Ok(()); }
+        BugCommands::Activate {
+            id,
+            opened_build,
+            assigned_to,
+            comment,
+            dry_run,
+        } => {
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 激活Bug #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 let mut body = json!({});
-                if let Some(ob) = opened_build { body["openedBuild"] = json!([ob]); }
-                if let Some(a) = assigned_to { body["assignedTo"] = json!(a); }
-                if let Some(c) = comment { body["comment"] = json!(c); }
+                if let Some(ob) = opened_build {
+                    body["openedBuild"] = json!([ob]);
+                }
+                if let Some(a) = assigned_to {
+                    body["assignedTo"] = json!(a);
+                }
+                if let Some(c) = comment {
+                    body["comment"] = json!(c);
+                }
                 ac.put(&format!("/bugs/{}/activate", id), &body)?;
                 println!("✅ Bug #{} 已激活", id);
                 Ok(())
             })
         }
         BugCommands::Delete { id, yes, dry_run } => {
-            if !yes && !dry_run { eprintln!("⚠️  确认删除Bug #{}？使用 --yes", id); return Ok(()); }
-            if *dry_run { println!("🔍 [DRY-RUN] 删除Bug #{}", id); return Ok(()); }
+            if !yes && !dry_run {
+                eprintln!("⚠️  确认删除Bug #{}？使用 --yes", id);
+                return Ok(());
+            }
+            if *dry_run {
+                println!("🔍 [DRY-RUN] 删除Bug #{}", id);
+                return Ok(());
+            }
             with_auth!(client, auth, |ac: &mut AuthenticatedClient| {
                 ac.delete(&format!("/bugs/{}", id))?;
                 println!("✅ Bug #{} 已删除", id);
@@ -331,4 +443,3 @@ pub fn handle_bug(
         }
     }
 }
-
