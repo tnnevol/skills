@@ -70,4 +70,4 @@ HALO_BASE_URL=https://your-halo-instance.com
 HALO_PAT=pat_your-personal-access-token
 ```
 
-These are loaded from `.env` in the skill directory or project root. See `docs/setup.md` for details.
+These are loaded from `.env` in the skill directory or project root. See `references/setup.md` for details.
