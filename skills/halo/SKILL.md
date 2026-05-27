@@ -53,6 +53,11 @@ All API calls go through the JS scripts in `scripts/` directory:
 - `--publish`: Publish the article immediately after creation
 - `--public`: Set visibility to PUBLIC (default is PRIVATE)
 
+### Agent 意图
+
+- **文章内容必须使用 HTML**：Agent 在创建或更新文章时，`--content` 参数**必须输出 HTML 内容**，禁止使用 Markdown。示例：`<h2>标题</h2><p>正文</p><ul><li>列表项</li></ul>`
+- **禁止 Markdown 语法**：不得使用 `# 标题`、`**粗体**`、`- 列表项` 等 Markdown 语法。应使用 `<h2>标题</h2>`、`<strong>粗体</strong>`、`<ul><li>列表项</li></ul>` 等 HTML 标签
+
 ## ⚠️ Important Notes
 
 1. **Console API vs Extension API** — create/publish/unpublish use **Console API** which triggers snapshot creation. list/get/update/delete use **Extension API**.
