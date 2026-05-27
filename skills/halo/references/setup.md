@@ -31,30 +31,27 @@ HALO_PAT=pat_xxx
 
 ## 使用方式
 
-通过 npm 包调用 CLI 工具：
+通过 Node.js script 执行：
 
-- **临时使用**: `npx -y @tnnevol/halo-cli <action>`
-- **全局安装**: `npm install -g @tnnevol/halo-cli` 然后使用 `halo-cli <action>`
+```
+node scripts/halo.mjs <action> [name] [options]
+```
 
-该 npm 包内部会根据操作系统自动选择合适的二进制文件：
-- **Linux**: `halo-linux`
-- **macOS**: `halo-macos` 
-- **Windows**: `halo-windows.exe`
-
-## CLI 命令参考
+## 命令参考
 
 | 命令 | 示例 | 说明 |
 |------|------|------|
-| `list` | `npx -y @tnnevol/halo-cli list` | 列出文章（默认20条） |
-| `list` | `npx -y @tnnevol/halo-cli list --limit=10 --page=2` | 分页列出，每页10条 |
-| `list` | `npx -y @tnnevol/halo-cli list --keyword=xxx` | 按关键词搜索 |
-| `get` | `npx -y @tnnevol/halo-cli get <name>` | 获取文章详情 |
-| `create` | `npx -y @tnnevol/halo-cli create --title=标题 --raw=内容` | 创建文章（默认 PRIVATE + HTML 格式） |
-| `create` | `npx -y @tnnevol/halo-cli create --title=标题 --raw=内容 --publish --public` | 创建并立即发布，公开可见 |
-| `update` | `npx -y @tnnevol/halo-cli update <name> --title=新标题` | 更新文章标题 |
-| `update` | `npx -y @tnnevol/halo-cli update <name> --raw=新内容` | 更新文章内容 |
-| `delete` | `npx -y @tnnevol/halo-cli delete <name>` | 删除文章 |
-| `publish` | `npx -y @tnnevol/halo-cli publish <name>` | 发布文章 |
-| `unpublish` | `npx -y @tnnevol/halo-cli unpublish <name>` | 取消发布 |
-
-> 所有调用走 `npx -y @tnnevol/halo-cli`，底层 API 细节已封装在 Go 二进制中。
+| `help` | `node scripts/halo.mjs help` | 显示帮助信息 |
+| `list` | `node scripts/halo.mjs list` | 列出文章（默认20条） |
+| `list` | `node scripts/halo.mjs list --limit=10 --page=2` | 分页列出，每页10条 |
+| `list` | `node scripts/halo.mjs list --keyword=xxx` | 按关键词搜索 |
+| `get` | `node scripts/halo.mjs get <name>` | 获取文章详情 |
+| `create` | `node scripts/halo.mjs create --title=标题 --content=内容` | 创建文章（默认 PRIVATE + HTML 格式） |
+| `create` | `node scripts/halo.mjs create --title=标题 --content=内容 --publish --public` | 创建并立即发布，公开可见 |
+| `create` | `node scripts/halo.mjs create --title=标题 --content-file=path.html` | 从本地 HTML 文件创建 |
+| `update` | `node scripts/halo.mjs update <name> --title=新标题` | 更新文章标题 |
+| `update` | `node scripts/halo.mjs update <name> --content=新内容` | 更新文章内容 |
+| `update` | `node scripts/halo.mjs update <name> --content-file=path.html` | 从本地 HTML 文件更新 |
+| `delete` | `node scripts/halo.mjs delete <name>` | 删除文章 |
+| `publish` | `node scripts/halo.mjs publish <name>` | 发布文章 |
+| `unpublish` | `node scripts/halo.mjs unpublish <name>` | 取消发布 |
