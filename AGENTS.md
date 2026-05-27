@@ -12,7 +12,7 @@
 │       ├── docs/              # 技能文档（可选）
 │       ├── references/        # 技能参考文件（可选）
 │       └── scripts/           # 技能配套脚本（可选）
-├── apps/                      # 应用目录（如 halo-cli）
+├── apps/                      # 独立应用目录（如 chandao-cli）
 ├── package.json
 └── eslint.config.js
 ```

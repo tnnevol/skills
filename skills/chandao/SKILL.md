@@ -265,7 +265,7 @@ chandao bug resolve <id> --resolution fixed --assigned-to <原指派人> --resol
 | [references/zentao-v2-api-fields.md](references/zentao-v2-api-fields.md) | v2 API 必填参数速查 |
 | [references/zentao-api-v2-quirks.md](references/zentao-api-v2-quirks.md) | API v2 常见坑点 |
 | [references/zentao-api-permissions.md](references/zentao-api-permissions.md) | 权限与角色问题 |
-| [references/framework-alignment.md](references/framework-alignment.md) | 与 halo-cli 框架对齐 |
+| [references/framework-alignment.md](references/framework-alignment.md) | chandao-cli 框架规范 |
 
 ## AI 安装指南
 

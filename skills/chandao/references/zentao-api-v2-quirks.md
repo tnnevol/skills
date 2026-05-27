@@ -263,7 +263,7 @@ bin/
 └── chandao-win.exe
 ```
 
-**解决方案**（参考 halo-cli）：`resolveBinPath` 函数自动检测并兼容两种结构：
+**解决方案**：`resolveBinPath` 函数自动检测并兼容两种结构：
 
 ```javascript
 function resolveBinPath(binPath) {

@@ -120,7 +120,7 @@ bin/
 
 **常见错误**：`path.join(__dirname, "bin", binaryName)` 指向的是**目录**而非文件，导致 `EACCES` 错误。
 
-**正确方案**：参考 halo-cli 的 `resolveBinPath` 模式。
+**正确方案**：使用 `resolveBinPath` 函数自动检测目录/扁平两种结构（见 `index.js`）。
 
 ## 12. npm 包装器 bin 路径 Bug（已修复）
 
@@ -254,7 +254,7 @@ chandao story update 38 --title "新标题" --pri 2 --category feature
 
 ## 开发与发布
 
-chandao-cli 是 skills monorepo (`github.com:tnnevol/skills`) 下的应用，与 halo-cli 框架对齐。
+chandao-cli 是 skills monorepo 下的应用。
 
 源码路径：`apps/chandao-cli/`
 
@@ -286,14 +286,3 @@ git tag v2.0.6 && git push origin v2.0.6
 ```
 
 CI/CD 自动编译四平台二进制并发布到 npm。
-
-### 框架对齐（与 halo-cli）
-
-两个 CLI 应保持一致的框架结构：
-- `index.js` — Node.js 包装器（含 resolveBinPath 兼容逻辑）
-- `Makefile` — 友好输出、install-targets、verify
-- `package.json` — license/repository/author/build:targets
-- `README.md` — 安装/配置/功能/开发文档
-- `.github/workflows/release-*.yml` — CI/CD 发布流程
-
-详细对比见 `references/framework-alignment.md`。
