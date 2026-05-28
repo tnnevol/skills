@@ -11,24 +11,28 @@ import {
 import { HaloError } from './client.mjs';
 
 export async function actionList(clients, { page = 1, limit = 20, keyword } = {}) {
+  // Extension API doesn't support keyword, use Console API for search
+  const api = keyword ? clients.console : clients.ext;
   const params = { page, size: limit };
-  // Note: Halo Extension API ignores keyword param, so we filter client-side
-  const res = await clients.ext.get('/posts', params);
-  let items = res.items || [];
+  if (keyword) params.keyword = keyword;
+
+  const res = await api.get('/posts', params);
+  const rawItems = res.items || [];
   const total = res.total || 0;
 
-  if (keyword) {
-    const kw = keyword.toLowerCase();
-    items = items.filter((item) => {
-      const spec = item.spec || {};
-      const meta = item.metadata || {};
-      return (
-        (spec.title || '').toLowerCase().includes(kw) ||
-        (meta.name || '').toLowerCase().includes(kw) ||
-        (spec.slug || '').toLowerCase().includes(kw)
-      );
-    });
-  }
+  // Console API returns nested structure { post, stats, ... }, normalize to flat
+  const items = rawItems.map((item) => {
+    if (item.post) {
+      const post = item.post;
+      return {
+        ...post,
+        status: post.status || {},
+        metadata: post.metadata || {},
+        spec: post.spec || {},
+      };
+    }
+    return item;
+  });
 
   if (items.length === 0) {
     if (keyword) {
@@ -43,12 +47,15 @@ export async function actionList(clients, { page = 1, limit = 20, keyword } = {}
     const status = item.status || {};
     const slug = spec.slug || meta.name || '-';
     const link = buildPostLink(clients.ext.baseUrl, slug);
+    const visitCount = keyword
+      ? item.stats?.visit || 0
+      : item.status?.visitCount || spec?.visitCount || 0;
     return (
       `${spec.title || '-'}\n` +
       `  名称: ${meta.name}\n` +
       `  状态: ${status.phase === 'DRAFT' ? '草稿' : '已发布'}\n` +
       `  可见性: ${mapVisibility(spec.visible || 'PRIVATE')}\n` +
-      `  阅读量: ${spec?.visitCount || 0}\n` +
+      `  阅读量: ${visitCount}\n` +
       `  链接: ${link}\n` +
       `  时间: ${formatTime(meta.creationTimestamp)}`
     );
