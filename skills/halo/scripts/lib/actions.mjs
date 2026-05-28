@@ -12,11 +12,23 @@ import { HaloError } from './client.mjs';
 
 export async function actionList(clients, { page = 1, limit = 20, keyword } = {}) {
   const params = { page, size: limit };
-  if (keyword) params.keyword = keyword;
-
+  // Note: Halo Extension API ignores keyword param, so we filter client-side
   const res = await clients.ext.get('/posts', params);
-  const items = res.items || [];
+  let items = res.items || [];
   const total = res.total || 0;
+
+  if (keyword) {
+    const kw = keyword.toLowerCase();
+    items = items.filter((item) => {
+      const spec = item.spec || {};
+      const meta = item.metadata || {};
+      return (
+        (spec.title || '').toLowerCase().includes(kw) ||
+        (meta.name || '').toLowerCase().includes(kw) ||
+        (spec.slug || '').toLowerCase().includes(kw)
+      );
+    });
+  }
 
   if (items.length === 0) {
     if (keyword) {
@@ -42,7 +54,8 @@ export async function actionList(clients, { page = 1, limit = 20, keyword } = {}
     );
   });
 
-  const summary = paginationSummary(total, page, limit);
+  const displayTotal = keyword ? items.length : total;
+  const summary = paginationSummary(displayTotal, page, limit);
   return `${summary}\n\n${lines.join('\n\n')}`;
 }
 

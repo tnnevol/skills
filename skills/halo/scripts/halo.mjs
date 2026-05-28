@@ -127,7 +127,7 @@ async function main() {
           slug: opts.slug,
           visible: opts.visible,
           cover: opts.cover,
-          pinned: opts.pinned === 'true',
+          pinned: opts.pinned === undefined ? undefined : true,
         });
         break;
 
