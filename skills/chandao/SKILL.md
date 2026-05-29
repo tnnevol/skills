@@ -38,16 +38,16 @@ node scripts/<module>.js --action <action> [--args]
 
 ### 脚本列表
 
-| 脚本 | 模块 | 操作 |
-|------|------|------|
-| `auth.js` | 认证 | `login` / `get-token` / `list-products` |
-| `product.js` | 产品 | `list` / `get` / `create` / `update` / `delete` / `list-by-program` |
-| `project.js` | 项目 | `list` / `get` / `create` / `update` / `delete` / `list-by-program` |
-| `story.js` | 需求 | `list` / `get` / `create` / `update` / `close` / `activate` / `change` / `delete` |
-| `task.js` | 任务 | `list` / `get` / `create` / `update` / `start` / `finish` / `close` / `activate` / `delete` |
-| `execution.js` | 执行 | `list` / `get` / `create` / `update` / `start` / `suspend` / `close` / `link-products` / `delete` |
-| `bug.js` | Bug | `list` / `get` / `create` / `update` / `resolve` / `close` / `activate` / `delete` |
-| `testcase.js` | 测试用例 | `list` / `get` / `create` / `update` / `delete` |
+| 脚本           | 模块     | 操作                                                                                              |
+| -------------- | -------- | ------------------------------------------------------------------------------------------------- |
+| `auth.js`      | 认证     | `login` / `get-token` / `list-products`                                                           |
+| `product.js`   | 产品     | `list` / `get` / `create` / `update` / `delete` / `list-by-program`                               |
+| `project.js`   | 项目     | `list` / `get` / `create` / `update` / `delete` / `list-by-program`                               |
+| `story.js`     | 需求     | `list` / `get` / `create` / `update` / `close` / `activate` / `change` / `delete`                 |
+| `task.js`      | 任务     | `list` / `get` / `create` / `update` / `start` / `finish` / `close` / `activate` / `delete`       |
+| `execution.js` | 执行     | `list` / `get` / `create` / `update` / `start` / `suspend` / `close` / `link-products` / `delete` |
+| `bug.js`       | Bug      | `list` / `get` / `create` / `update` / `resolve` / `close` / `activate` / `delete`                |
+| `testcase.js`  | 测试用例 | `list` / `get` / `create` / `update` / `delete`                                                   |
 
 ### 通用选项
 
@@ -70,13 +70,13 @@ node scripts/<module>.js --action <action> [--args]
 - "项目集的产品" / "项目集 N 的产品" → `node scripts/product.js --action list-by-program --program N`
 
 #### 产品透传参数
-| 用户关键词 | 提取字段 | 取值 |
-|-----------|---------|------|
-| 正常 | `--type` | `normal` |
-| 多分支 | `--type` | `branch` |
-| 多平台 | `--type` | `platform` |
-| 公开 | `--acl` | `open` |
-| 私有 | `--acl` | `private` |
+| 用户关键词 | 提取字段 | 取值       |
+| ---------- | -------- | ---------- |
+| 正常       | `--type` | `normal`   |
+| 多分支     | `--type` | `branch`   |
+| 多平台     | `--type` | `platform` |
+| 公开       | `--acl`  | `open`     |
+| 私有       | `--acl`  | `private`  |
 
 ### 项目管理
 - "查项目" / "项目列表" / "有哪些项目" → `node scripts/project.js --action list`
@@ -88,12 +88,12 @@ node scripts/<module>.js --action <action> [--args]
 
 #### 项目透传参数
 
-| 用户关键词 | 提取字段 | 取值 |
-|-----------|---------|------|
-| 敏捷 / Scrum | `--model` | `scrum` |
-| 瀑布 / Waterfall | `--model` | `waterfall` |
-| 看板 / Kanban | `--model` | `kanban` |
-| 融合敏捷 / Agile Plus | `--model` | `agileplus` |
+| 用户关键词                | 提取字段  | 取值            |
+| ------------------------- | --------- | --------------- |
+| 敏捷 / Scrum              | `--model` | `scrum`         |
+| 瀑布 / Waterfall          | `--model` | `waterfall`     |
+| 看板 / Kanban             | `--model` | `kanban`        |
+| 融合敏捷 / Agile Plus     | `--model` | `agileplus`     |
 | 融合瀑布 / Waterfall Plus | `--model` | `waterfallplus` |
 
 ### 通用更新规则
@@ -134,16 +134,16 @@ node scripts/<module>.js --action <action> [--args]
 - 应使用 HTML 标签（如 `<h2>标题</h2>`、`<strong>粗体</strong>`、`<ul><li>列表</li></ul>`）
 
 #### 需求透传参数
-| 用户关键词 | 提取字段 | 取值 |
-|-----------|---------|------|
-| 功能 | `--category` | `feature` |
-| 接口 | `--category` | `interface` |
-| 性能 | `--category` | `performance` |
-| 安全 | `--category` | `safe` |
-| 体验 | `--category` | `experience` |
-| 改进 | `--category` | `improve` |
-| 客户 | `--source` | `customer` |
-| 用户 | `--source` | `user` |
+| 用户关键词 | 提取字段     | 取值          |
+| ---------- | ------------ | ------------- |
+| 功能       | `--category` | `feature`     |
+| 接口       | `--category` | `interface`   |
+| 性能       | `--category` | `performance` |
+| 安全       | `--category` | `safe`        |
+| 体验       | `--category` | `experience`  |
+| 改进       | `--category` | `improve`     |
+| 客户       | `--source`   | `customer`    |
+| 用户       | `--source`   | `user`        |
 
 ### 任务管理
 - "列出任务" / "任务列表" → `node scripts/task.js --action list --execution <id>`
@@ -156,35 +156,40 @@ node scripts/<module>.js --action <action> [--args]
 - "删除任务" → `node scripts/task.js --action delete --id <id>`
 
 #### 任务透传参数
-| 用户关键词 | 提取字段 | 取值 |
-|-----------|---------|------|
-| 开发 | `--type` | `devel` |
-| 测试 | `--type` | `test` |
-| 设计 | `--type` | `design` |
-| 讨论 | `--type` | `discuss` |
-| 界面/UI | `--type` | `ui` |
+| 用户关键词 | 提取字段 | 取值      |
+| ---------- | -------- | --------- |
+| 开发       | `--type` | `devel`   |
+| 测试       | `--type` | `test`    |
+| 设计       | `--type` | `design`  |
+| 讨论       | `--type` | `discuss` |
+| 界面/UI    | `--type` | `ui`      |
 
 ### 迭代/执行管理
 - "列出执行" / "迭代列表" → `node scripts/execution.js --action list [--project N] [--status all|undone|wait|doing]`
 - "执行详情" / "查看迭代" → `node scripts/execution.js --action get --id <id>`
-- "创建执行" / "新建迭代" → `node scripts/execution.js --action create --project <id> --name <name> --begin <date> --end <date>`
-- "更新执行" / "修改执行" / "编辑执行" → `node scripts/execution.js --action update --id <id>`
+- "创建执行" / "新建迭代" → `node scripts/execution.js --action create --project <id> --name <name> --begin <date> --end <date> [--products <ids>]`
+- "更新执行" / "修改执行" / "编辑执行" → `node scripts/execution.js --action update --id <id> [--products <ids>]`
 - "启动执行" / "启动迭代" → `node scripts/execution.js --action start --id <id>`
 - "暂停执行" / "暂停迭代" → `node scripts/execution.js --action suspend --id <id>`
 - "关闭执行" / "关闭迭代" → `node scripts/execution.js --action close --id <id>`
-- "关联产品" / "绑定产品" → `node scripts/execution.js --action link-products --id <id> --products <ids>`
 - "删除执行" / "删除迭代" → `node scripts/execution.js --action delete --id <id>`
 
+> ⚠️ **关联产品说明**：
+> - ✅ **推荐方式**：在 `create` 或 `update` 时使用 `--products` 参数关联产品
+> - ❌ **不支持**：`link-products` 动作（禅道 API 返回 403 权限错误）
+> - 📝 **关联规则**：迭代必须先关联项目，只能关联项目已关联的产品
+> - 示例：`node scripts/execution.js --action create --project 11 --name "迭代" --begin 2026-06-01 --end 2026-06-15 --products 21`
+
 #### 执行透传参数
-| 用户关键词 | 提取字段 | 取值 |
-|-----------|---------|------|
-| 敏捷 / Scrum | `--type` | `sprint` |
-| 看板 / Kanban | `--type` | `kanban` |
-| 短期 | `--lifetime` | `short` |
-| 长期 | `--lifetime` | `long` |
-| 运维 | `--lifetime` | `ops` |
-| 公开 | `--acl` | `open` |
-| 私有 | `--acl` | `private` |
+| 用户关键词    | 提取字段     | 取值      |
+| ------------- | ------------ | --------- |
+| 敏捷 / Scrum  | `--type`     | `sprint`  |
+| 看板 / Kanban | `--type`     | `kanban`  |
+| 短期          | `--lifetime` | `short`   |
+| 长期          | `--lifetime` | `long`    |
+| 运维          | `--lifetime` | `ops`     |
+| 公开          | `--acl`      | `open`    |
+| 私有          | `--acl`      | `private` |
 
 ### Bug 管理
 - "Bug 列表" / "列出 Bug" → `node scripts/bug.js --action list`
@@ -200,20 +205,20 @@ node scripts/<module>.js --action <action> [--args]
 - "删除 Bug N" → `node scripts/bug.js --action delete --id <id>`（需用户确认）
 
 #### Bug 透传参数
-| 用户关键词 | 提取字段 | 取值 |
-|-----------|---------|------|
-| 代码错误 | `--type` | `codeerror` |
-| 配置 | `--type` | `config` |
-| 安装 | `--type` | `install` |
-| 安全 | `--type` | `security` |
-| 性能 | `--type` | `performance` |
-| 已解决 | `--resolution` | `fixed` |
-| 设计如此 | `--resolution` | `bydesign` |
-| 无法重现 | `--resolution` | `notrepro` |
-| 严重/紧急 | `--severity` | `1` |
-| 高 | `--severity` | `2` |
-| 中 | `--severity` | `3` |
-| 低 | `--severity` | `4` |
+| 用户关键词 | 提取字段       | 取值          |
+| ---------- | -------------- | ------------- |
+| 代码错误   | `--type`       | `codeerror`   |
+| 配置       | `--type`       | `config`      |
+| 安装       | `--type`       | `install`     |
+| 安全       | `--type`       | `security`    |
+| 性能       | `--type`       | `performance` |
+| 已解决     | `--resolution` | `fixed`       |
+| 设计如此   | `--resolution` | `bydesign`    |
+| 无法重现   | `--resolution` | `notrepro`    |
+| 严重/紧急  | `--severity`   | `1`           |
+| 高         | `--severity`   | `2`           |
+| 中         | `--severity`   | `3`           |
+| 低         | `--severity`   | `4`           |
 
 ### 史诗管理
 > 史诗模块暂未实现，后续可按需添加。
@@ -259,14 +264,14 @@ node scripts/bug.js --action resolve --id <id> --resolution fixed
 
 ## 错误处理
 
-| 情况 | 处理 |
-|------|------|
-| 未配置环境变量 | 提示配置 `CHANDAO_URL` / `CHANDAO_ACCOUNT` / `CHANDAO_PASSWORD` |
-| 登录失败 | 提示检查环境变量中的账号密码是否正确 |
-| 无数据 | "暂无数据" |
-| 网络错误 | 友好提示，不暴露内部细节 |
-| `--dry-run` 输出 | 展示将要执行的操作，询问用户是否确认 |
-| HTTP 403 | 检查用户角色和模块权限，详见 Pitfalls |
+| 情况             | 处理                                                            |
+| ---------------- | --------------------------------------------------------------- |
+| 未配置环境变量   | 提示配置 `CHANDAO_URL` / `CHANDAO_ACCOUNT` / `CHANDAO_PASSWORD` |
+| 登录失败         | 提示检查环境变量中的账号密码是否正确                            |
+| 无数据           | "暂无数据"                                                      |
+| 网络错误         | 友好提示，不暴露内部细节                                        |
+| `--dry-run` 输出 | 展示将要执行的操作，询问用户是否确认                            |
+| HTTP 403         | 检查用户角色和模块权限，详见 Pitfalls                           |
 
 ## 关键警告摘要
 
@@ -291,14 +296,14 @@ node scripts/bug.js --action resolve --id <id> --resolution fixed
 
 ## References
 
-| 文件 | 说明 |
-|------|------|
-| [references/pitfalls.md](references/pitfalls.md) | 完整踩坑记录（23 条） |
-| [references/setup.md](references/setup.md) | 安装与配置 |
-| [references/help.md](references/help.md) | 常见问题 |
-| [references/zentao-v2-api-fields.md](references/zentao-v2-api-fields.md) | v2 API 必填参数速查 |
-| [references/zentao-api-v2-quirks.md](references/zentao-api-v2-quirks.md) | API v2 常见坑点 |
-| [references/zentao-api-permissions.md](references/zentao-api-permissions.md) | 权限与角色问题 |
+| 文件                                                                         | 说明                  |
+| ---------------------------------------------------------------------------- | --------------------- |
+| [references/pitfalls.md](references/pitfalls.md)                             | 完整踩坑记录（23 条） |
+| [references/setup.md](references/setup.md)                                   | 安装与配置            |
+| [references/help.md](references/help.md)                                     | 常见问题              |
+| [references/zentao-v2-api-fields.md](references/zentao-v2-api-fields.md)     | v2 API 必填参数速查   |
+| [references/zentao-api-v2-quirks.md](references/zentao-api-v2-quirks.md)     | API v2 常见坑点       |
+| [references/zentao-api-permissions.md](references/zentao-api-permissions.md) | 权限与角色问题        |
 
 ## 脚本架构
 

@@ -11,10 +11,14 @@
 | `/chandao execution start <id>` | 启动执行 |
 | `/chandao execution suspend <id>` | 暂停执行 |
 | `/chandao execution close <id>` | 关闭执行 |
-| `/chandao execution link-products <id> --products <ID1,ID2> [--plans <json>]` | 关联产品到执行 |
 | `/chandao execution delete <id>` | 删除执行 |
 
 > ⚠️ `execution create` 的参数是 `--project`（不是 `--product`）。
+
+> ⚠️ **关联产品说明**：
+> - ✅ 在 `create` 或 `update` 时使用 `--products` 参数关联产品
+> - ❌ `link-products` 命令**不支持**（禅道 API 返回 403 权限错误）
+> - 📝 迭代必须先关联项目，只能关联项目已关联的产品
 
 ## 详细参数说明
 
@@ -77,9 +81,9 @@
 | `start <id>` | `id` | ✅ | 启动执行 |
 | `suspend <id>` | `id` | ✅ | 暂停执行 |
 | `close <id>` | `id` | ✅ | 关闭执行 |
-| `link-products <id>` | `id`, `--products` | ✅ | 关联产品 ID（逗号分隔） |
-| `link-products <id>` | `--plans` | ❌ | 计划映射 JSON |
 | `delete <id>` | `id`, `--yes` | ✅ | 删除，需 `--yes` 确认 |
+
+> ❌ **注意**：`link-products` 命令已移除（禅道 API 不支持），请使用 `create` 或 `update` 的 `--products` 参数替代。
 
 ### ⚠️ 更新操作前必须先获取当前值
 
