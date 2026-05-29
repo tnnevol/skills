@@ -1,6 +1,9 @@
 ---
 name: chandao
 description: Assistant for 禅道 (ZenTao) project management system via JS scripts. Use when the user asks about 禅道, lists/creates/updates projects, products, users, tasks, bugs, or manages project workflow via natural language commands.
+metadata:
+  author: Tnnevol
+  version: "2026.05.29"
 ---
 
 # SKILL: chandao (禅道)
@@ -336,16 +339,23 @@ node scripts/bug.js --action resolve --id <id> --resolution fixed
 - ⚠️ **spec/verify 字段必须使用 HTML 格式**：需求描述（`--spec`）和验收标准（`--verify`）字段必须使用 HTML 格式，不可使用 Markdown
 - ⚠️ **PUT 请求会重置未包含字段为默认值**：禅道 API 的 PUT 请求会将未包含在请求体中的字段重置为默认值。更新操作前必须先获取当前值，再合并用户指定的字段。详见 `references/pitfalls.md` 第 23 条
 
-## References
+## Core References
 
-| 文件                                                                         | 说明                  |
-| ---------------------------------------------------------------------------- | --------------------- |
-| [references/pitfalls.md](references/pitfalls.md)                             | 完整踩坑记录（23 条） |
-| [references/setup.md](references/setup.md)                                   | 安装与配置            |
-| [references/help.md](references/help.md)                                     | 常见问题              |
-| [references/zentao-v2-api-fields.md](references/zentao-v2-api-fields.md)     | v2 API 必填参数速查   |
-| [references/zentao-api-v2-quirks.md](references/zentao-api-v2-quirks.md)     | API v2 常见坑点       |
-| [references/zentao-api-permissions.md](references/zentao-api-permissions.md) | 权限与角色问题        |
+| Topic | Description | Reference |
+| ----- | ----------- | --------- |
+| Setup & Config | 安装与环境配置 | [setup.md](references/setup.md) |
+| API Pitfalls | 禅道 API 踩坑记录（23 条） | [pitfalls.md](references/pitfalls.md) |
+| Help & FAQ | 常见问题解答 | [help.md](references/help.md) |
+| API Fields | v2 API 必填参数速查 | [zentao-v2-api-fields.md](references/zentao-v2-api-fields.md) |
+| API Quirks | API v2 常见坑点 | [zentao-api-v2-quirks.md](references/zentao-api-v2-quirks.md) |
+| Permissions | 权限与角色问题 | [zentao-api-permissions.md](references/zentao-api-permissions.md) |
+| Product API | 产品管理命令 | [commands-product.md](references/commands-product.md) |
+| Project API | 项目管理命令 | [commands-project.md](references/commands-project.md) |
+| Story API | 需求管理命令 | [commands-story.md](references/commands-story.md) |
+| Task API | 任务管理命令 | [commands-task.md](references/commands-task.md) |
+| Execution API | 执行/迭代管理命令 | [commands-execution.md](references/commands-execution.md) |
+| Bug API | Bug 管理命令 | [commands-bug.md](references/commands-bug.md) |
+| Test API | 测试用例管理命令 | [commands-test.md](references/commands-test.md) |
 
 ## 脚本架构
 
