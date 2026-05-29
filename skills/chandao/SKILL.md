@@ -341,21 +341,21 @@ node scripts/bug.js --action resolve --id <id> --resolution fixed
 
 ## Core References
 
-| Topic | Description | Reference |
-| ----- | ----------- | --------- |
-| Setup & Config | 安装与环境配置 | [setup.md](references/setup.md) |
-| API Pitfalls | 禅道 API 踩坑记录（23 条） | [pitfalls.md](references/pitfalls.md) |
-| Help & FAQ | 常见问题解答 | [help.md](references/help.md) |
-| API Fields | v2 API 必填参数速查 | [zentao-v2-api-fields.md](references/zentao-v2-api-fields.md) |
-| API Quirks | API v2 常见坑点 | [zentao-api-v2-quirks.md](references/zentao-api-v2-quirks.md) |
-| Permissions | 权限与角色问题 | [zentao-api-permissions.md](references/zentao-api-permissions.md) |
-| Product API | 产品管理命令 | [commands-product.md](references/commands-product.md) |
-| Project API | 项目管理命令 | [commands-project.md](references/commands-project.md) |
-| Story API | 需求管理命令 | [commands-story.md](references/commands-story.md) |
-| Task API | 任务管理命令 | [commands-task.md](references/commands-task.md) |
-| Execution API | 执行/迭代管理命令 | [commands-execution.md](references/commands-execution.md) |
-| Bug API | Bug 管理命令 | [commands-bug.md](references/commands-bug.md) |
-| Test API | 测试用例管理命令 | [commands-test.md](references/commands-test.md) |
+| Topic          | Description                | Reference                                                         |
+| -------------- | -------------------------- | ----------------------------------------------------------------- |
+| Setup & Config | 安装与环境配置             | [setup.md](references/setup.md)                                   |
+| API Pitfalls   | 禅道 API 踩坑记录（23 条） | [pitfalls.md](references/pitfalls.md)                             |
+| Help & FAQ     | 常见问题解答               | [help.md](references/help.md)                                     |
+| API Fields     | v2 API 必填参数速查        | [zentao-v2-api-fields.md](references/zentao-v2-api-fields.md)     |
+| API Quirks     | API v2 常见坑点            | [zentao-api-v2-quirks.md](references/zentao-api-v2-quirks.md)     |
+| Permissions    | 权限与角色问题             | [zentao-api-permissions.md](references/zentao-api-permissions.md) |
+| Product API    | 产品管理命令               | [commands-product.md](references/commands-product.md)             |
+| Project API    | 项目管理命令               | [commands-project.md](references/commands-project.md)             |
+| Story API      | 需求管理命令               | [commands-story.md](references/commands-story.md)                 |
+| Task API       | 任务管理命令               | [commands-task.md](references/commands-task.md)                   |
+| Execution API  | 执行/迭代管理命令          | [commands-execution.md](references/commands-execution.md)         |
+| Bug API        | Bug 管理命令               | [commands-bug.md](references/commands-bug.md)                     |
+| Test API       | 测试用例管理命令           | [commands-test.md](references/commands-test.md)                   |
 
 ## 脚本架构
 
