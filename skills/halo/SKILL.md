@@ -1,13 +1,13 @@
 ---
 name: halo
 description: >
-  Assistant for Halo CMS (https://www.halo.run/). Use when the user types /halo commands or asks about Halo blog posts management. Triggers: /halo help, /halo list, /halo create, /halo get, /halo update, /halo delete, /halo publish, managing Halo blog posts, creating articles in Halo.
+  Assistant for Halo CMS (https://www.halo.run/). Use when the user types /halo commands or asks about Halo blog posts management, tags, categories, singlepages. Triggers: /halo help, /halo list, /halo create, /halo get, /halo update, /halo delete, /halo publish, /halo list-tags, /halo create-tag, /halo get-tag, /halo update-tag, /halo delete-tag, /halo list-categories, /halo create-category, /halo get-category, /halo update-category, /halo delete-category, /halo list-singlepages, /halo create-singlepage, /halo get-singlepage, /halo update-singlepage, /halo delete-singlepage, /halo publish-singlepage, /halo unpublish-singlepage, managing Halo blog posts, creating articles in Halo, listing tags, creating tags, updating tags, deleting tags, listing categories, creating categories, updating categories, deleting categories, listing singlepages, creating singlepages, updating singlepages, deleting singlepages.
 ---
 
 # SKILL: halo
 
 Halo ([halo.run](https://halo.run)) is a powerful open-source website building tool built with Spring Boot.
-Use this skill to manage blog posts via the Halo RESTful API — list, view, create, update, delete, and publish articles.
+Use this skill to manage blog posts, tags, categories, and singlepages via the Halo RESTful API.
 
 ## Security Guidelines
 
@@ -18,58 +18,46 @@ Use this skill to manage blog posts via the Halo RESTful API — list, view, cre
 
 ## How to Execute
 
-When the user types `/halo <action>`, execute via Node.js script:
-
 ```
 /halo list                          →  node scripts/halo.mjs list
 /halo get my-post                   →  node scripts/halo.mjs get my-post
 /halo create --title=标题 --content=内容  →  node scripts/halo.mjs create --title=标题 --content=内容
+/halo list-tags                     →  node scripts/halo.mjs list-tags
+/halo list-singlepages              →  node scripts/halo.mjs list-singlepages
 ```
 
-All API calls go through the JS scripts in `scripts/` directory:
+## Scripts
+
 - `scripts/halo.mjs` — CLI entry point
+- `scripts/lib/post-actions.mjs` — post business logic (list/get/create/update/delete/publish/unpublish)
+- `scripts/lib/tag-actions.mjs` — tag business logic (list/create/get/update/delete)
+- `scripts/lib/category-actions.mjs` — category business logic (list/create/get/update/delete)
+- `scripts/lib/singlepage-actions.mjs` — singlepage business logic (list/get/create/update/delete/publish/unpublish)
 - `scripts/lib/client.mjs` — HTTP client (Extension API + Console API)
 - `scripts/lib/config.mjs` — environment variable loading
-- `scripts/lib/actions.mjs` — business logic (list/get/create/update/delete/publish/unpublish)
 - `scripts/lib/utils.mjs` — utilities (slugify, time formatting, link building)
 
-## Actions
+## Core References
 
-| Action      | 用法                                                                           | 说明                                |
-| ----------- | ------------------------------------------------------------------------------ | ----------------------------------- |
-| `help`      | `/halo help`                                                                   | 显示帮助信息                        |
-| `list`      | `/halo list [--limit=N] [--page=N] [--keyword=xxx]`                            | 列出文章                            |
-| `get`       | `/halo get <name>`                                                             | 获取文章详情                        |
-| `create`    | `/halo create --title=标题 --content=内容 [--slug=xxx] [--publish] [--public]` | 创建文章（默认 PRIVATE，HTML 格式） |
-| `update`    | `/halo update <name> [--title=xxx] [--content=xxx] [--content-file=xxx]`       | 更新文章                            |
-| `delete`    | `/halo delete <name>`                                                          | 删除文章                            |
-| `publish`   | `/halo publish <name>`                                                         | 发布文章                            |
-| `unpublish` | `/halo unpublish <name>`                                                       | 取消发布                            |
+| Topic               | Description             | Reference                                              |
+| ------------------- | ----------------------- | ------------------------------------------------------ |
+| Posts Actions       | 文章操作指南及注意事项  | [posts-actions](references/posts-actions.md)           |
+| Posts API           | 文章 API 参考及快照机制 | [posts-api](references/posts-api.md)                   |
+| Tags Actions        | 标签操作指南及注意事项  | [tags-actions](references/tags-actions.md)             |
+| Tags API            | 标签 API 参考           | [tags-api](references/tags-api.md)                     |
+| Categories Actions  | 分类操作指南及注意事项  | [categories-actions](references/categories-actions.md) |
+| Categories API      | 分类 API 参考           | [categories-api](references/categories-api.md)         |
+| Singlepages Actions | 单页操作指南及注意事项  | [singlepage-actions](references/singlepage-actions.md) |
+| Singlepages API     | 单页 API 参考及快照机制 | [singlepage-api](references/singlepage-api.md)         |
+| Setup               | 环境配置说明            | [setup](references/setup.md)                           |
 
-### Parameter Details
+## Common Notes
 
-- `--content`: HTML content, sent directly to Halo API without conversion
-- `--content-file`: local HTML file path, content is read and sent as `--content`
-- `--publish`: Publish the article immediately after creation
-- `--public`: Set visibility to PUBLIC (default is PRIVATE)
-
-### Agent 意图
-
-- **文章内容必须使用 HTML**：Agent 在创建或更新文章时，`--content` 参数**必须输出 HTML 内容**，禁止使用 Markdown。示例：`<h2>标题</h2><p>正文</p><ul><li>列表项</li></ul>`
-- **禁止 Markdown 语法**：不得使用 `# 标题`、`**粗体**`、`- 列表项` 等 Markdown 语法。应使用 `<h2>标题</h2>`、`<strong>粗体</strong>`、`<ul><li>列表项</li></ul>` 等 HTML 标签
-
-## ⚠️ Important Notes
-
-1. **Console API vs Extension API** — create/publish/unpublish use **Console API** which triggers snapshot creation. list/get/update/delete use **Extension API**.
-2. **Request Body Format** — Console API create requires **nested format** (`{ post: {...}, content: { raw, content, rawType } }`). Both `raw` and `content` must be set to the HTML body. Extension API update uses flat Post object.
-3. **Snapshot Mechanism** — Halo uses snapshots to version content: `baseSnapshot` (initial), `headSnapshot` (current draft), `releaseSnapshot` (published). The frontend renders `releaseSnapshot.contentPatch`. `PUT /posts/{name}/content` creates a new headSnapshot; `PUT /posts/{name}/publish` syncs releaseSnapshot to headSnapshot.
-4. **Update + Publish Workflow** — After updating content via `update`, must call `publish` to sync releaseSnapshot. The script re-fetches the latest post after content update to preserve the new headSnapshot during metadata update.
-5. **Optimistic Locking** — Updates require `metadata.version`. The script auto-fetches the latest version and retries on 409 conflict.
-6. **metadata.name Rules** — ≤253 characters, only lowercase letters, digits, and hyphens. The `create` action auto-generates a name as `{slug}-{timestamp}`.
-7. **Search Tip** — When searching Halo documentation online, use `site:docs.halo.run` to avoid game-related content pollution.
-8. **Visibility** — Default is `PRIVATE`. Use `--public` to set to PUBLIC.
-9. **Slug Auto-generation** — CJK characters are preserved in slugs (Halo supports Unicode). Special characters are replaced with hyphens.
-10. **Error Handling** — The script provides localized error messages: 401 → 认证失败, 403 → 无权限, 404 → 资源不存在, 409 → 版本冲突已重试.
+- **Error Handling** — 401 → 认证失败, 403 → 无权限, 404 → 资源不存在, 409 → 版本冲突已重试
+- **Optimistic Locking** — 更新操作需要 `metadata.version`，脚本自动获取最新版本并在 409 冲突时重试
+- **metadata.name Rules** — ≤253 characters, only lowercase letters, digits, and hyphens. 自动生成 `{slug}-{timestamp}`
+- **Slug Auto-generation** — CJK characters are preserved in slugs (Halo supports Unicode). Special characters are replaced with hyphens.
+- **Search Tip** — When searching Halo documentation online, use `site:docs.halo.run` to avoid game-related content pollution.
 
 ## Environment Variables
 
@@ -78,4 +66,4 @@ HALO_BASE_URL=https://your-halo-instance.com
 HALO_PAT=pat_your-personal-access-token
 ```
 
-These are loaded with priority order: process environment variables > skill directory `.env` > project root `.env`. See `references/setup.md` for details.
+Loaded with priority: process env > skill `.env` > project root `.env`. See [setup](references/setup.md) for details.

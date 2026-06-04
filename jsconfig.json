@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "checkJs": false,
+    "noEmit": true,
+    "moduleResolution": "nodenext",
+    "module": "nodenext"
+  },
+  "include": ["skills/**/*.mjs"],
+  "exclude": ["node_modules"]
+}
