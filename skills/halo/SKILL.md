@@ -35,16 +35,16 @@ All API calls go through the JS scripts in `scripts/` directory:
 
 ## Actions
 
-| Action | 用法 | 说明 |
-|--------|------|------|
-| `help` | `/halo help` | 显示帮助信息 |
-| `list` | `/halo list [--limit=N] [--page=N] [--keyword=xxx]` | 列出文章 |
-| `get` | `/halo get <name>` | 获取文章详情 |
-| `create` | `/halo create --title=标题 --content=内容 [--slug=xxx] [--publish] [--public]` | 创建文章（默认 PRIVATE，HTML 格式） |
-| `update` | `/halo update <name> [--title=xxx] [--content=xxx] [--content-file=xxx]` | 更新文章 |
-| `delete` | `/halo delete <name>` | 删除文章 |
-| `publish` | `/halo publish <name>` | 发布文章 |
-| `unpublish` | `/halo unpublish <name>` | 取消发布 |
+| Action      | 用法                                                                           | 说明                                |
+| ----------- | ------------------------------------------------------------------------------ | ----------------------------------- |
+| `help`      | `/halo help`                                                                   | 显示帮助信息                        |
+| `list`      | `/halo list [--limit=N] [--page=N] [--keyword=xxx]`                            | 列出文章                            |
+| `get`       | `/halo get <name>`                                                             | 获取文章详情                        |
+| `create`    | `/halo create --title=标题 --content=内容 [--slug=xxx] [--publish] [--public]` | 创建文章（默认 PRIVATE，HTML 格式） |
+| `update`    | `/halo update <name> [--title=xxx] [--content=xxx] [--content-file=xxx]`       | 更新文章                            |
+| `delete`    | `/halo delete <name>`                                                          | 删除文章                            |
+| `publish`   | `/halo publish <name>`                                                         | 发布文章                            |
+| `unpublish` | `/halo unpublish <name>`                                                       | 取消发布                            |
 
 ### Parameter Details
 
@@ -61,13 +61,15 @@ All API calls go through the JS scripts in `scripts/` directory:
 ## ⚠️ Important Notes
 
 1. **Console API vs Extension API** — create/publish/unpublish use **Console API** which triggers snapshot creation. list/get/update/delete use **Extension API**.
-2. **Request Body Format** — Console API create requires **nested format** (`{ post: {...}, content: { raw, rawType } }`). Extension API update uses flat Post object.
-3. **Optimistic Locking** — Updates require `metadata.version`. The script auto-fetches the latest version and retries on 409 conflict.
-4. **metadata.name Rules** — ≤253 characters, only lowercase letters, digits, and hyphens. The `create` action auto-generates a name as `{slug}-{timestamp}`.
-5. **Search Tip** — When searching Halo documentation online, use `site:docs.halo.run` to avoid game-related content pollution.
-6. **Visibility** — Default is `PRIVATE`. Use `--public` to set to PUBLIC.
-7. **Slug Auto-generation** — CJK characters are preserved in slugs (Halo supports Unicode). Special characters are replaced with hyphens.
-8. **Error Handling** — The script provides localized error messages: 401 → 认证失败, 403 → 无权限, 404 → 资源不存在, 409 → 版本冲突已重试.
+2. **Request Body Format** — Console API create requires **nested format** (`{ post: {...}, content: { raw, content, rawType } }`). Both `raw` and `content` must be set to the HTML body. Extension API update uses flat Post object.
+3. **Snapshot Mechanism** — Halo uses snapshots to version content: `baseSnapshot` (initial), `headSnapshot` (current draft), `releaseSnapshot` (published). The frontend renders `releaseSnapshot.contentPatch`. `PUT /posts/{name}/content` creates a new headSnapshot; `PUT /posts/{name}/publish` syncs releaseSnapshot to headSnapshot.
+4. **Update + Publish Workflow** — After updating content via `update`, must call `publish` to sync releaseSnapshot. The script re-fetches the latest post after content update to preserve the new headSnapshot during metadata update.
+5. **Optimistic Locking** — Updates require `metadata.version`. The script auto-fetches the latest version and retries on 409 conflict.
+6. **metadata.name Rules** — ≤253 characters, only lowercase letters, digits, and hyphens. The `create` action auto-generates a name as `{slug}-{timestamp}`.
+7. **Search Tip** — When searching Halo documentation online, use `site:docs.halo.run` to avoid game-related content pollution.
+8. **Visibility** — Default is `PRIVATE`. Use `--public` to set to PUBLIC.
+9. **Slug Auto-generation** — CJK characters are preserved in slugs (Halo supports Unicode). Special characters are replaced with hyphens.
+10. **Error Handling** — The script provides localized error messages: 401 → 认证失败, 403 → 无权限, 404 → 资源不存在, 409 → 版本冲突已重试.
 
 ## Environment Variables
 
