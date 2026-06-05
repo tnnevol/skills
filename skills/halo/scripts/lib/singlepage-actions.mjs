@@ -10,6 +10,153 @@ import {
 } from "./utils.mjs";
 import { HaloError } from "./client.mjs";
 
+/**
+ * SinglePage module commands definition
+ */
+export const commands = {
+  "list-singlepages": {
+    description: "列出单页",
+    usage: "list-singlepages [--limit=N] [--page=N] [--keyword=xxx]",
+    options: [
+      { name: "limit", description: "每页数量，默认 20" },
+      { name: "page", description: "页码，从 1 开始" },
+      { name: "keyword", description: "搜索关键词" },
+    ],
+    execute: (clients, opts) =>
+      actionListSinglePages(clients, {
+        page: opts.page !== undefined ? opts.page : 1,
+        limit: opts.limit !== undefined ? opts.limit : 20,
+        keyword: opts.keyword,
+        trash: false,
+      }),
+  },
+  "list-singlepages-trash": {
+    description: "列出回收站单页",
+    usage: "list-singlepages-trash [--limit=N] [--page=N]",
+    options: [
+      { name: "limit", description: "每页数量，默认 20" },
+      { name: "page", description: "页码，从 1 开始" },
+    ],
+    execute: (clients, opts) =>
+      actionListSinglePages(clients, {
+        page: opts.page !== undefined ? opts.page : 1,
+        limit: opts.limit !== undefined ? opts.limit : 20,
+        trash: true,
+      }),
+  },
+  "create-singlepage": {
+    description: "创建单页",
+    usage: "create-singlepage --title=标题 --content=内容",
+    options: [
+      { name: "title", description: "单页标题" },
+      { name: "content", description: "HTML 内容" },
+      { name: "content-file", description: "本地 HTML 文件路径" },
+      { name: "slug", description: "单页别名" },
+      { name: "publish", description: "创建后立即发布", type: "flag" },
+      { name: "public", description: "设置公开可见", type: "flag" },
+    ],
+    execute: (clients, opts) =>
+      actionCreateSinglePage(clients, {
+        title: opts.title,
+        content: opts.content,
+        contentFile: opts["content-file"],
+        slug: opts.slug,
+        publish: opts.publish,
+        public: opts.public,
+      }),
+  },
+  "get-singlepage": {
+    description: "获取单页详情",
+    usage: "get-singlepage <name>",
+    options: [],
+    validate: (opts) => {
+      if (!opts.name)
+        throw new HaloError("请提供单页名称，用法: halo get-singlepage <name>");
+    },
+    execute: (clients, opts) => actionGetSinglePage(clients, opts.name),
+  },
+  "update-singlepage": {
+    description: "更新单页",
+    usage: "update-singlepage <name> [--title=标题] [--content=内容]",
+    options: [
+      { name: "title", description: "单页标题" },
+      { name: "content", description: "HTML 内容" },
+      { name: "content-file", description: "本地 HTML 文件路径" },
+      { name: "slug", description: "单页别名" },
+      { name: "visible", description: "可见性: PUBLIC/PRIVATE" },
+      { name: "publish", description: "更新并发布", type: "flag" },
+    ],
+    validate: (opts) => {
+      if (!opts.name)
+        throw new HaloError(
+          "请提供单页名称，用法: halo update-singlepage <name>",
+        );
+    },
+    execute: (clients, opts) =>
+      actionUpdateSinglePage(clients, opts.name, {
+        title: opts.title,
+        content: opts.content,
+        contentFile: opts["content-file"],
+        slug: opts.slug,
+        visible: opts.visible,
+        publish: opts.publish,
+      }),
+  },
+  "delete-singlepage": {
+    description: "删除单页（默认回收站）",
+    usage: "delete-singlepage <name> [--permanent]",
+    options: [
+      { name: "permanent", description: "永久删除，不进回收站", type: "flag" },
+    ],
+    validate: (opts) => {
+      if (!opts.name)
+        throw new HaloError(
+          "请提供单页名称，用法: halo delete-singlepage <name>",
+        );
+    },
+    execute: (clients, opts) =>
+      actionDeleteSinglePage(clients, opts.name, {
+        permanent: opts.permanent === true,
+      }),
+  },
+  "restore-singlepage": {
+    description: "从回收站恢复单页",
+    usage: "restore-singlepage <name>",
+    options: [],
+    validate: (opts) => {
+      if (!opts.name)
+        throw new HaloError(
+          "请提供单页名称，用法: halo restore-singlepage <name>",
+        );
+    },
+    execute: (clients, opts) => actionRestoreSinglePage(clients, opts.name),
+  },
+  "publish-singlepage": {
+    description: "发布单页",
+    usage: "publish-singlepage <name>",
+    options: [],
+    validate: (opts) => {
+      if (!opts.name)
+        throw new HaloError(
+          "请提供单页名称，用法: halo publish-singlepage <name>",
+        );
+    },
+    execute: (clients, opts) => actionPublishSinglePage(clients, opts.name),
+  },
+  "unpublish-singlepage": {
+    description: "取消发布单页",
+    usage: "unpublish-singlepage <name>",
+    options: [],
+    validate: (opts) => {
+      if (!opts.name)
+        throw new HaloError(
+          "请提供单页名称，用法: halo unpublish-singlepage <name>",
+        );
+    },
+    execute: (clients, opts) => actionUnpublishSinglePage(clients, opts.name),
+  },
+};
+
 export async function actionListSinglePages(
   clients,
   { page = 1, limit = 20, keyword, trash = false } = {},

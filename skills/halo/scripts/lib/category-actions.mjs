@@ -8,6 +8,99 @@ import {
 } from "./utils.mjs";
 import { HaloError } from "./client.mjs";
 
+/**
+ * Category module commands definition
+ */
+export const commands = {
+  "list-categories": {
+    description: "列出分类",
+    usage: "list-categories [--limit=N] [--page=N] [--sort=xxx]",
+    options: [
+      { name: "limit", description: "每页数量，默认 20" },
+      { name: "page", description: "页码，从 1 开始" },
+      { name: "sort", description: "排序字段，如 spec.displayName,asc" },
+    ],
+    execute: (clients, opts) =>
+      actionListCategories(clients, {
+        page: opts.page !== undefined ? opts.page : 1,
+        limit: opts.limit !== undefined ? opts.limit : 20,
+        sort: opts.sort,
+      }),
+  },
+  "create-category": {
+    description: "创建分类",
+    usage: "create-category --display-name=名称 [--slug=xxx]",
+    options: [
+      { name: "display-name", description: "分类显示名" },
+      { name: "slug", description: "分类别名" },
+      { name: "description", description: "分类描述" },
+      { name: "priority", description: "分类优先级，默认 0" },
+    ],
+    execute: (clients, opts) =>
+      actionCreateCategory(clients, {
+        displayName: opts["display-name"],
+        slug: opts.slug,
+        cover: opts.cover,
+        description: opts.description,
+        priority:
+          opts.priority !== undefined ? parseInt(opts.priority, 10) : undefined,
+      }),
+  },
+  "get-category": {
+    description: "获取分类详情",
+    usage: "get-category <name>",
+    options: [],
+    validate: (opts) => {
+      if (!opts.name)
+        throw new HaloError("请提供分类名称，用法: halo get-category <name>");
+    },
+    execute: (clients, opts) => actionGetCategory(clients, opts.name),
+  },
+  "update-category": {
+    description: "更新分类",
+    usage: "update-category <name> [--display-name=xxx]",
+    options: [
+      { name: "display-name", description: "分类显示名" },
+      { name: "slug", description: "分类别名" },
+      { name: "description", description: "分类描述" },
+      { name: "priority", description: "分类优先级" },
+      {
+        name: "hide-from-list",
+        description: "隐藏分类不在列表显示",
+        type: "flag",
+      },
+    ],
+    validate: (opts) => {
+      if (!opts.name)
+        throw new HaloError(
+          "请提供分类名称，用法: halo update-category <name>",
+        );
+    },
+    execute: (clients, opts) =>
+      actionUpdateCategory(clients, opts.name, {
+        displayName: opts["display-name"],
+        slug: opts.slug,
+        cover: opts.cover,
+        description: opts.description,
+        priority:
+          opts.priority !== undefined ? parseInt(opts.priority, 10) : undefined,
+        hideFromList: opts["hide-from-list"] !== undefined,
+      }),
+  },
+  "delete-category": {
+    description: "删除分类",
+    usage: "delete-category <name>",
+    options: [],
+    validate: (opts) => {
+      if (!opts.name)
+        throw new HaloError(
+          "请提供分类名称，用法: halo delete-category <name>",
+        );
+    },
+    execute: (clients, opts) => actionDeleteCategory(clients, opts.name),
+  },
+};
+
 export async function actionListCategories(
   clients,
   { page, limit, sort } = {},

@@ -5,6 +5,6 @@
     "moduleResolution": "nodenext",
     "module": "nodenext"
   },
-  "include": ["skills/**/*.mjs"],
+  "include": ["skills/**/*.mjs", "skills/**/*.js", "skills/**/*.cjs"],
   "exclude": ["node_modules"]
 }

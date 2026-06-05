@@ -8,6 +8,89 @@ import {
 } from "./utils.mjs";
 import { HaloError } from "./client.mjs";
 
+/**
+ * Tag module commands definition
+ */
+export const commands = {
+  "list-tags": {
+    description: "列出标签",
+    usage: "list-tags [--limit=N] [--page=N] [--sort=xxx]",
+    options: [
+      { name: "limit", description: "每页数量，默认 20" },
+      { name: "page", description: "页码，从 1 开始" },
+      { name: "sort", description: "排序字段，如 spec.displayName,asc" },
+    ],
+    execute: (clients, opts) =>
+      actionListTags(clients, {
+        page: opts.page !== undefined ? opts.page : 1,
+        limit: opts.limit !== undefined ? opts.limit : 20,
+        sort: opts.sort,
+      }),
+  },
+  "create-tag": {
+    description: "创建标签",
+    usage: "create-tag --display-name=名称 [--slug=xxx]",
+    options: [
+      { name: "display-name", description: "标签显示名" },
+      { name: "slug", description: "标签别名" },
+      { name: "color", description: "标签颜色，如 #ff0000" },
+      { name: "cover", description: "封面 URL" },
+      { name: "description", description: "标签描述" },
+    ],
+    execute: (clients, opts) =>
+      actionCreateTag(clients, {
+        displayName: opts["display-name"],
+        slug: opts.slug,
+        color: opts.color,
+        cover: opts.cover,
+        description: opts.description,
+      }),
+  },
+  "get-tag": {
+    description: "获取标签详情",
+    usage: "get-tag <name>",
+    options: [],
+    validate: (opts) => {
+      if (!opts.name)
+        throw new HaloError("请提供标签名称，用法: halo get-tag <name>");
+    },
+    execute: (clients, opts) => actionGetTag(clients, opts.name),
+  },
+  "update-tag": {
+    description: "更新标签",
+    usage: "update-tag <name> [--display-name=xxx] [--color=xxx]",
+    options: [
+      { name: "display-name", description: "标签显示名" },
+      { name: "slug", description: "标签别名" },
+      { name: "color", description: "标签颜色，如 #ff0000" },
+      { name: "cover", description: "封面 URL" },
+      { name: "description", description: "标签描述" },
+    ],
+    validate: (opts) => {
+      if (!opts.name)
+        throw new HaloError("请提供标签名称，用法: halo update-tag <name>");
+    },
+    execute: (clients, opts) =>
+      actionUpdateTag(clients, opts.name, {
+        displayName: opts["display-name"],
+        slug: opts.slug,
+        color: opts.color,
+        cover: opts.cover,
+        description: opts.description,
+      }),
+  },
+  "delete-tag": {
+    description: "删除标签",
+    usage: "delete-tag <name>",
+    options: [],
+    validate: (opts) => {
+      if (!opts.name)
+        throw new HaloError("请提供标签名称，用法: halo delete-tag <name>");
+    },
+    execute: (clients, opts) => actionDeleteTag(clients, opts.name),
+  },
+};
+
 export async function actionListTags(clients, { page, limit, sort } = {}) {
   const params = {};
   if (page !== undefined) params.page = page;
