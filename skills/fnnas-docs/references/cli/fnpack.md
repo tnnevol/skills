@@ -1,140 +1,120 @@
 ---
-title: 📦　fnpack
-source: https://developer.fnnas.com/docs/
+title: fnpack
+source: https://developer.fnnas.com/docs/cli/fnpack
 ---
 
-- [](/)
-- [🔧　CLI 开发工具](/docs/category/cli-开发工具)
-- 📦　fnpack
+`fnpack` 用于创建飞牛 fnOS 应用项目，并将应用打包为可安装的 `.fpk` 文件。开发者可以在本地开发机使用，也可以在飞牛 fnOS 设备上使用。
 
-本页总览# 📦　fnpack
+## 下载
 
-`fnpack` 是飞牛 fnOS 应用打包的便利工具，它帮助您快速创建应用项目结构并将应用打包成可安装的 `fpk` 文件。无论您是初学者还是经验丰富的开发者，这个工具都能让应用开发变得更加简单高效。
+根据开发机系统下载对应版本：
 
-更新提示　　本文档于 **2025-12-31** 新增了部分内容。
+- **Windows x86**: [fnpack-1.2.3-windows-amd64](https://static2.fnnas.com/fnpack/fnpack-1.2.3-windows-amd64)
+- **Linux x86**: [fnpack-1.2.3-linux-amd64](https://static2.fnnas.com/fnpack/fnpack-1.2.3-linux-amd64)
+- **Linux ARM**: [fnpack-1.2.3-linux-arm64](https://static2.fnnas.com/fnpack/fnpack-1.2.3-linux-arm64)
+- **macOS Intel**: [fnpack-1.2.3-darwin-amd64](https://static2.fnnas.com/fnpack/fnpack-1.2.3-darwin-amd64)
+- **macOS Apple Silicon**: [fnpack-1.2.3-darwin-arm64](https://static2.fnnas.com/fnpack/fnpack-1.2.3-darwin-arm64)
 
-## 工具下载Update![​](#工具下载update)
+Linux 或 macOS 可安装到系统路径：
 
-`fnpack` 已预置到飞牛 fnOS 中，同时也支持在本地使用，可根据操作系统进行下载：
-
-- **Windows x86**: [fnpack-1.2.1-windows-amd64](https://static2.fnnas.com/fnpack/fnpack-1.2.1-windows-amd64)
-
-- **Linux x86**: [fnpack-1.2.1-linux-amd64](https://static2.fnnas.com/fnpack/fnpack-1.2.1-linux-amd64)
-
-- **Linux ARM**: [fnpack-1.2.1-linux-arm64](https://static2.fnnas.com/fnpack/fnpack-1.2.1-linux-arm64)
-
-- **Mac Intel**: [fnpack-1.2.1-darwin-amd64](https://static2.fnnas.com/fnpack/fnpack-1.2.1-darwin-amd64)
-
-- **Mac M系列**: [fnpack-1.2.1-darwin-arm64](https://static2.fnnas.com/fnpack/fnpack-1.2.1-darwin-arm64)
-
-## 创建应用项目[​](#创建应用项目)
-
-### 基本创建命令[​](#基本创建命令)
-
-使用 `fnpack create` 命令可以快速创建应用项目：
-
+```bash
+chmod +x fnpack-1.2.3-linux-amd64
+sudo mv fnpack-1.2.3-linux-amd64 /usr/local/bin/fnpack
+fnpack --help
 ```
-# 创建独立项目
+
+## 创建项目
+
+创建普通应用项目：
+
+```bash
 fnpack create <appname>
-# 不带应用访问入口，使用纯服务类型的项目
+```
+
+创建不包含桌面入口的服务类项目：
+
+```bash
 fnpack create <appname> --without-ui true
+```
 
-# 创建 Docker 应用项目
+创建 Docker 应用项目：
+
+```bash
 fnpack create <appname> --template docker
-# 无应用访问入口Docker应用，使用纯服务类型的项目
+```
+
+创建不包含桌面入口的 Docker 服务类项目：
+
+```bash
 fnpack create <appname> --template docker --without-ui true
-
 ```
 
-### 关于 Docker 应用模板[​](#关于-docker-应用模板)
+Docker 模板会生成 `docker-compose.yaml`、基础资源声明和生命周期脚本框架。打包前需要根据应用实际运行方式检查并调整这些文件。
 
-- 自动生成 `docker-compose.yaml` 文件，需手动编辑
+## 项目结构
 
-- 自动生成 `shares/data` 目录的挂载映射配置，可自行修改
-
-- 自动生成 `cmd/main` 的 `status` 检查代码，可自行修改
-
-### 项目结构示例[​](#项目结构示例)
-
-创建后的项目结构如下：
-
-```
+```text
 myapp/
-├── app/                            # 应用可执行文件目录
+├── app/
 │   ├── ui/
-│   │   ├── images/
-│   │   └── config
-│   └── docker/                     # Docker 配置（Docker 应用模板）
+│   │   ├── config
+│   │   └── images/
+│   └── docker/
 │       └── docker-compose.yaml
-├── cmd/                            # 应用生命周期管理脚本
+├── cmd/
 │   ├── main
 │   ├── install_init
 │   ├── install_callback
-│   ├── uninstall_init
-│   ├── uninstall_callback
 │   ├── upgrade_init
 │   ├── upgrade_callback
+│   ├── uninstall_init
+│   ├── uninstall_callback
 │   ├── config_init
 │   └── config_callback
 ├── config/
-│   ├── privilege                   # 应用权限配置
-│   └── resource                    # 应用资源配置
+│   ├── privilege
+│   └── resource
 ├── wizard/
-│   ├── install                     # 安装向导配置
-│   ├── uninstall                   # 卸载向导配置
-│   └── config                      # 配置向导
-├── manifest                        # 应用基本信息
-├── LICENSE                         # 许可证文件
-├── ICON.PNG                        # 应用图标（64x64）
-└── ICON_256.PNG                    # 应用图标（256x256）
-
+├── manifest
+├── ICON.PNG
+└── ICON_256.PNG
 ```
 
-## 打包应用项目[​](#打包应用项目)
+## 打包项目
 
-### 基本打包命令[​](#基本打包命令)
+在应用目录中执行：
 
-使用 `fnpack build` 命令将应用打包成 `fpk` 文件
-
-```
-# 在应用目录中执行打包
+```bash
 cd myapp
 fnpack build
+```
 
-## 指定打包的目录
+指定其他目录进行打包：
+
+```bash
 fnpack build --directory <path>
-
 ```
 
-打包校验规则：
+## 打包检查
 
-| 路径 | 类型 | 校验规则 
-| `manifest` | 文件 | 必须存在，且必选字段存在 
-| `config/privilege` | 文件 | 必须存在，且符合 `JSON` 格式 
-| `config/resource` | 文件 | 必须存在，且符合 `JSON` 格式 
-| `ICON.PNG` | 文件 | 必须存在 
-| `ICON_256.PNG` | 文件 | 必须存在 
-| `app/` | 目录 | 必须存在 
-| `cmd/` | 目录 | 必须存在 
-| `wizard/` | 目录 | 必须存在 
-| `app/{manifest.desktop_uidir}/` | 目录 | 若有定义，则目录必须存在 
+`fnpack` 会在生成 `.fpk` 前检查必要文件和基础格式。
 
-### 本地安装工具方法[​](#本地安装工具方法)
+| 路径 | 类型 | 要求 |
+| --- | --- | --- |
+| `manifest` | 文件 | 存在，并包含必要字段 |
+| `config/privilege` | 文件 | 存在，并使用合法 JSON |
+| `config/resource` | 文件 | 存在，并使用合法 JSON |
+| `ICON.PNG` | 文件 | 存在 |
+| `ICON_256.PNG` | 文件 | 存在 |
+| `app/` | 目录 | 存在 |
+| `cmd/` | 目录 | 存在 |
+| `wizard/` | 目录 | 存在 |
+| `app/{desktop_uidir}/` | 目录 | 声明 `desktop_uidir` 时必须存在 |
 
-```
-# Linux/macOS 安装
-chmod +x fnpack-1.2.1-linux-amd64
-sudo mv fnpack-1.2.1-linux-amd64 /usr/local/bin/fnpack
+## 使用建议
 
-# 验证安装
-fnpack --help
+- 将打包目录放在应用源码附近，便于版本管理和自动化构建。
+- 在发布构建脚本中加入 `fnpack build`。
+- 发布前在飞牛 fnOS 测试设备上安装生成的 `.fpk` 并完成基础验证。
 
-```
-
-## 最佳实践[​](#最佳实践)
-
-- **模板选择**：根据应用类型选择合适的模板
-
-- **集成编译**：将打包目录创建于代码目录下，并将 **`fnpack build`** 命令集成到代码编译脚本中
-
-通过合理使用 **fnpack**，您可以更高效地开发和管理飞牛 **fnOS** 应用，专注于应用功能本身而不是繁琐的配置工作。
+---

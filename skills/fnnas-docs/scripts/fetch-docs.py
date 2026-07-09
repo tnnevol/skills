@@ -1,267 +1,187 @@
 #!/usr/bin/env python3
 """
-飞牛应用开发文档抓取脚本
-从 developer.fnnas.com 抓取文档内容并转换为 Markdown
+飞牛应用开发文档同步脚本
+从 developer.fnnas.com/llms-full.txt 解析并同步 Markdown 文档
 
-注意: developer.fnnas.com 对无末尾 / 的 URL 返回 308 重定向，
-urllib 不支持 308，脚本手动处理该重定向。
+文档结构：
+- 每篇文档以 "Source: https://developer.fnnas.com/docs/<path>" 开头
+- 后跟空行、# 标题和正文内容
 """
 
 import urllib.request
 import urllib.error
-import urllib.parse
 import ssl
-import re
 import os
-import time
+import re
 
 # SSL 上下文
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
-# 基础 URL
-BASE_URL = "https://developer.fnnas.com/docs/"
+LLMS_FULL_URL = "https://developer.fnnas.com/llms-full.txt"
+LLMS_INDEX_URL = "https://developer.fnnas.com/llms.txt"
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
 }
 
-# 文档列表
-DOCS = {
-    # 快速开始
-    "quick-started/prerequisites": "references/quick-started/prerequisites.md",
-    "quick-started/create-application": "references/quick-started/create-application.md",
-    "quick-started/test-application": "references/quick-started/test-application.md",
-    "quick-started/publish-application": "references/quick-started/publish-application.md",
-    # 开发指南 - 基础
-    "core-concepts/framework": "references/core-concepts/framework.md",
-    "core-concepts/manifest": "references/core-concepts/manifest.md",
-    "core-concepts/environment-variables": "references/core-concepts/environment-variables.md",
-    "core-concepts/privilege": "references/core-concepts/privilege.md",
-    "core-concepts/resource": "references/core-concepts/resource.md",
-    "core-concepts/app-entry": "references/core-concepts/app-entry.md",
-    "core-concepts/wizard": "references/core-concepts/wizard.md",
-    # 开发指南 - 进阶
-    "core-concepts/gateway-registration": "references/core-concepts/gateway-registration.md",
-    "core-concepts/gateway-authentication": "references/core-concepts/gateway-authentication.md",
-    "core-concepts/dependency": "references/core-concepts/dependency.md",
-    "core-concepts/middleware": "references/core-concepts/middleware.md",
-    "core-concepts/runtime": "references/core-concepts/runtime.md",
-    # 开发指南 - 实战
-    "core-concepts/native": "references/core-concepts/native.md",
-    "core-concepts/docker": "references/core-concepts/docker.md",
-    # 开发指南 - 规范
-    "core-concepts/icon": "references/core-concepts/icon.md",
-    # CLI 工具
-    "cli/fnpack": "references/cli/fnpack.md",
-    "cli/appcentercli": "references/cli/appcenter-cli.md",
+# URL 路径到本地保存路径的映射规则
+PATH_MAPPING = {
+    "guide": "references/guide.md",
 }
 
 
-def fetch_page(url):
-    """获取页面内容，手动处理 308 重定向"""
+def fetch_url(url):
+    """获取 URL 内容"""
     req = urllib.request.Request(url, headers=HEADERS)
     try:
-        with urllib.request.urlopen(req, context=ctx, timeout=30) as resp:
+        with urllib.request.urlopen(req, context=ctx, timeout=60) as resp:
             return resp.read().decode('utf-8')
-    except urllib.error.HTTPError as e:
-        # 308 重定向：urllib 不支持，手动跟随
-        if e.code == 308:
-            location = e.headers.get('Location')
-            if location:
-                req2 = urllib.request.Request(location, headers=HEADERS)
-                try:
-                    with urllib.request.urlopen(req2, context=ctx, timeout=30) as resp2:
-                        return resp2.read().decode('utf-8')
-                except Exception as e2:
-                    print(f"  ❌ 重定向后获取失败: {e2}")
-                    return None
-        print(f"  ❌ 获取失败: {e}")
-        return None
     except Exception as e:
         print(f"  ❌ 获取失败: {e}")
         return None
 
 
-def extract_article(html):
-    """提取 article 标签内容"""
-    match = re.search(r'<article[^>]*>(.*?)</article>', html, re.DOTALL)
-    if match:
-        return match.group(1)
-    return None
+def resolve_local_path(doc_path):
+    """根据文档路径确定本地保存路径"""
+    if doc_path in PATH_MAPPING:
+        return PATH_MAPPING[doc_path]
+
+    # quick-started/prerequisites -> references/quick-started/prerequisites.md
+    # core-concepts/manifest -> references/core-concepts/manifest.md
+    # examples/native -> references/examples/native.md
+    # cli/fnpack -> references/cli/fnpack.md
+    # update-log/20260705 -> references/update-log/20260705.md
+    if "/" in doc_path:
+        return f"references/{doc_path}.md"
+
+    return f"references/{doc_path}.md"
 
 
-def html_to_markdown(html):
-    """将 HTML 转换为 Markdown"""
-    if not html:
-        return ""
+def rewrite_relative_links(content):
+    """将内容中的相对链接重写为本地 references/ 路径"""
+    # 站点内相对路径：./quick-started/prerequisites.md -> ../quick-started/prerequisites.md
+    # ../core-concepts/manifest.md -> ../core-concepts/manifest.md
+    def replace_link(m):
+        text = m.group(1)
+        href = m.group(2)
 
-    text = html
+        # 跳过外部链接和锚点
+        if href.startswith("http://") or href.startswith("https://") or href.startswith("#"):
+            return m.group(0)
 
-    # 处理标题
-    text = re.sub(r'<h1[^>]*>(.*?)</h1>', r'# \1\n\n', text, flags=re.DOTALL)
-    text = re.sub(r'<h2[^>]*>(.*?)</h2>', r'## \1\n\n', text, flags=re.DOTALL)
-    text = re.sub(r'<h3[^>]*>(.*?)</h3>', r'### \1\n\n', text, flags=re.DOTALL)
-    text = re.sub(r'<h4[^>]*>(.*?)</h4>', r'#### \1\n\n', text, flags=re.DOTALL)
-    text = re.sub(r'<h5[^>]*>(.*?)</h5>', r'##### \1\n\n', text, flags=re.DOTALL)
+        # 处理 ./xxx.md 相对路径
+        if href.startswith("./"):
+            href = href[2:]
 
-    # 处理代码块
-    def replace_code_block(m):
-        lang = m.group(1) or ''
-        code = m.group(2)
-        code = re.sub(r'<[^>]+>', '', code)
-        code = code.strip()
-        return f'```{lang}\n{code}\n```\n\n'
+        # 处理 ../xxx/xxx.md 相对路径，保留原样即可，因为本地目录结构与站点一致
+        if href.startswith("../"):
+            return f"[{text}]({href})"
 
-    text = re.sub(r'<pre[^>]*><code[^>]*class="language-(\w+)"[^>]*>(.*?)</code></pre>',
-                  replace_code_block, text, flags=re.DOTALL)
-    text = re.sub(r'<pre[^>]*><code[^>]*>(.*?)</code></pre>',
-                  lambda m: f'```\n{m.group(1)}\n```\n\n', text, flags=re.DOTALL)
-    text = re.sub(r'<pre[^>]*>(.*?)</pre>',
-                  lambda m: f'```\n{m.group(1)}\n```\n\n', text, flags=re.DOTALL)
+        # 处理 /docs/xxx/xxx 路径
+        if href.startswith("/docs/"):
+            local_path = href[len("/docs/"):]
+            if local_path.endswith(".md"):
+                local_path = local_path[:-3]
+            local_path = local_path.rstrip("/")
+            return f"[{text}](../{local_path}.md)"
 
-    # 处理行内代码
-    text = re.sub(r'<code[^>]*>(.*?)</code>', r'`\1`', text)
+        # 处理站点图片资源 /img/xxx
+        if href.startswith("/img/"):
+            return f"[{text}](https://developer.fnnas.com{href})"
 
-    # 处理粗体和斜体
-    text = re.sub(r'<strong[^>]*>(.*?)</strong>', r'**\1**', text, flags=re.DOTALL)
-    text = re.sub(r'<b[^>]*>(.*?)</b>', r'**\1**', text, flags=re.DOTALL)
-    text = re.sub(r'<em[^>]*>(.*?)</em>', r'*\1*', text, flags=re.DOTALL)
-    text = re.sub(r'<i[^>]*>(.*?)</i>', r'*\1*', text, flags=re.DOTALL)
+        return m.group(0)
 
-    # 处理链接
-    text = re.sub(r'<a[^>]*href="([^"]*)"[^>]*>(.*?)</a>', r'[\2](\1)', text, flags=re.DOTALL)
-
-    # 处理图片
-    text = re.sub(r'<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*/?>',
-                  r'![\2](\1)', text)
-    text = re.sub(r'<img[^>]*src="([^"]*)"[^>]*/?>', r'![](\1)', text)
-
-    # 处理列表
-    text = re.sub(r'<ul[^>]*>', '\n', text)
-    text = re.sub(r'</ul>', '\n', text)
-    text = re.sub(r'<ol[^>]*>', '\n', text)
-    text = re.sub(r'</ol>', '\n', text)
-    text = re.sub(r'<li[^>]*>(.*?)</li>', r'- \1\n', text, flags=re.DOTALL)
-
-    # 处理表格
-    text = re.sub(r'<table[^>]*>', '\n', text)
-    text = re.sub(r'</table>', '\n', text)
-    text = re.sub(r'<thead[^>]*>', '', text)
-    text = re.sub(r'</thead>', '', text)
-    text = re.sub(r'<tbody[^>]*>', '', text)
-    text = re.sub(r'</tbody>', '', text)
-    text = re.sub(r'<tr[^>]*>(.*?)</tr>', lambda m: m.group(1).strip() + '\n', text, flags=re.DOTALL)
-    text = re.sub(r'<th[^>]*>(.*?)</th>', r'| \1 ', text, flags=re.DOTALL)
-    text = re.sub(r'<td[^>]*>(.*?)</td>', r'| \1 ', text, flags=re.DOTALL)
-
-    # 处理引用块
-    text = re.sub(r'<blockquote[^>]*>(.*?)</blockquote>',
-                  lambda m: '> ' + m.group(1).strip().replace('\n', '\n> ') + '\n\n',
-                  text, flags=re.DOTALL)
-
-    # 处理段落
-    text = re.sub(r'<p[^>]*>(.*?)</p>', r'\1\n\n', text, flags=re.DOTALL)
-
-    # 处理换行
-    text = re.sub(r'<br\s*/?>', '\n', text)
-    text = re.sub(r'<hr\s*/?>', '\n---\n\n', text)
-
-    # 处理提示框 (admonition)
-    text = re.sub(r'<div[^>]*class="admonition admonition-(\w+)"[^>]*>.*?<p[^>]*class="admonition-title"[^>]*>(.*?)</p>(.*?)</div>',
-                  lambda m: f':::{m.group(1)}\n**{m.group(2)}**\n{m.group(3).strip()}\n:::\n\n',
-                  text, flags=re.DOTALL)
-
-    # 移除剩余 HTML 标签
-    text = re.sub(r'<[^>]+>', '', text)
-
-    # 清理 HTML 实体
-    text = text.replace('&amp;', '&')
-    text = text.replace('&lt;', '<')
-    text = text.replace('&gt;', '>')
-    text = text.replace('&quot;', '"')
-    text = text.replace('&#39;', "'")
-    text = text.replace('&nbsp;', ' ')
-    text = text.replace('\u0000', '')
-
-    # 清理多余空白
-    text = re.sub(r'\n{3,}', '\n\n', text)
-    text = text.strip()
-
-    return text
+    content = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', replace_link, content)
+    return content
 
 
-def add_header(title, content):
-    """添加文档头部"""
-    header = f"""---
+def parse_docs(text):
+    """解析 llms-full.txt，返回 [(doc_path, title, content), ...]"""
+    docs = []
+
+    # 按 Source: 行分割
+    pattern = r'^Source: (https://developer\.fnnas\.com/docs/(.+))\n\n'
+    matches = list(re.finditer(pattern, text, re.MULTILINE))
+
+    for i, match in enumerate(matches):
+        url = match.group(1)
+        doc_path = match.group(2).rstrip('/')
+        start = match.end()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        section = text[start:end].strip()
+
+        # 提取标题（第一行 # 标题）
+        lines = section.split('\n')
+        title = doc_path
+        content_start = 0
+
+        if lines and lines[0].startswith('# '):
+            title = lines[0][2:].strip()
+            content_start = 1
+        elif lines and lines[0].startswith('## '):
+            title = lines[0][3:].strip()
+            content_start = 1
+
+        body = '\n'.join(lines[content_start:]).strip()
+        body = rewrite_relative_links(body)
+
+        docs.append((doc_path, title, body, url))
+
+    return docs
+
+
+def add_frontmatter(title, source_url):
+    """生成 Markdown frontmatter"""
+    return f"""---
 title: {title}
-source: https://developer.fnnas.com/docs/
+source: {source_url}
 ---
 
 """
-    return header + content
 
 
 def main():
-    """主函数"""
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    # 脚本位于 scripts/ 目录下，工作目录应为技能根目录
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     os.chdir(base_dir)
 
-    total = len(DOCS)
+    print("📚 开始同步飞牛应用开发文档")
+    print(f"   来源: {LLMS_FULL_URL}")
+    print("=" * 50)
+
+    text = fetch_url(LLMS_FULL_URL)
+    if not text:
+        return
+
+    docs = parse_docs(text)
+    total = len(docs)
     success = 0
     failed = []
 
-    print(f"📚 开始抓取飞牛应用开发文档 (共 {total} 篇)")
-    print("=" * 50)
+    print(f"\n📝 解析到 {total} 篇文档")
 
-    for doc_path, file_path in DOCS.items():
-        url = BASE_URL + doc_path
+    for doc_path, title, body, url in docs:
+        file_path = resolve_local_path(doc_path)
         print(f"\n📄 [{success + 1}/{total}] {doc_path}")
-        print(f"   URL: {url}")
+        print(f"   保存: {file_path}")
 
-        # 获取页面
-        html = fetch_page(url)
-        if not html:
+        try:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+            content = add_frontmatter(title, url) + body + '\n'
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+
+            print(f"  ✅ 成功 ({len(content)} 字符)")
+            success += 1
+        except Exception as e:
+            print(f"  ❌ 失败: {e}")
             failed.append(doc_path)
-            continue
 
-        # 提取 article 内容
-        article = extract_article(html)
-        if not article:
-            print(f"  ⚠️ 未找到 article 标签")
-            failed.append(doc_path)
-            continue
-
-        # 转换为 Markdown
-        markdown = html_to_markdown(article)
-
-        # 提取标题
-        title_match = re.search(r'<h1[^>]*>(.*?)</h1>', article, re.DOTALL)
-        title = re.sub(r'<[^>]+>', '', title_match.group(1)).strip() if title_match else doc_path.split('/')[-1]
-
-        # 添加头部
-        markdown = add_header(title, markdown)
-
-        # 创建目录
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
-        # 保存文件
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(markdown)
-
-        print(f"  ✅ 保存成功: {file_path}")
-        print(f"     标题: {title}")
-        print(f"     大小: {len(markdown)} 字符")
-
-        success += 1
-
-        # 避免请求过快
-        time.sleep(0.5)
-
-    # 汇总
     print("\n" + "=" * 50)
-    print(f"📊 抓取完成:")
+    print(f"📊 同步完成:")
     print(f"   ✅ 成功: {success}/{total}")
     if failed:
         print(f"   ❌ 失败: {len(failed)}")
