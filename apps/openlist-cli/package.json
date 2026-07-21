@@ -1,0 +1,42 @@
+{
+  "name": "@tnnevol/openlist-cli",
+  "version": "0.1.0",
+  "description": "CLI for OpenList - A modern file list program",
+  "type": "module",
+  "bin": {
+    "openlist": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "link": "pnpm link --global"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "undici": "^7.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "openlist",
+    "alist",
+    "cli",
+    "file-manager"
+  ],
+  "author": "tnnevol",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}
