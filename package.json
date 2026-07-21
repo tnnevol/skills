@@ -3,18 +3,7 @@
   "private": true,
   "packageManager": "pnpm@10.32.1",
   "scripts": {
-    "lint": "eslint .",
-    "chandao:build": "pnpm --filter @tnnevol/chandao-cli build",
-    "chandao:build:linux": "pnpm --filter @tnnevol/chandao-cli build:linux",
-    "chandao:build:macos": "pnpm --filter @tnnevol/chandao-cli build:macos",
-    "chandao:build:windows": "pnpm --filter @tnnevol/chandao-cli build:windows",
-    "chandao:clean": "pnpm --filter @tnnevol/chandao-cli clean",
-    "chandao:verify": "pnpm --filter @tnnevol/chandao-cli verify",
-    "chandao:publish": "pnpm --filter @tnnevol/chandao-cli publish",
-    "chandao:bump": "bumpp",
-    "chandao:bump:patch": "bumpp patch -y",
-    "chandao:bump:minor": "bumpp minor -y",
-    "chandao:bump:major": "bumpp major -y"
+    "lint": "eslint ."
   },
   "devDependencies": {
     "@antfu/eslint-config": "^7.7.2",
