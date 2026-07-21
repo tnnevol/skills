@@ -12,8 +12,7 @@
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
-    "clean": "rm -rf dist",
-    "link": "pnpm link --global"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "chalk": "^5.4.1",

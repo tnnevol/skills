@@ -12,7 +12,7 @@ const appsDir = join(rootDir, "apps");
 const command = process.argv[2];
 
 if (!command) {
-  console.error("用法: node app-runner.js <dev|build|link|clean|bump|publish>");
+  console.error("用法: node app-runner.js <dev|build|clean|bump|publish>");
   process.exit(1);
 }
 
@@ -48,7 +48,6 @@ console.log(`\n选择的应用: ${app} (${packageName})\n`);
 switch (command) {
   case "dev":
   case "build":
-  case "link":
   case "clean":
     execSync(`pnpm --filter ${packageName} ${command}`, {
       cwd: rootDir,
