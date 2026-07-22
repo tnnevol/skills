@@ -60,14 +60,14 @@ export function resolveConfig(options: {
 
   if (!baseUrl) {
     console.error(
-      "Error: OpenList 服务地址未配置。请使用 --base-url 选项或设置 OPENLIST_BASE_URL 环境变量，或运行 `openlist auth login` 进行配置。",
+      "Error: OpenList 服务地址未配置。请使用 --base-url 选项或设置 OPENLIST_BASE_URL 环境变量，或运行 `openlist-cli auth login` 进行配置。",
     );
     process.exit(1);
   }
 
   if (!token) {
     console.error(
-      "Error: API Token 未配置。请使用 --token 选项或设置 OPENLIST_TOKEN 环境变量，或运行 `openlist auth login` 进行配置。",
+      "Error: API Token 未配置。请使用 --token 选项或设置 OPENLIST_TOKEN 环境变量，或运行 `openlist-cli auth login` 进行配置。",
     );
     process.exit(1);
   }

@@ -4,7 +4,7 @@
   "description": "CLI for OpenList - A modern file list program",
   "type": "module",
   "bin": {
-    "openlist": "./dist/cli.js"
+    "openlist-cli": "./dist/cli.js"
   },
   "files": [
     "dist"
@@ -12,7 +12,10 @@
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run src/__tests__/e2e.test.ts"
   },
   "dependencies": {
     "chalk": "^5.4.1",
@@ -21,8 +24,10 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
+    "dotenv": "^17.4.2",
     "tsup": "^8.4.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^4.1.10"
   },
   "engines": {
     "node": ">=20.0.0"

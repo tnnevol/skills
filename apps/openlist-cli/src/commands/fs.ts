@@ -52,18 +52,22 @@ export function registerFsCommand(program: Command): void {
 
   fs.command("search")
     .description("搜索文件和目录")
-    .requiredOption("-k, --keyword <keyword>", "搜索关键词")
+    .requiredOption("-k, --keywords <keywords>", "搜索关键词")
     .option("-p, --parent <parent>", "父目录路径", "/")
+    .option("--scope <scope>", "搜索类型: 0=全部 1=文件夹 2=文件", "0")
     .option("--page <page>", "页码", "1")
     .option("--per-page <perPage>", "每页数量", "20")
+    .option("-P, --password <password>", "目录密码", "")
     .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
         const response = await client.post("/api/fs/search", {
           parent: options.parent,
-          keyword: options.keyword,
+          keywords: options.keywords,
+          scope: parseInt(options.scope),
           page: parseInt(options.page),
           per_page: parseInt(options.perPage),
+          password: options.password,
         });
         handleApiResponse(response, "fs.search");
       } catch (error) {
@@ -109,14 +113,16 @@ export function registerFsCommand(program: Command): void {
 
   fs.command("move")
     .description("移动文件或目录")
-    .requiredOption("--paths <paths>", "源路径列表（逗号分隔）")
-    .requiredOption("--target <target>", "目标目录")
+    .requiredOption("--src-dir <srcDir>", "源目录")
+    .requiredOption("--dst-dir <dstDir>", "目标目录")
+    .requiredOption("--names <names>", "文件名列表（逗号分隔）")
     .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
         const response = await client.post("/api/fs/move", {
-          paths: options.paths.split(","),
-          target: options.target,
+          src_dir: options.srcDir,
+          dst_dir: options.dstDir,
+          names: options.names.split(","),
         });
         handleApiResponse(response, "fs.move");
       } catch (error) {
@@ -126,14 +132,16 @@ export function registerFsCommand(program: Command): void {
 
   fs.command("copy")
     .description("复制文件或目录")
-    .requiredOption("--paths <paths>", "源路径列表（逗号分隔）")
-    .requiredOption("--target <target>", "目标目录")
+    .requiredOption("--src-dir <srcDir>", "源目录")
+    .requiredOption("--dst-dir <dstDir>", "目标目录")
+    .requiredOption("--names <names>", "文件名列表（逗号分隔）")
     .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
         const response = await client.post("/api/fs/copy", {
-          paths: options.paths.split(","),
-          target: options.target,
+          src_dir: options.srcDir,
+          dst_dir: options.dstDir,
+          names: options.names.split(","),
         });
         handleApiResponse(response, "fs.copy");
       } catch (error) {
@@ -141,12 +149,17 @@ export function registerFsCommand(program: Command): void {
       }
     });
 
-  fs.command("remove <paths...>")
+  fs.command("remove")
     .description("删除文件或目录")
-    .action(async (paths: string[], options, cmd) => {
+    .requiredOption("--dir <dir>", "所在目录")
+    .requiredOption("--names <names>", "文件名列表（逗号分隔）")
+    .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
-        const response = await client.post("/api/fs/remove", { paths });
+        const response = await client.post("/api/fs/remove", {
+          dir: options.dir,
+          names: options.names.split(","),
+        });
         handleApiResponse(response, "fs.remove");
       } catch (error) {
         printError(error instanceof Error ? error.message : "删除失败");
@@ -177,12 +190,9 @@ export function registerFsCommand(program: Command): void {
           body: content,
         });
 
-        const body = await response.body.json();
-        if (body.code === 200) {
-          handleApiResponse(body, "fs.put");
-        } else {
-          handleApiResponse(body, "fs.put");
-        }
+        const body =
+          (await response.body.json()) as import("../client.js").ApiResponse;
+        handleApiResponse(body, "fs.put");
       } catch (error) {
         printError(error instanceof Error ? error.message : "上传失败");
       }
@@ -236,12 +246,14 @@ export function registerFsCommand(program: Command): void {
 
   fs.command("batch-rename")
     .description("批量重命名")
+    .requiredOption("--src-dir <srcDir>", "源目录")
     .requiredOption("--rename-objects <json>", "重命名规则 JSON")
     .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
         const renameObjects = JSON.parse(options.renameObjects);
         const response = await client.post("/api/fs/batch_rename", {
+          src_dir: options.srcDir,
           rename_objects: renameObjects,
         });
         handleApiResponse(response, "fs.batch-rename");
@@ -252,16 +264,16 @@ export function registerFsCommand(program: Command): void {
 
   fs.command("regex-rename")
     .description("正则批量重命名")
-    .requiredOption("--path <path>", "目录路径")
-    .requiredOption("--pattern <pattern>", "正则表达式")
-    .requiredOption("--replacement <replacement>", "替换字符串")
+    .requiredOption("--src-dir <srcDir>", "源目录")
+    .requiredOption("--src-name-regex <regex>", "源文件名正则表达式")
+    .requiredOption("--new-name-regex <regex>", "新文件名正则表达式")
     .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
         const response = await client.post("/api/fs/regex_rename", {
-          path: options.path,
-          pattern: options.pattern,
-          replacement: options.replacement,
+          src_dir: options.srcDir,
+          src_name_regex: options.srcNameRegex,
+          new_name_regex: options.newNameRegex,
         });
         handleApiResponse(response, "fs.regex-rename");
       } catch (error) {
@@ -292,7 +304,7 @@ export function registerFsCommand(program: Command): void {
       try {
         const client = getClient(cmd);
         const response = await client.post("/api/fs/remove_empty_directory", {
-          path,
+          src_dir: path,
         });
         handleApiResponse(response, "fs.remove-empty-dirs");
       } catch (error) {
@@ -302,16 +314,22 @@ export function registerFsCommand(program: Command): void {
 
   fs.command("offline-download")
     .description("添加离线下载任务")
-    .requiredOption("--url <url>", "下载链接")
+    .requiredOption("--urls <urls>", "下载链接（逗号分隔）")
     .requiredOption("--path <path>", "保存路径")
-    .option("--tool <tool>", "下载工具")
+    .requiredOption("--tool <tool>", "下载工具 (aria2/SimpleHttp/qBittorrent)")
+    .option(
+      "--delete-policy <policy>",
+      "删除策略 (delete_on_upload_succeed/delete_on_upload_failed/delete_never/delete_always)",
+      "delete_on_upload_succeed",
+    )
     .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
         const response = await client.post("/api/fs/add_offline_download", {
-          url: options.url,
+          urls: options.urls.split(","),
           path: options.path,
           tool: options.tool,
+          delete_policy: options.deletePolicy,
         });
         handleApiResponse(response, "fs.offline-download");
       } catch (error) {
