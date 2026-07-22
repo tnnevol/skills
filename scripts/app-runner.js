@@ -56,7 +56,10 @@ switch (command) {
     break;
 
   case "bump":
-    execSync(`pnpm exec bumpp --no-push`, { cwd: appPath, stdio: "inherit" });
+    execSync(`pnpm exec bumpp --no-push --no-tag`, {
+      cwd: appPath,
+      stdio: "inherit",
+    });
     break;
 
   case "publish": {
