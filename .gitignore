@@ -18,3 +18,8 @@ core
 .claude
 .qwen
 temp
+.pnpm-store
+
+# openlist-cli 测试运行时的临时产物（中断时可能残留）
+.tmp-home-*
+.tmp-upload-*
