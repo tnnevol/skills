@@ -13,9 +13,8 @@
     "dev": "tsup --watch",
     "build": "tsup",
     "clean": "rm -rf dist",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:e2e": "vitest run src/__tests__/e2e.test.ts"
+    "test": "pnpm build && vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "chalk": "^5.4.1",
