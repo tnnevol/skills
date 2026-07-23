@@ -165,29 +165,35 @@ openlist-cli share list --page 1 --per-page 50
 
 ### admin - 后台管理
 
-| 命令                   | 说明         |
-| ---------------------- | ------------ |
-| `admin list`           | 列出管理资源 |
-| `admin get <id>`       | 获取资源详情 |
-| `admin create`         | 创建资源     |
-| `admin update <id>`    | 更新资源     |
-| `admin delete <id>`    | 删除资源     |
-| `admin index-build`    | 构建搜索索引 |
-| `admin index-stop`     | 停止索引构建 |
-| `admin index-clear`    | 清除搜索索引 |
-| `admin index-progress` | 获取索引进度 |
+按资源分组：`admin <资源> <操作>`。
 
-资源类型（`--type`）：`user`、`storage`、`driver`、`setting`、`meta`、`index`
+| 资源            | 操作                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------ |
+| `admin user`    | `list` / `get <id>` / `create` / `update <id>` / `delete <id>`                                               |
+| `admin storage` | `list` / `get <id>` / `create` / `update <id>` / `delete <id>` / `enable <id>` / `disable <id>` / `load-all` |
+| `admin meta`    | `list` / `get <id>` / `create` / `update <id>` / `delete <id>`                                               |
+| `admin setting` | `list` / `get <key>` / `save` / `delete <key>` / `reset-token`                                               |
+| `admin driver`  | `list` / `names` / `info <name>`                                                                             |
+| `admin index`   | `build` / `stop` / `clear` / `progress` / `update`                                                           |
+
+说明：`get`/`delete` 等按 `?id=` 查询；`setting` 的 `get`/`delete` 按 `key`；`create`/`update`/`save` 使用 `--file <path>` 或 `--data <json>` 传入 JSON 体。
 
 ```bash
 # 列出用户
-openlist-cli admin list --type user
+openlist-cli admin user list
+
+# 按 key 获取设置
+openlist-cli admin setting get version
 
 # 创建存储（从 JSON 文件）
-openlist-cli admin create --type storage --file ./storage-config.json
+openlist-cli admin storage create --file ./storage-config.json
+
+# 启用/禁用存储
+openlist-cli admin storage enable 1
+openlist-cli admin storage disable 1
 
 # 构建搜索索引
-openlist-cli admin index-build
+openlist-cli admin index build
 ```
 
 ## 开发

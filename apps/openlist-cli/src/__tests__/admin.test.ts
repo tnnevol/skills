@@ -1,43 +1,94 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { runCli, requireEnv } from "./helpers.js";
 
-// admin 命令测试仅覆盖只读操作（list / get / index-progress）与参数校验，
-// 不测试 create/update/delete/index-build 等破坏性或重负载操作。
-describe("admin 命令", () => {
+// admin 命令改为按资源子命令树（admin <资源> <操作>）。
+// 测试仅覆盖只读操作（list/get/progress/driver 查询），
+// 不测试 create/update/delete/enable/disable/save/reset-token/index-build 等
+// 破坏性操作（会真实改动后台数据）。
+describe("admin 命令（按资源子命令树）", () => {
   beforeAll(() => {
     requireEnv("OPENLIST_BASE_URL");
     requireEnv("OPENLIST_TOKEN");
   });
 
-  it.each(["user", "storage", "setting", "meta"])(
-    "list --type %s 返回资源",
-    (type) => {
-      const r = runCli(["admin", "list", "--type", type]);
-      expect(r.code).toBe(0);
-      expect(r.json.success).toBe(true);
-      expect(r.json.operation).toBe(`admin.list(${type})`);
-      expect(r.json.data).toBeDefined();
-    },
-  );
-
-  it("list 无效 --type 时本地校验报错", () => {
-    const r = runCli(["admin", "list", "--type", "bogus"]);
-    expect(r.json.success).toBe(false);
-    expect(r.json.message).toContain("无效的资源类型");
+  it("user list 列出用户", () => {
+    const r = runCli(["admin", "user", "list"]);
+    expect(r.code).toBe(0);
+    expect(r.json.success).toBe(true);
+    expect(r.json.operation).toBe("admin.user.list");
+    expect(r.json.data).toBeDefined();
   });
 
-  it("get 返回指定用户详情", () => {
-    // id=1 为默认 admin 用户
-    const r = runCli(["admin", "get", "1", "--type", "user"]);
+  it("user get 获取指定用户", () => {
+    // id=1 为默认 admin
+    const r = runCli(["admin", "user", "get", "1"]);
     expect(r.json.success).toBe(true);
-    expect(r.json.operation).toBe("admin.get(user)");
+    expect(r.json.operation).toBe("admin.user.get");
     expect(r.json.data).toHaveProperty("id");
   });
 
-  it("index-progress 返回索引进度", () => {
-    const r = runCli(["admin", "index-progress"]);
+  it("storage list 列出存储", () => {
+    const r = runCli(["admin", "storage", "list"]);
     expect(r.json.success).toBe(true);
-    expect(r.json.operation).toBe("admin.index-progress");
+    expect(r.json.operation).toBe("admin.storage.list");
+    expect(r.json.data).toBeDefined();
+  });
+
+  it("storage get 获取指定存储", () => {
+    const r = runCli(["admin", "storage", "get", "1"]);
+    expect(r.json.success).toBe(true);
+    expect(r.json.operation).toBe("admin.storage.get");
+    expect(r.json.data).toHaveProperty("id");
+  });
+
+  it("meta list 列出元信息", () => {
+    const r = runCli(["admin", "meta", "list"]);
+    expect(r.json.success).toBe(true);
+    expect(r.json.operation).toBe("admin.meta.list");
+    expect(r.json.data).toBeDefined();
+  });
+
+  it("setting list 列出设置", () => {
+    const r = runCli(["admin", "setting", "list"]);
+    expect(r.json.success).toBe(true);
+    expect(r.json.operation).toBe("admin.setting.list");
+    expect(Array.isArray(r.json.data)).toBe(true);
+  });
+
+  it("setting get 按 key 获取设置", () => {
+    // version 为内置设置项，按 key 查询（修正后不再用 id）
+    const r = runCli(["admin", "setting", "get", "version"]);
+    expect(r.json.success).toBe(true);
+    expect(r.json.operation).toBe("admin.setting.get");
+    expect(r.json.data.key).toBe("version");
+  });
+
+  it("driver list 列出驱动模板", () => {
+    const r = runCli(["admin", "driver", "list"]);
+    expect(r.json.success).toBe(true);
+    expect(r.json.operation).toBe("admin.driver.list");
+    expect(r.json.data).toBeDefined();
+  });
+
+  it("driver names 列出驱动名", () => {
+    const r = runCli(["admin", "driver", "names"]);
+    expect(r.json.success).toBe(true);
+    expect(r.json.operation).toBe("admin.driver.names");
+    expect(Array.isArray(r.json.data)).toBe(true);
+    expect(r.json.data.length).toBeGreaterThan(0);
+  });
+
+  it("driver info 获取指定驱动信息", () => {
+    const r = runCli(["admin", "driver", "info", "SMB"]);
+    expect(r.json.success).toBe(true);
+    expect(r.json.operation).toBe("admin.driver.info");
+    expect(r.json.data).toBeDefined();
+  });
+
+  it("index progress 获取索引进度", () => {
+    const r = runCli(["admin", "index", "progress"]);
+    expect(r.json.success).toBe(true);
+    expect(r.json.operation).toBe("admin.index.progress");
     expect(r.json.data).toHaveProperty("is_done");
   });
 });
