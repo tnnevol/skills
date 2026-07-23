@@ -41,25 +41,25 @@
 | `fs put`               | PUT /api/fs/put                     | 一致（File-Path 头 + 流式 body）      |
 | `fs form`              | PUT /api/fs/form                    | 一致（multipart）                     |
 
-### fs — 压缩包（❗有差异，已修正）
+### fs — 压缩包
 
-| CLI 命令                | 接口                            | 与文档差异                                                                                                         |
-| ----------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `fs archive-meta`       | POST /api/fs/archive/meta       | 一致（`{path}`）                                                                                                   |
-| `fs archive-list`       | POST /api/fs/archive/list       | ❗文档字段 `inner_path`→ 实际 `archive_path`，**已按服务端修正**                                                    |
-| `fs archive-decompress` | POST /api/fs/archive/decompress | ❗文档 `{path, archive_path}` 且 `name` 标为 string；实际为 `{src_dir, name:[]string, dst_dir}`，**已按服务端修正** |
+| CLI 命令                | 接口                            | 与文档差异                                                                                                |
+| ----------------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `fs archive-meta`       | POST /api/fs/archive/meta       | 一致（`{path}`）                                                                                          |
+| `fs archive-list`       | POST /api/fs/archive/list       | 一致（apifox 参数 `{path, archive_path}` 与当前实现一致）                                                 |
+| `fs archive-decompress` | POST /api/fs/archive/decompress | 字段一致（`{src_dir, name, dst_dir}`）；仅 `name` 类型不同：apifox 标为 string，实现按服务端用 `[]string` |
 
 ### share — 分享（❗文档错误，实现以服务端为准）
 
-| CLI 命令        | 接口                       | 与文档差异                                                                       |
-| --------------- | -------------------------- | -------------------------------------------------------------------------------- |
-| `share list`    | POST /api/share/list       | 一致                                                                             |
-| `share get`     | GET /api/share/get?id=     | 一致                                                                             |
-| `share create`  | POST /api/share/create     | ❗文档 `paths`+`password`；实际 **`files`+`pwd`**（文档错，见 GitHub issue #306） |
-| `share update`  | POST /api/share/update     | ❗文档仅需 `id`+`password`；实际 **必须带 `files`，密码字段为 `pwd`**             |
-| `share delete`  | POST /api/share/delete?id= | ❗必须用 **query `?id=`**；请求体传 `{id}` 会报 `WHERE conditions required`       |
-| `share enable`  | POST /api/share/enable     | 一致（`{id}`）                                                                   |
-| `share disable` | POST /api/share/disable    | 一致（`{id}`）                                                                   |
+| CLI 命令        | 接口                       | 与文档差异                                                                                                                               |
+| --------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `share list`    | POST /api/share/list       | 一致                                                                                                                                     |
+| `share get`     | GET /api/share/get?id=     | 一致                                                                                                                                     |
+| `share create`  | POST /api/share/create     | ❗文档 `paths`+`password`+`expiration`；实际 **`files`+`pwd`+`expires`**（文档字段均错，`expiration` 传了也被忽略；见 GitHub issue #306） |
+| `share update`  | POST /api/share/update     | ❗文档仅需 `id`+`password`；实际 **必须带 `files`，密码字段为 `pwd`，过期为 `expires`（RFC3339）**                                        |
+| `share delete`  | POST /api/share/delete?id= | ❗必须用 **query `?id=`**；请求体传 `{id}` 会报 `WHERE conditions required`                                                               |
+| `share enable`  | POST /api/share/enable     | 一致（`{id}`）                                                                                                                           |
+| `share disable` | POST /api/share/disable    | 一致（`{id}`）                                                                                                                           |
 
 ### me — 当前用户
 
