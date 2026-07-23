@@ -24,8 +24,11 @@ export class OpenListClient {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${path}`;
 
+    // 二进制 body（文件上传）：不做 JSON 序列化，也不强制 json Content-Type
+    const isRaw = Buffer.isBuffer(body) || body instanceof Uint8Array;
+
     const requestHeaders: Record<string, string> = {
-      "Content-Type": "application/json",
+      ...(isRaw ? {} : { "Content-Type": "application/json" }),
       ...headers,
     };
 
@@ -37,7 +40,12 @@ export class OpenListClient {
       const response = await undiciRequest(url, {
         method: method.toUpperCase(),
         headers: requestHeaders,
-        body: body ? JSON.stringify(body) : undefined,
+        body:
+          body === undefined || body === null
+            ? undefined
+            : isRaw
+              ? (body as Buffer)
+              : JSON.stringify(body),
       });
 
       const responseBody = (await response.body.json()) as ApiResponse<T>;
@@ -64,8 +72,9 @@ export class OpenListClient {
   async put<T = unknown>(
     path: string,
     body?: unknown,
+    headers?: Record<string, string>,
   ): Promise<ApiResponse<T>> {
-    return this.request<T>("PUT", path, body);
+    return this.request<T>("PUT", path, body, headers);
   }
 
   async delete<T = unknown>(

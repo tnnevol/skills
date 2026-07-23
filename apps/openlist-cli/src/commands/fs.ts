@@ -9,6 +9,46 @@ function getClient(cmd: Command) {
   return createClient(config);
 }
 
+interface UploadOptions {
+  asTask?: boolean;
+  overwrite?: string;
+  lastModified?: string;
+  md5?: string;
+  sha1?: string;
+  sha256?: string;
+}
+
+// 依据文档为 /api/fs/put 与 /api/fs/form 构造上传请求头；
+// 除必填 File-Path/Content-Type 外，其余可选头仅在用户显式提供时才发送。
+function buildUploadHeaders(
+  remote: string,
+  contentType: string,
+  options: UploadOptions,
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    "File-Path": encodeURIComponent(remote),
+    "Content-Type": contentType,
+  };
+  if (options.asTask) headers["As-Task"] = "true";
+  if (options.overwrite !== undefined) headers["Overwrite"] = options.overwrite;
+  if (options.lastModified) headers["Last-Modified"] = options.lastModified;
+  if (options.md5) headers["X-File-Md5"] = options.md5;
+  if (options.sha1) headers["X-File-Sha1"] = options.sha1;
+  if (options.sha256) headers["X-File-Sha256"] = options.sha256;
+  return headers;
+}
+
+// 上传命令共用的可选头选项（对应文档 header 参数）
+function withUploadOptions(command: Command): Command {
+  return command
+    .option("--as-task", "作为后台任务上传（As-Task）")
+    .option("--overwrite <bool>", "是否允许覆盖 true/false（默认 true）")
+    .option("--last-modified <ms>", "文件修改时间（Unix 毫秒时间戳）")
+    .option("--md5 <hash>", "文件 MD5（X-File-Md5）")
+    .option("--sha1 <hash>", "文件 SHA1（X-File-Sha1）")
+    .option("--sha256 <hash>", "文件 SHA256（X-File-Sha256）");
+}
+
 export function registerFsCommand(program: Command): void {
   const fs = program.command("fs").description("管理文件和目录");
 
@@ -166,7 +206,7 @@ export function registerFsCommand(program: Command): void {
       }
     });
 
-  fs.command("put <local> <remote>")
+  withUploadOptions(fs.command("put <local> <remote>"))
     .description("上传文件（流式）")
     .action(async (local: string, remote: string, options, cmd) => {
       try {
@@ -174,71 +214,50 @@ export function registerFsCommand(program: Command): void {
         const { readFileSync } = await import("node:fs");
         const content = readFileSync(local);
 
-        const opts = cmd.optsWithGlobals();
-        const config = resolveConfig({
-          baseUrl: opts.baseUrl,
-          token: opts.token,
-        });
-        const { request } = await import("undici");
-        const response = await request(`${config.baseUrl}/api/fs/put`, {
-          method: "PUT",
-          headers: {
-            Authorization: config.token,
-            "File-Path": encodeURIComponent(remote),
-            "Content-Type": "application/octet-stream",
-          },
-          body: content,
-        });
-
-        const body =
-          (await response.body.json()) as import("../client.js").ApiResponse;
-        handleApiResponse(body, "fs.put");
+        const response = await client.put(
+          "/api/fs/put",
+          content,
+          buildUploadHeaders(remote, "application/octet-stream", options),
+        );
+        handleApiResponse(response, "fs.put");
       } catch (error) {
         printError(error instanceof Error ? error.message : "上传失败");
       }
     });
 
   // Phase 3 扩展命令
-  fs.command("form <local> <remote>")
+  withUploadOptions(fs.command("form <local> <remote>"))
     .description("上传文件（表单模式）")
     .action(async (local: string, remote: string, options, cmd) => {
       try {
+        const client = getClient(cmd);
         const { readFileSync } = await import("node:fs");
-        const opts = cmd.optsWithGlobals();
-        const config = resolveConfig({
-          baseUrl: opts.baseUrl,
-          token: opts.token,
-        });
-        const { request } = await import("undici");
         const content = readFileSync(local);
 
         const boundary = "----OpenListCLI" + Date.now();
         const fileName = local.split("/").pop() || "file";
-        const body = [
+        const header = [
           `--${boundary}\r\n`,
           `Content-Disposition: form-data; name="file"; filename="${fileName}"\r\n`,
           `Content-Type: application/octet-stream\r\n\r\n`,
         ].join("");
         const end = `\r\n--${boundary}--\r\n`;
         const bodyBuffer = Buffer.concat([
-          Buffer.from(body),
+          Buffer.from(header),
           content,
           Buffer.from(end),
         ]);
 
-        const response = await request(`${config.baseUrl}/api/fs/form`, {
-          method: "PUT",
-          headers: {
-            Authorization: config.token,
-            "File-Path": encodeURIComponent(remote),
-            "Content-Type": `multipart/form-data; boundary=${boundary}`,
-          },
-          body: bodyBuffer,
-        });
-
-        const responseBody =
-          (await response.body.json()) as import("../client.js").ApiResponse;
-        handleApiResponse(responseBody, "fs.form");
+        const response = await client.put(
+          "/api/fs/form",
+          bodyBuffer,
+          buildUploadHeaders(
+            remote,
+            `multipart/form-data; boundary=${boundary}`,
+            options,
+          ),
+        );
+        handleApiResponse(response, "fs.form");
       } catch (error) {
         printError(error instanceof Error ? error.message : "上传失败");
       }
