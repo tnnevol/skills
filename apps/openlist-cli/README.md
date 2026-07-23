@@ -101,7 +101,6 @@ openlist-cli share create --path /share-dir
 | `fs regex-rename`             | 正则批量重命名       |
 | `fs recursive-move`           | 递归移动             |
 | `fs remove-empty-dirs <path>` | 删除空目录           |
-| `fs offline-download`         | 添加离线下载任务     |
 | `fs archive-decompress`       | 解压压缩包           |
 | `fs archive-meta <path>`      | 获取压缩包元信息     |
 | `fs archive-list`             | 列出压缩包内容       |
@@ -130,22 +129,19 @@ openlist-cli fs regex-rename --src-dir /photos --src-name-regex "IMG_(\d+)" --ne
 
 # 批量重命名
 openlist-cli fs batch-rename --src-dir /docs --rename-objects '[{"src_name":"a.txt","new_name":"b.txt"}]'
-
-# 离线下载
-openlist-cli fs offline-download --urls https://example.com/file.zip --path /downloads --tool SimpleHttp
 ```
 
 ### share - 分享管理
 
-| 命令                 | 说明                                       |
-| -------------------- | ------------------------------------------ |
-| `share list`         | 列出所有分享                               |
-| `share get <id>`     | 获取分享详情                               |
-| `share create`       | 创建文件分享（`--path` 支持逗号分隔多个）  |
-| `share update <id>`  | 更新分享（需 `--path` 指定文件）           |
-| `share delete <id>`  | 删除分享                                   |
-| `share enable <id>`  | 启用分享                                   |
-| `share disable <id>` | 禁用分享                                   |
+| 命令                 | 说明                                      |
+| -------------------- | ----------------------------------------- |
+| `share list`         | 列出所有分享                              |
+| `share get <id>`     | 获取分享详情                              |
+| `share create`       | 创建文件分享（`--path` 支持逗号分隔多个） |
+| `share update <id>`  | 更新分享（需 `--path` 指定文件）          |
+| `share delete <id>`  | 删除分享                                  |
+| `share enable <id>`  | 启用分享                                  |
+| `share disable <id>` | 禁用分享                                  |
 
 ```bash
 # 创建带密码的分享
@@ -197,11 +193,10 @@ openlist-cli admin index-build
 
 ### public - 公开信息
 
-| 命令                            | 说明                   |
-| ------------------------------- | ---------------------- |
-| `public settings`               | 获取公开设置           |
-| `public offline-download-tools` | 获取可用的离线下载工具 |
-| `public archive-extensions`     | 获取支持的压缩格式     |
+| 命令                        | 说明               |
+| --------------------------- | ------------------ |
+| `public settings`           | 获取公开设置       |
+| `public archive-extensions` | 获取支持的压缩格式 |
 
 ## 开发
 

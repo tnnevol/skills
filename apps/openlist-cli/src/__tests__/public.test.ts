@@ -18,13 +18,6 @@ describe("public 命令", () => {
     expect(r.json.data).toHaveProperty("site_title");
   });
 
-  it("offline-download-tools 返回可用工具列表", () => {
-    const r = runCli(["public", "offline-download-tools"]);
-    expect(r.json.success).toBe(true);
-    expect(r.json.operation).toBe("public.offline-download-tools");
-    expect(Array.isArray(r.json.data)).toBe(true);
-  });
-
   it("archive-extensions 返回支持的压缩格式", () => {
     const r = runCli(["public", "archive-extensions"]);
     expect(r.json.success).toBe(true);

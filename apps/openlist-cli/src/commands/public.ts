@@ -26,21 +26,6 @@ export function registerPublicCommand(program: Command): void {
     });
 
   pub
-    .command("offline-download-tools")
-    .description("获取可用的离线下载工具")
-    .action(async (options, cmd) => {
-      try {
-        const client = getClient(cmd);
-        const response = await client.get("/api/public/offline_download_tools");
-        handleApiResponse(response, "public.offline-download-tools");
-      } catch (error) {
-        printError(
-          error instanceof Error ? error.message : "获取离线下载工具失败",
-        );
-      }
-    });
-
-  pub
     .command("archive-extensions")
     .description("获取支持的压缩格式")
     .action(async (options, cmd) => {

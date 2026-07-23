@@ -312,31 +312,6 @@ export function registerFsCommand(program: Command): void {
       }
     });
 
-  fs.command("offline-download")
-    .description("添加离线下载任务")
-    .requiredOption("--urls <urls>", "下载链接（逗号分隔）")
-    .requiredOption("--path <path>", "保存路径")
-    .requiredOption("--tool <tool>", "下载工具 (aria2/SimpleHttp/qBittorrent)")
-    .option(
-      "--delete-policy <policy>",
-      "删除策略 (delete_on_upload_succeed/delete_on_upload_failed/delete_never/delete_always)",
-      "delete_on_upload_succeed",
-    )
-    .action(async (options, cmd) => {
-      try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/add_offline_download", {
-          urls: options.urls.split(","),
-          path: options.path,
-          tool: options.tool,
-          delete_policy: options.deletePolicy,
-        });
-        handleApiResponse(response, "fs.offline-download");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "添加离线下载失败");
-      }
-    });
-
   fs.command("archive-decompress")
     .description("解压压缩包")
     .requiredOption("--path <path>", "压缩包完整路径")
