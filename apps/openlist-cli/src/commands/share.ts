@@ -48,13 +48,20 @@ export function registerShareCommand(program: Command): void {
     .description("创建文件分享")
     .requiredOption("--path <paths>", "文件路径（逗号分隔可多个）")
     .option("--password <password>", "分享密码")
+    .option(
+      "--expires <expires>",
+      "过期时间（RFC3339，如 2027-01-01T00:00:00Z）",
+    )
     .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
-        const response = await client.post("/api/share/create", {
+        const body: Record<string, unknown> = {
           files: options.path.split(","),
           pwd: options.password || "",
-        });
+        };
+        // 服务端字段为 expires（非文档标注的 expiration），仅在提供时发送
+        if (options.expires) body.expires = options.expires;
+        const response = await client.post("/api/share/create", body);
         handleApiResponse(response, "share.create");
       } catch (error) {
         printError(error instanceof Error ? error.message : "创建分享失败");
@@ -66,14 +73,20 @@ export function registerShareCommand(program: Command): void {
     .description("更新分享")
     .requiredOption("--path <paths>", "文件路径（逗号分隔可多个）")
     .option("--password <password>", "新密码")
+    .option(
+      "--expires <expires>",
+      "过期时间（RFC3339，如 2027-01-01T00:00:00Z）",
+    )
     .action(async (id: string, options, cmd) => {
       try {
         const client = getClient(cmd);
-        const response = await client.post("/api/share/update", {
+        const body: Record<string, unknown> = {
           id,
           files: options.path.split(","),
           pwd: options.password || "",
-        });
+        };
+        if (options.expires) body.expires = options.expires;
+        const response = await client.post("/api/share/update", body);
         handleApiResponse(response, "share.update");
       } catch (error) {
         printError(error instanceof Error ? error.message : "更新分享失败");

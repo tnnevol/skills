@@ -29,6 +29,24 @@ describe("share 命令（真实分享生命周期）", () => {
     shareId = r.json.data.id;
   });
 
+  it("create --expires 设置过期时间（服务端字段 expires）", () => {
+    const expires = "2099-01-01T00:00:00Z";
+    const r = runCli([
+      "share",
+      "create",
+      "--path",
+      testDir,
+      "--expires",
+      expires,
+    ]);
+    expect(r.json.success).toBe(true);
+    // expires 真实生效（非文档的 expiration）
+    expect(r.json.data.expires).toBeTruthy();
+    expect(String(r.json.data.expires)).toContain("2099");
+    // 立即删除该独立分享，避免干扰生命周期用例
+    runCli(["share", "delete", r.json.data.id]);
+  });
+
   it("get 返回分享详情", () => {
     expect(shareId).toBeTruthy();
     const r = runCli(["share", "get", shareId!]);

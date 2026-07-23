@@ -147,6 +147,9 @@ openlist-cli fs batch-rename --src-dir /docs --rename-objects '[{"src_name":"a.t
 # 创建带密码的分享
 openlist-cli share create --path /shared --password secret
 
+# 创建带过期时间的分享（RFC3339）
+openlist-cli share create --path /shared --expires 2027-01-01T00:00:00Z
+
 # 更新分享（需重新指定 --path）
 openlist-cli share update <id> --path /shared --password newpass
 
