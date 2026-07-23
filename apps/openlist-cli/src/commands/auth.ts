@@ -16,14 +16,20 @@ export function registerAuthCommand(program: Command): void {
   auth
     .command("login")
     .description("登录 OpenList 并保存配置")
-    .requiredOption("--base-url <url>", "OpenList 服务地址")
-    .requiredOption("--token <token>", "API Token")
-    .action((options: LoginOptions) => {
+    .option("--base-url <url>", "OpenList 服务地址")
+    .option("--token <token>", "API Token")
+    .action((_options: LoginOptions, cmd: Command) => {
+      // --base-url / --token 与全局选项同名，需通过 optsWithGlobals 读取
+      const opts = cmd.optsWithGlobals() as LoginOptions;
+      if (!opts.baseUrl || !opts.token) {
+        printError("请提供 --base-url 和 --token 选项");
+        return;
+      }
       saveConfig({
-        baseUrl: options.baseUrl!,
-        token: options.token!,
+        baseUrl: opts.baseUrl,
+        token: opts.token,
       });
-      printSuccess({ baseUrl: options.baseUrl }, "login");
+      printSuccess({ baseUrl: opts.baseUrl }, "login");
     });
 
   auth

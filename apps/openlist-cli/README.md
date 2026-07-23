@@ -137,19 +137,22 @@ openlist-cli fs offline-download --urls https://example.com/file.zip --path /dow
 
 ### share - 分享管理
 
-| 命令                 | 说明         |
-| -------------------- | ------------ |
-| `share list`         | 列出所有分享 |
-| `share get <id>`     | 获取分享详情 |
-| `share create`       | 创建文件分享 |
-| `share update <id>`  | 更新分享     |
-| `share delete <id>`  | 删除分享     |
-| `share enable <id>`  | 启用分享     |
-| `share disable <id>` | 禁用分享     |
+| 命令                 | 说明                                       |
+| -------------------- | ------------------------------------------ |
+| `share list`         | 列出所有分享                               |
+| `share get <id>`     | 获取分享详情                               |
+| `share create`       | 创建文件分享（`--path` 支持逗号分隔多个）  |
+| `share update <id>`  | 更新分享（需 `--path` 指定文件）           |
+| `share delete <id>`  | 删除分享                                   |
+| `share enable <id>`  | 启用分享                                   |
+| `share disable <id>` | 禁用分享                                   |
 
 ```bash
 # 创建带密码的分享
 openlist-cli share create --path /shared --password secret
+
+# 更新分享（需重新指定 --path）
+openlist-cli share update <id> --path /shared --password newpass
 
 # 分页列出分享
 openlist-cli share list --page 1 --per-page 50

@@ -46,14 +46,14 @@ export function registerShareCommand(program: Command): void {
   share
     .command("create")
     .description("创建文件分享")
-    .requiredOption("--path <path>", "文件路径")
+    .requiredOption("--path <paths>", "文件路径（逗号分隔可多个）")
     .option("--password <password>", "分享密码")
     .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
         const response = await client.post("/api/share/create", {
-          path: options.path,
-          password: options.password || "",
+          files: options.path.split(","),
+          pwd: options.password || "",
         });
         handleApiResponse(response, "share.create");
       } catch (error) {
@@ -64,13 +64,15 @@ export function registerShareCommand(program: Command): void {
   share
     .command("update <id>")
     .description("更新分享")
+    .requiredOption("--path <paths>", "文件路径（逗号分隔可多个）")
     .option("--password <password>", "新密码")
     .action(async (id: string, options, cmd) => {
       try {
         const client = getClient(cmd);
         const response = await client.post("/api/share/update", {
           id,
-          password: options.password,
+          files: options.path.split(","),
+          pwd: options.password || "",
         });
         handleApiResponse(response, "share.update");
       } catch (error) {
@@ -84,7 +86,9 @@ export function registerShareCommand(program: Command): void {
     .action(async (id: string, options, cmd) => {
       try {
         const client = getClient(cmd);
-        const response = await client.post("/api/share/delete", { id });
+        const response = await client.post(
+          `/api/share/delete?id=${encodeURIComponent(id)}`,
+        );
         handleApiResponse(response, "share.delete");
       } catch (error) {
         printError(error instanceof Error ? error.message : "删除分享失败");
