@@ -10,8 +10,8 @@
 | fs 文件         | 20          | 18     | 未接：`add_offline_download`（已按需求移除）、`other` |
 | fs 压缩包       | （含于 fs） | 3      | decompress / meta / list                              |
 | share 分享      | 7           | 7      | 全覆盖                                                |
-| me 用户         | 5           | 5      | 全覆盖（`me/update` 字段未对齐，见差异）              |
-| public 公开     | 3           | 2      | 未接：`offline_download_tools`（已按需求移除）        |
+| me 用户         | 5           | 1      | 仅 `me get`；update/sshkey-* 已按需求移除             |
+| public 公开     | 3           | 0      | 已按需求移除整个 public 命令组                        |
 | admin 后台      | 35          | 约 15  | 泛型包装覆盖 CRUD，部分类型/专用操作未接或有误        |
 | auth 登录       | 8           | 0      | CLI 用 Token 本地保存，未调用登录接口                 |
 | authn(WebAuthn) | 6           | 0      | 不适合 CLI（见"不可做"）                              |
@@ -63,20 +63,15 @@
 
 ### me — 当前用户
 
-| CLI 命令           | 接口                       | 与文档差异                                                                                                                |
-| ------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `me get`           | GET /api/me                | 一致                                                                                                                      |
-| `me sshkey-list`   | GET /api/me/sshkey/list    | 一致                                                                                                                      |
-| `me sshkey-add`    | POST /api/me/sshkey/add    | ❗文档 `name`+`public_key`；实际 **`title`+`key`**（文档字段会报 `request invalid`，文档错）                               |
-| `me sshkey-delete` | POST /api/me/sshkey/delete | 基本一致（`{id}`；文档标 integer，CLI 传字符串）                                                                          |
-| `me update`        | POST /api/me/update        | ⚠️**未对齐**：CLI 传 `{username, password, sso_id}`，文档为 `{password, old_password}`；因会真实改密码，**未实测、未改动** |
+| CLI 命令 | 接口        | 与文档差异 |
+| -------- | ----------- | ---------- |
+| `me get` | GET /api/me | 一致       |
+
+> 已按需求移除：`me update`、`me sshkey-list/add/delete`（对应 `/api/me/update`、`/api/me/sshkey/*`）。
 
 ### public — 公开信息
 
-| CLI 命令                    | 接口                               | 与文档差异 |
-| --------------------------- | ---------------------------------- | ---------- |
-| `public settings`           | GET /api/public/settings           | 一致       |
-| `public archive-extensions` | GET /api/public/archive_extensions | 一致       |
+> 已按需求**移除整个 public 命令组**（`settings`、`archive-extensions`，对应 `/api/public/*`）。
 
 ### admin — 后台（泛型 `--type` 包装，部分有误）
 
@@ -95,12 +90,11 @@ CLI 用 `admin list/get/create/update/delete --type <user|storage|driver|setting
 
 ## 三、重点差异详解
 
-1. **Apifox 文档不可靠**：经实测，文档在 `share/create`（paths vs files）、`share/update`、`archive/decompress`（name string vs []string）、`me/sshkey/add`（name/public_key vs title/key）等处与真实服务端不符。凡冲突，均以服务端为准。
+1. **Apifox 文档不可靠**：经实测，文档在 `share/create`（paths vs files）、`share/update`、`archive/decompress`（name string vs []string）等处与真实服务端不符。凡冲突，均以服务端为准。
 2. **已按服务端修正并有测试**：`archive/decompress`、`archive/list`、`share/*`。
 3. **admin 泛型包装器缺陷**（可做优化）：
    - `setting` 的 `get`/`delete` 应按 `key` 而非 `id`；`create`/`update` 应为 `save`。
    - `driver` 只有 `info/list/names`，泛型的 `get/create/update/delete` 对 driver 无效。
-4. **`me/update` 待定**：字段与文档不符且未验证（避免误改 admin 密码）。
 
 ---
 
@@ -116,7 +110,6 @@ CLI 用 `admin list/get/create/update/delete --type <user|storage|driver|setting
 | 索引配置更新                          | /api/admin/index/update                                            | 补全 index                                                 |
 | 获取文件其它信息                      | /api/fs/other                                                      | 某些驱动的额外元数据                                       |
 | 修正 admin 泛型包装器                 | —                                                                  | 针对 setting/driver 的特殊路径与参数做适配                 |
-| 对齐 `me/update`                      | /api/me/update                                                     | 改为 `{password, old_password}`（需先在安全环境实测确认）  |
 
 ---
 

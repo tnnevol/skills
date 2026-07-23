@@ -159,13 +159,9 @@ openlist-cli share list --page 1 --per-page 50
 
 ### me - 用户信息
 
-| 命令               | 说明             |
-| ------------------ | ---------------- |
-| `me get`           | 获取当前用户信息 |
-| `me update`        | 更新当前用户信息 |
-| `me sshkey-list`   | 列出 SSH 公钥    |
-| `me sshkey-add`    | 添加 SSH 公钥    |
-| `me sshkey-delete` | 删除 SSH 公钥    |
+| 命令     | 说明             |
+| -------- | ---------------- |
+| `me get` | 获取当前用户信息 |
 
 ### admin - 后台管理
 
@@ -193,13 +189,6 @@ openlist-cli admin create --type storage --file ./storage-config.json
 # 构建搜索索引
 openlist-cli admin index-build
 ```
-
-### public - 公开信息
-
-| 命令                        | 说明               |
-| --------------------------- | ------------------ |
-| `public settings`           | 获取公开设置       |
-| `public archive-extensions` | 获取支持的压缩格式 |
 
 ## 开发
 

@@ -6,7 +6,6 @@ import { registerFsCommand } from "./commands/fs.js";
 import { registerShareCommand } from "./commands/share.js";
 import { registerMeCommand } from "./commands/me.js";
 import { registerAdminCommand } from "./commands/admin.js";
-import { registerPublicCommand } from "./commands/public.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json") as { version: string };
@@ -33,6 +32,5 @@ registerFsCommand(program);
 registerShareCommand(program);
 registerMeCommand(program);
 registerAdminCommand(program);
-registerPublicCommand(program);
 
 program.parse();
