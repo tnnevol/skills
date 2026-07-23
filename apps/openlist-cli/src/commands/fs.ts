@@ -339,14 +339,20 @@ export function registerFsCommand(program: Command): void {
 
   fs.command("archive-decompress")
     .description("解压压缩包")
-    .requiredOption("--path <path>", "压缩包路径")
-    .option("--archive-path <archivePath>", "解压到目录（默认当前目录）")
+    .requiredOption("--path <path>", "压缩包完整路径")
+    .requiredOption("--dst-dir <dstDir>", "解压目标目录")
     .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
+        // 文档标注 name 为 string，但服务端实际要求 []string（ArchiveDecompressReq.Names）
+        const p = options.path as string;
+        const idx = p.lastIndexOf("/");
+        const srcDir = idx >= 0 ? p.slice(0, idx) || "/" : "/";
+        const name = idx >= 0 ? p.slice(idx + 1) : p;
         const response = await client.post("/api/fs/archive/decompress", {
-          path: options.path,
-          archive_path: options.archivePath || "",
+          src_dir: srcDir,
+          name: [name],
+          dst_dir: options.dstDir,
         });
         handleApiResponse(response, "fs.archive-decompress");
       } catch (error) {
@@ -377,7 +383,7 @@ export function registerFsCommand(program: Command): void {
         const client = getClient(cmd);
         const response = await client.post("/api/fs/archive/list", {
           path: options.path,
-          inner_path: options.innerPath,
+          archive_path: options.innerPath,
         });
         handleApiResponse(response, "fs.archive-list");
       } catch (error) {
