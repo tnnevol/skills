@@ -22,22 +22,23 @@ pnpx skills add tnnevol/skills --skill='*' -g
 
 CLI 工具可直接被 AI Agent 调用，实现自动化管理。
 
-| CLI 工具 | 说明 | 接入指南 |
-|----------|------|----------|
+| CLI 工具    | 说明         | 接入指南                                             |
+| ----------- | ------------ | ---------------------------------------------------- |
 | chandao-cli | 禅道项目管理 | [Agent Setup Guide](apps/chandao-cli/agent-setup.md) |
 
 ## 技能列表
 
 ### 技能
 
-| Skill | Description |
-|-------|-------------|
-| [autosave](skills/autosave) | 开源网盘自动保存服务 - 任务管理、配置、API - Tnnevol |
-| [chandao](skills/chandao) | 禅道项目管理 - 任务、需求、Bug、产品 API 操作 - Tnnevol |
-| [ding](skills/ding) | 钉钉群聊中快速联系其他 Agent（demo1、demo2 等） - Tnnevol |
-| [halo](skills/halo) | Halo CMS 博客管理 - 创建、查询、更新、删除、发布文章 - Tnnevol |
-| [memos](skills/memos) | Memos 自建笔记工具 - CRUD + 标签 API - Tnnevol |
-| [fnnas-docs](skills/fnnas-docs) | 飞牛 fnOS 应用开发文档 - 快速开始、开发指南、CLI 工具 - Tnnevol |
+| Skill                           | Description                                                          |
+| ------------------------------- | -------------------------------------------------------------------- |
+| [autosave](skills/autosave)     | 开源网盘自动保存服务 - 任务管理、配置、API - Tnnevol                 |
+| [chandao](skills/chandao)       | 禅道项目管理 - 任务、需求、Bug、产品 API 操作 - Tnnevol              |
+| [ding](skills/ding)             | 钉钉群聊中快速联系其他 Agent（demo1、demo2 等） - Tnnevol            |
+| [halo](skills/halo)             | Halo CMS 博客管理 - 创建、查询、更新、删除、发布文章 - Tnnevol       |
+| [memos](skills/memos)           | Memos 自建笔记工具 - CRUD + 标签 API - Tnnevol                       |
+| [fnnas-docs](skills/fnnas-docs) | 飞牛 fnOS 应用开发文档 - 快速开始、开发指南、CLI 工具 - Tnnevol      |
+| [openlist](skills/openlist)     | OpenList 网盘聚合 - 通过 openlist-cli 管理文件、分享、后台 - Tnnevol |
 
 ## License
 
