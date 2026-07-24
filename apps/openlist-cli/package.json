@@ -8,8 +8,7 @@
   },
   "files": [
     "dist",
-    "README.md",
-    "LICENSE"
+    "README.md"
   ],
   "scripts": {
     "dev": "tsup --watch",
@@ -41,7 +40,7 @@
     "file-manager"
   ],
   "author": "tnnevol",
-  "license": "MPL-2.0",
+  "license": "AGPL-3.0",
   "homepage": "https://github.com/tnnevol/skills",
   "bugs": {
     "url": "https://github.com/tnnevol/skills/issues"
