@@ -12,7 +12,7 @@ const appsDir = join(rootDir, "apps");
 const command = process.argv[2];
 
 if (!command) {
-  console.error("用法: node app-runner.js <dev|build|clean|bump|publish>");
+  console.error("用法: node app-runner.js <dev|build|test|clean|bump|publish>");
   process.exit(1);
 }
 
@@ -26,15 +26,20 @@ if (apps.length === 0) {
   process.exit(1);
 }
 
-// 选择应用
-const app = await select({
-  message: "选择应用",
-  options: apps.map((a) => ({ value: a, label: a })),
-});
+// 选择应用（apps 下仅一个应用时直接运行，无需选择）
+let app;
+if (apps.length === 1) {
+  app = apps[0];
+} else {
+  app = await select({
+    message: "选择应用",
+    options: apps.map((a) => ({ value: a, label: a })),
+  });
 
-if (isCancel(app)) {
-  cancel("已取消");
-  process.exit(0);
+  if (isCancel(app)) {
+    cancel("已取消");
+    process.exit(0);
+  }
 }
 
 const appPath = join(appsDir, app);
@@ -48,6 +53,7 @@ console.log(`\n选择的应用: ${app} (${packageName})\n`);
 switch (command) {
   case "dev":
   case "build":
+  case "test":
   case "clean":
     execSync(`pnpm --filter ${packageName} ${command}`, {
       cwd: rootDir,

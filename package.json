@@ -6,6 +6,7 @@
     "lint": "eslint .",
     "dev": "node scripts/app-runner.js dev",
     "build": "node scripts/app-runner.js build",
+    "test": "node scripts/app-runner.js test",
     "clean": "node scripts/app-runner.js clean",
     "bump": "node scripts/app-runner.js bump",
     "publish": "node scripts/app-runner.js publish"
