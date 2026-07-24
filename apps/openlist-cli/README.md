@@ -65,6 +65,8 @@ openlist-cli share create --path /share-dir
 | `--token <token>`  | API Token         |
 | `--pretty`         | 美化 JSON 输出    |
 
+> 分页：列表命令（`fs list` / `fs search` / `share list` / `admin user|storage|meta list`）默认 `--page` 1、`--per-page` 30；输出在 `data` 同级附带 `pagination`（`page` / `perPage` / `total` / `totalPages`，其中 `totalPages = ⌈total / perPage⌉`）。
+
 ## 命令
 
 ### auth - 账号管理

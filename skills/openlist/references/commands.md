@@ -2,6 +2,8 @@
 
 所有命令支持 `--help`。全局选项 `--base-url` / `--token` / `--pretty` 可加在任意命令前。
 
+> 分页：列表命令（`fs list` / `fs search` / `share list` / `admin user|storage|meta list`）默认 `--page` 1、`--per-page` 30（`fs list` / `share list` 上限 100）；输出在 `data` 同级附带 `pagination`（`page` / `perPage` / `total` / `totalPages`，其中 `totalPages = ⌈total / perPage⌉`）。
+
 ## auth — 认证
 
 | 命令          | 说明                              | 选项                                            |
@@ -14,9 +16,9 @@
 
 | 命令                          | 说明               | 选项                                                                                           |
 | ----------------------------- | ------------------ | ---------------------------------------------------------------------------------------------- |
-| `fs list <path>`              | 列出目录           | `-p/--password`、`--page`(1)、`--per-page`(20)、`--refresh`                                    |
+| `fs list <path>`              | 列出目录           | `-p/--password`、`--page`(1)、`--per-page`(30)、`--refresh`                                    |
 | `fs get <path>`               | 文件/目录信息      | `-p/--password`                                                                                |
-| `fs search`                   | 搜索               | `-k/--keywords`(必填)、`-p/--parent`(/)、`--scope`(0)、`--page`、`--per-page`、`-P/--password` |
+| `fs search`                   | 搜索               | `-k/--keywords`(必填)、`-p/--parent`(/)、`--scope`(0)、`--page`(1)、`--per-page`(30)、`-P/--password` |
 | `fs dirs <path>`              | 目录树             | —                                                                                              |
 | `fs mkdir <path>`             | 新建目录           | —                                                                                              |
 | `fs rename <path> <name>`     | 重命名             | —                                                                                              |
@@ -58,7 +60,7 @@ openlist-cli fs mkdir /out && openlist-cli fs archive-decompress --path /data.zi
 
 | 命令                 | 说明     | 选项                                                                        |
 | -------------------- | -------- | --------------------------------------------------------------------------- |
-| `share list`         | 列出分享 | `--page`、`--per-page`                                                      |
+| `share list`         | 列出分享 | `--page`(1)、`--per-page`(30)                                                      |
 | `share get <id>`     | 分享详情 | —                                                                           |
 | `share create`       | 创建分享 | `--path`(必填, 逗号分隔可多个)、`--password`、`--expires <RFC3339>`         |
 | `share update <id>`  | 更新分享 | `--path`(必填)、`--password`、`--expires`（**未带 --password 会清空密码**） |

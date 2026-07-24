@@ -34,6 +34,25 @@ describe("admin 命令（按资源子命令树）", () => {
     expect(r.json.data).toBeDefined();
   });
 
+  it("storage list 返回分页信息（含总页数）", () => {
+    const perPage = 1;
+    const r = runCli([
+      "admin",
+      "storage",
+      "list",
+      "--per-page",
+      String(perPage),
+    ]);
+    expect(r.json.success).toBe(true);
+    expect(r.json.pagination).toBeDefined();
+    expect(r.json.pagination.page).toBe(1);
+    expect(r.json.pagination.perPage).toBe(perPage);
+    expect(r.json.pagination.total).toBe(r.json.data.total);
+    expect(r.json.pagination.totalPages).toBe(
+      Math.ceil(r.json.data.total / perPage),
+    );
+  });
+
   it("storage get 获取指定存储", () => {
     const r = runCli(["admin", "storage", "get", "1"]);
     expect(r.json.success).toBe(true);

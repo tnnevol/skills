@@ -51,3 +51,35 @@ export function handleApiResponse<T>(
     printError(response.message || "Unknown error", response.code);
   }
 }
+
+// 列表接口响应形如 { content, total }。当返回体带有数值型 total 时，
+// 依据请求的 page/perPage 计算总页数，并在输出中附带 pagination 信息。
+export function handlePagedResponse<T>(
+  response: ApiResponse<T>,
+  operation: string,
+  paging: { page: number; perPage: number },
+): void {
+  if (response.code !== 200) {
+    printError(response.message || "Unknown error", response.code);
+    return;
+  }
+
+  const result: Record<string, unknown> = {
+    success: true,
+    operation,
+    data: response.data,
+  };
+
+  const data = response.data as { total?: unknown } | null | undefined;
+  if (data && typeof data.total === "number") {
+    const { page, perPage } = paging;
+    result.pagination = {
+      page,
+      perPage,
+      total: data.total,
+      totalPages: perPage > 0 ? Math.ceil(data.total / perPage) : 0,
+    };
+  }
+
+  printResult(result);
+}

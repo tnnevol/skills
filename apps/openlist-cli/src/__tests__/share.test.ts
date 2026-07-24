@@ -61,6 +61,13 @@ describe("share 命令（真实分享生命周期）", () => {
     expect(r.json.operation).toBe("share.list");
     const ids = (r.json.data.content ?? []).map((x: any) => x.id);
     expect(ids).toContain(shareId);
+    // 附带分页信息：总页数 = ceil(total / perPage)
+    expect(r.json.pagination).toBeDefined();
+    expect(r.json.pagination.perPage).toBe(30);
+    expect(r.json.pagination.total).toBe(r.json.data.total);
+    expect(r.json.pagination.totalPages).toBe(
+      Math.ceil(r.json.data.total / 30),
+    );
   });
 
   it("update 更新分享密码", () => {

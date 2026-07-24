@@ -1,7 +1,11 @@
 import { Command } from "commander";
 import { createClient } from "../client.js";
 import { resolveConfig } from "../config.js";
-import { handleApiResponse, printError } from "../output.js";
+import {
+  handleApiResponse,
+  handlePagedResponse,
+  printError,
+} from "../output.js";
 
 function getClient(cmd: Command) {
   const opts = cmd.optsWithGlobals();
@@ -16,15 +20,17 @@ export function registerShareCommand(program: Command): void {
     .command("list")
     .description("列出所有分享")
     .option("--page <page>", "页码", "1")
-    .option("--per-page <perPage>", "每页数量", "20")
+    .option("--per-page <perPage>", "每页数量（1-100）", "30")
     .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
+        const page = parseInt(options.page);
+        const perPage = parseInt(options.perPage);
         const response = await client.post("/api/share/list", {
-          page: parseInt(options.page),
-          per_page: parseInt(options.perPage),
+          page,
+          per_page: perPage,
         });
-        handleApiResponse(response, "share.list");
+        handlePagedResponse(response, "share.list", { page, perPage });
       } catch (error) {
         printError(error instanceof Error ? error.message : "列出分享失败");
       }

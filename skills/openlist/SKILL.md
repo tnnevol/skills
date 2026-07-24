@@ -4,7 +4,7 @@ description: >
   通过 openlist-cli 操作 OpenList（多存储文件列表 / 网盘聚合，AList 开源分支）。触发场景：管理文件与目录（列出/获取/搜索/新建/重命名/移动/复制/删除/上传/解压压缩包）、创建与管理分享、查看当前用户、后台管理（用户/存储/元信息/设置/驱动/索引）。命令输出为结构化 JSON，所有命令支持 --help。当用户提到 openlist、alist、网盘文件管理、文件分享、跨盘复制/移动、解压等时使用。
 metadata:
   author: Tnnevol
-  version: "2026.07.23"
+  version: "2026.07.24"
 ---
 
 # SKILL: openlist
@@ -67,6 +67,14 @@ openlist-cli <group> <command> --help
 
 > `admin` 增删改用 `--file <path>` 或 `--data <json>` 传 JSON 体。详见 [commands](references/commands.md)。
 
+## 分页结果处理
+
+列表命令（`fs list` / `fs search` / `share list` / `admin user|storage|meta list`）输出在 `data` 同级带 `pagination`（`page` / `perPage` / `total` / `totalPages`）。
+
+- **判断是否还有下一页**：`pagination.page < pagination.totalPages`。
+- **还有下一页时**：先向用户展示当前页结果，并**主动提示“当前第 {page}/{totalPages} 页，共 {total} 条，是否获取下一页？”**，由用户决定；**不要默认自动翻页或拉全量**。
+- 用户确认后：用 `--page <下一页> [--per-page <与上次相同>]` 获取；若用户要求全量，先告知总页数再逐页拉取。
+
 ## 意图识别（自然语言 → 命令）
 
 - "列出 / 看目录 X" → `fs list X`
@@ -110,6 +118,7 @@ openlist-cli <group> <command> --help
 ## 关键提示摘要（详见 pitfalls）
 
 - 输出为结构化 JSON：`{ success, operation, data }` 或错误 `{ success:false, message, code }`；加 `--pretty` 美化。
+- 列表命令输出带 `pagination`；`page < totalPages` 时**主动提示用户是否获取下一页**，不要自动拉全量（见「分页结果处理」）。
 - **跨驱动** copy/move/decompress 是**异步任务**（返回 `task`），需轮询目标目录确认落地。
 - `share create/update` 用 `--path`（内部转 `files`）+ 可选 `--password`（服务端字段 `pwd`）、`--expires`（RFC3339，服务端字段 `expires`）。
 - `fs archive-decompress` 目标目录须已存在；`name` 服务端要求数组，CLI 已自动处理。

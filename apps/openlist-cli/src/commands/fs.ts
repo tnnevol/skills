@@ -1,7 +1,11 @@
 import { Command } from "commander";
 import { createClient } from "../client.js";
 import { resolveConfig } from "../config.js";
-import { handleApiResponse, printError } from "../output.js";
+import {
+  handleApiResponse,
+  handlePagedResponse,
+  printError,
+} from "../output.js";
 
 function getClient(cmd: Command) {
   const opts = cmd.optsWithGlobals();
@@ -56,19 +60,21 @@ export function registerFsCommand(program: Command): void {
     .description("列出目录内容")
     .option("-p, --password <password>", "目录密码")
     .option("--page <page>", "页码", "1")
-    .option("--per-page <perPage>", "每页数量", "20")
+    .option("--per-page <perPage>", "每页数量（1-100）", "30")
     .option("--refresh", "强制刷新")
     .action(async (path: string, options, cmd) => {
       try {
         const client = getClient(cmd);
+        const page = parseInt(options.page);
+        const perPage = parseInt(options.perPage);
         const response = await client.post("/api/fs/list", {
           path,
           password: options.password || "",
-          page: parseInt(options.page),
-          per_page: parseInt(options.perPage),
+          page,
+          per_page: perPage,
           refresh: options.refresh || false,
         });
-        handleApiResponse(response, "fs.list");
+        handlePagedResponse(response, "fs.list", { page, perPage });
       } catch (error) {
         printError(error instanceof Error ? error.message : "列出目录失败");
       }
@@ -96,20 +102,22 @@ export function registerFsCommand(program: Command): void {
     .option("-p, --parent <parent>", "父目录路径", "/")
     .option("--scope <scope>", "搜索类型: 0=全部 1=文件夹 2=文件", "0")
     .option("--page <page>", "页码", "1")
-    .option("--per-page <perPage>", "每页数量", "20")
+    .option("--per-page <perPage>", "每页数量", "30")
     .option("-P, --password <password>", "目录密码", "")
     .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
+        const page = parseInt(options.page);
+        const perPage = parseInt(options.perPage);
         const response = await client.post("/api/fs/search", {
           parent: options.parent,
           keywords: options.keywords,
           scope: parseInt(options.scope),
-          page: parseInt(options.page),
-          per_page: parseInt(options.perPage),
+          page,
+          per_page: perPage,
           password: options.password,
         });
-        handleApiResponse(response, "fs.search");
+        handlePagedResponse(response, "fs.search", { page, perPage });
       } catch (error) {
         printError(error instanceof Error ? error.message : "搜索失败");
       }

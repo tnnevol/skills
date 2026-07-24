@@ -67,6 +67,13 @@ describe("fs 命令（真实文件生命周期）", () => {
     expect(r.json.success).toBe(true);
     const names = (r.json.data.content ?? []).map((x: any) => x.name);
     expect(names).toContain("a.txt");
+    // 附带分页信息：总页数 = ceil(total / perPage)
+    expect(r.json.pagination).toBeDefined();
+    expect(r.json.pagination.perPage).toBe(30);
+    expect(r.json.pagination.total).toBe(r.json.data.total);
+    expect(r.json.pagination.totalPages).toBe(
+      Math.ceil(r.json.data.total / 30),
+    );
   });
 
   it("rename 重命名文件", () => {
@@ -137,6 +144,13 @@ describe("fs 命令（真实文件生命周期）", () => {
     expect(r.json.success).toBe(true);
     expect(r.json.operation).toBe("fs.search");
     expect(r.json.data).toHaveProperty("content");
+    // 附带分页信息：总页数 = ceil(total / perPage)
+    expect(r.json.pagination).toBeDefined();
+    expect(r.json.pagination.perPage).toBe(30);
+    expect(r.json.pagination.total).toBe(r.json.data.total);
+    expect(r.json.pagination.totalPages).toBe(
+      Math.ceil(r.json.data.total / 30),
+    );
   });
 
   it("dirs 获取目录树", () => {

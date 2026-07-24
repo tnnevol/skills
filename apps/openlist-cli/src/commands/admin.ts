@@ -1,7 +1,11 @@
 import { Command } from "commander";
 import { createClient } from "../client.js";
 import { resolveConfig } from "../config.js";
-import { handleApiResponse, printError } from "../output.js";
+import {
+  handleApiResponse,
+  handlePagedResponse,
+  printError,
+} from "../output.js";
 
 function getClient(cmd: Command) {
   const opts = cmd.optsWithGlobals();
@@ -36,14 +40,16 @@ function addCrud(group: Command, resource: string): void {
     .command("list")
     .description("列出资源")
     .option("--page <page>", "页码", "1")
-    .option("--per-page <perPage>", "每页数量", "20")
+    .option("--per-page <perPage>", "每页数量", "30")
     .action(async (options, cmd) => {
       try {
         const client = getClient(cmd);
+        const page = parseInt(options.page);
+        const perPage = parseInt(options.perPage);
         const res = await client.get(
-          `/api/admin/${resource}/list?page=${options.page}&per_page=${options.perPage}`,
+          `/api/admin/${resource}/list?page=${page}&per_page=${perPage}`,
         );
-        handleApiResponse(res, `admin.${resource}.list`);
+        handlePagedResponse(res, `admin.${resource}.list`, { page, perPage });
       } catch (error) {
         printError(errMsg(error, "列出资源失败"));
       }
