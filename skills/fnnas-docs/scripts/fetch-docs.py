@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
 飞牛应用开发文档同步脚本
-从 developer.fnnas.com/llms-full.txt 解析并同步 Markdown 文档
+从 developer.fnnas.com/llms.txt 和 developer.fnnas.com/llms-full.txt
+解析并同步 Markdown 文档。llms.txt 作为文档索引，llms-full.txt 提供正文。
 
 文档结构：
-- 每篇文档以 "Source: https://developer.fnnas.com/docs/<path>" 开头
+- 每篇文档以 "Source: https://developer.fnnas.com/docs/<path>" 或
+  "Source: https://developer.fnnas.com/api/<path>" 开头
 - 后跟空行、# 标题和正文内容
 """
 
@@ -12,6 +14,7 @@ import urllib.request
 import urllib.error
 import ssl
 import os
+import posixpath
 import re
 
 # SSL 上下文
@@ -59,7 +62,7 @@ def resolve_local_path(doc_path):
     return f"references/{doc_path}.md"
 
 
-def rewrite_relative_links(content):
+def rewrite_relative_links(content, doc_path):
     """将内容中的相对链接重写为本地 references/ 路径"""
     # 站点内相对路径：./quick-started/prerequisites.md -> ../quick-started/prerequisites.md
     # ../core-concepts/manifest.md -> ../core-concepts/manifest.md
@@ -79,13 +82,27 @@ def rewrite_relative_links(content):
         if href.startswith("../"):
             return f"[{text}]({href})"
 
-        # 处理 /docs/xxx/xxx 路径
-        if href.startswith("/docs/"):
-            local_path = href[len("/docs/"):]
-            if local_path.endswith(".md"):
-                local_path = local_path[:-3]
-            local_path = local_path.rstrip("/")
-            return f"[{text}](../{local_path}.md)"
+        # 处理站点内绝对文档路径。源站的 docs/ 和 api/ 在本地都位于
+        # references/ 下，因此根据当前文档位置计算相对路径。
+        if href.startswith("/docs/") or href.startswith("/api/"):
+            target, separator, anchor = href.partition("#")
+            if target.startswith("/docs/"):
+                target_path = target[len("/docs/"):]
+            else:
+                target_path = target[len("/"):]
+            target_path = target_path.rstrip("/")
+            if target_path.endswith(".md"):
+                target_path = target_path[:-3]
+
+            current_file = f"references/{doc_path}.md"
+            target_file = f"references/{target_path}.md"
+            local_path = posixpath.relpath(
+                target_file,
+                posixpath.dirname(current_file),
+            )
+            if separator:
+                local_path += f"#{anchor}"
+            return f"[{text}]({local_path})"
 
         # 处理站点图片资源 /img/xxx
         if href.startswith("/img/"):
@@ -97,17 +114,37 @@ def rewrite_relative_links(content):
     return content
 
 
-def parse_docs(text):
+def parse_index(text):
+    """解析 llms.txt，返回索引中声明的本地文档路径集合"""
+    paths = set()
+    pattern = r"\[[^\]]+\]\((https://developer\.fnnas\.com/(docs|api)/[^)]+)\)"
+
+    for match in re.finditer(pattern, text):
+        url = match.group(1).rstrip("/")
+        site_path = url.split("developer.fnnas.com/", 1)[1]
+        if site_path.startswith("docs/"):
+            site_path = site_path[len("docs/"):]
+        paths.add(site_path)
+
+    return paths
+
+
+def parse_docs(text, allowed_paths=None):
     """解析 llms-full.txt，返回 [(doc_path, title, content), ...]"""
     docs = []
 
-    # 按 Source: 行分割
-    pattern = r'^Source: (https://developer\.fnnas\.com/docs/(.+))\n\n'
+    # 按 Source: 行分割，兼容 docs 和 api 两个文档根路径。
+    pattern = r"^Source: (https://developer\.fnnas\.com/(docs|api)/([^\s]+?))/?\n\n"
     matches = list(re.finditer(pattern, text, re.MULTILINE))
 
     for i, match in enumerate(matches):
-        url = match.group(1)
-        doc_path = match.group(2).rstrip('/')
+        url = match.group(1).rstrip('/')
+        root = match.group(2)
+        source_path = match.group(3).rstrip('/')
+        doc_path = source_path if root == "docs" else f"{root}/{source_path}"
+        if allowed_paths is not None and doc_path not in allowed_paths:
+            continue
+
         start = match.end()
         end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
         section = text[start:end].strip()
@@ -125,7 +162,7 @@ def parse_docs(text):
             content_start = 1
 
         body = '\n'.join(lines[content_start:]).strip()
-        body = rewrite_relative_links(body)
+        body = rewrite_relative_links(body, doc_path)
 
         docs.append((doc_path, title, body, url))
 
@@ -148,14 +185,26 @@ def main():
     os.chdir(base_dir)
 
     print("📚 开始同步飞牛应用开发文档")
-    print(f"   来源: {LLMS_FULL_URL}")
+    print(f"   索引: {LLMS_INDEX_URL}")
+    print(f"   正文: {LLMS_FULL_URL}")
     print("=" * 50)
+
+    index_text = fetch_url(LLMS_INDEX_URL)
+    allowed_paths = None
+    if index_text:
+        allowed_paths = parse_index(index_text)
+        if not allowed_paths:
+            print("  ❌ llms.txt 未解析到文档，停止同步以避免清空或写入错误内容")
+            return
+        print(f"   索引文档: {len(allowed_paths)} 篇")
+    else:
+        print("  ⚠️ llms.txt 获取失败，将回退为同步 llms-full.txt 中的全部文档")
 
     text = fetch_url(LLMS_FULL_URL)
     if not text:
         return
 
-    docs = parse_docs(text)
+    docs = parse_docs(text, allowed_paths)
     total = len(docs)
     success = 0
     failed = []

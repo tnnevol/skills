@@ -1,26 +1,27 @@
 ---
 name: fnnas-docs
-description: 飞牛 fnOS 应用开发文档 - 快速开始、开发指南、CLI 工具参考、应用案例和更新日志。当用户询问飞牛应用开发、fnOS 应用打包上架、Manifest 配置、应用权限、Docker 构建等问题时使用此技能。
+description: 飞牛 fnOS 应用开发文档 - 快速开始、开发指南、开放 API、CLI 工具参考、应用案例和更新日志。当用户询问飞牛应用开发、开放 API、JS SDK、文件授权、Manifest 配置、应用权限或 Docker 构建等问题时使用此技能。
 metadata:
   author: Tnnevol
-  version: "2026.07.09"
+  version: "2026.08.04"
 ---
 
 # SKILL: fnnas-docs (飞牛应用开发文档)
 
-飞牛 fnOS 应用开发完整文档索引。基于飞牛应用开放平台 (https://developer.fnnas.com/docs/) 整理。
+飞牛 fnOS 应用开发完整文档索引。基于飞牛应用开放平台的 [文档索引](https://developer.fnnas.com/llms.txt) 和 [完整文档](https://developer.fnnas.com/llms-full.txt) 整理。
 
 ## Quick Start
 
 ```bash
 # 文档来源
-https://developer.fnnas.com/docs/
+https://developer.fnnas.com/llms.txt
+https://developer.fnnas.com/llms-full.txt
 
 # 技能目录
-skills/skills/fnnas-docs/
+skills/fnnas-docs/
 
 # 更新文档（如需同步最新内容）
-cd skills/skills/fnnas-docs && python3 scripts/fetch-docs.py
+ cd skills/fnnas-docs && python3 scripts/fetch-docs.py
 ```
 
 ## 使用场景
@@ -38,10 +39,11 @@ cd skills/skills/fnnas-docs && python3 scripts/fetch-docs.py
 | -------- | ------ | ---------------------------------- | ------------------------------------------- |
 | 概览     | 1 篇   | 平台介绍与学习路径                 | [guide.md](references/guide.md)             |
 | 快速开始 | 4 篇   | 环境准备、创建/测试/上架应用       | [quick-started/](references/quick-started/) |
-| 开发指南 | 12 篇  | 架构、Manifest、权限、入口、网关等 | [core-concepts/](references/core-concepts/) |
+| 开发指南 | 13 篇  | 架构、Manifest、权限、入口、网关等 | [core-concepts/](references/core-concepts/) |
 | 应用案例 | 2 篇   | Native/Docker 应用实战案例         | [examples/](references/examples/)           |
 | CLI 工具 | 2 篇   | fnpack、appcenter-cli              | [cli/](references/cli/)                     |
-| 更新日志 | 4 篇   | 文档站点更新记录                   | [update-log/](references/update-log/)       |
+| 开放 API | 11 篇  | JS SDK、文件授权、页面能力和后端 API | [api/](references/api/)                     |
+| 更新日志 | 5 篇   | 文档站点和开放 API 更新记录         | [update-log.md](references/update-log.md)   |
 
 ## 文档索引
 
@@ -92,10 +94,27 @@ cd skills/skills/fnnas-docs && python3 scripts/fetch-docs.py
 | fnpack        | 应用打包工具       | [fnpack.md](references/cli/fnpack.md)             |
 | appcenter-cli | 应用中心命令行工具 | [appcentercli.md](references/cli/appcentercli.md) |
 
+### 🔌 开放 API
+
+| 文档             | 说明                                  | 链接                                             |
+| ---------------- | ------------------------------------- | ------------------------------------------------ |
+| 概述             | 开放能力范围和阅读顺序                | [overview.md](references/api/overview.md)        |
+| 调用方式         | API Scope、JS SDK、后端 API 通用规则  | [calling.md](references/api/calling.md)          |
+| 授权与文件       | 文件授权能力总览                      | [authorization/overview.md](references/api/authorization/overview.md) |
+| 应用共享授权路径 | 管理员授权固定目录                    | [shared-access.md](references/api/authorization/shared-access.md) |
+| 用户个人授权路径 | 当前用户授权目录或文件                | [user-access.md](references/api/authorization/user-access.md) |
+| 文件权限检查     | 检查用户对文件或目录的 ACL             | [file-acl.md](references/api/authorization/file-acl.md) |
+| 路径转换         | 转换内部路径为语义化展示路径           | [path-convert.md](references/api/authorization/path-convert.md) |
+| 页面路由         | 打开文件、文件管理器和应用设置         | [routing.md](references/api/page/routing.md)     |
+| 页面交互         | 页面标题、主题、语言和离开提示         | [ui.md](references/api/page/ui.md)               |
+| 错误码           | JS SDK 和后端 API 错误码               | [error-codes.md](references/api/error-codes.md)  |
+| 平台配置         | 读取语言、主题、系统版本和格式配置     | [platform-config.md](references/api/platform-config.md) |
+
 ### 📝 更新日志
 
 | 文档       | 说明                          | 链接                                             |
 | ---------- | ----------------------------- | ------------------------------------------------ |
+| 2026-07-31 | 新增开放 API 和 API 文档索引   | [update-log.md](references/update-log.md)       |
 | 2026-07-05 | 新增 llms.txt、fnpack V1.2.3  | [20260705.md](references/update-log/20260705.md) |
 | 2026-05-09 | 统一网关文档补充              | [20260509.md](references/update-log/20260509.md) |
 | 2025-12-31 | 文档组织调整、platform 字段等 | [20251231.md](references/update-log/20251231.md) |
@@ -150,6 +169,19 @@ cd skills/skills/fnnas-docs && python3 scripts/fetch-docs.py
 - "appcenter-cli" / "appcenter" / "命令行工具" / "CLI" → [appcentercli.md](references/cli/appcentercli.md)
 - "install-local" / "本地安装" / "快速安装" → [appcentercli.md](references/cli/appcentercli.md)
 
+### 开放 API 相关
+- "开放 API" / "Open API" / "API 概述" / "应用中心 API" → [overview.md](references/api/overview.md)
+- "调用方式" / "api-scope" / "JS SDK" / "后端 API" → [calling.md](references/api/calling.md)
+- "文件授权" / "授权与文件" / "授权目录" → [authorization/overview.md](references/api/authorization/overview.md)
+- "共享授权" / "管理员授权" / "固定目录" → [shared-access.md](references/api/authorization/shared-access.md)
+- "个人授权" / "用户授权" / "pickUserFile" → [user-access.md](references/api/authorization/user-access.md)
+- "文件权限" / "ACL" / "checkUserACL" → [file-acl.md](references/api/authorization/file-acl.md)
+- "路径转换" / "convertPath" → [path-convert.md](references/api/authorization/path-convert.md)
+- "打开文件" / "文件管理器" / "页面路由" → [routing.md](references/api/page/routing.md)
+- "页面交互" / "主题" / "语言变化" → [ui.md](references/api/page/ui.md)
+- "平台配置" / "系统版本" / "getPlatformConfig" → [platform-config.md](references/api/platform-config.md)
+- "错误码" / "API 报错" → [error-codes.md](references/api/error-codes.md)
+
 ### 更新日志相关
 - "文档更新" / "更新记录" / "changelog" / "最近更新" → [update-log/](references/update-log/)
 
@@ -174,8 +206,9 @@ fnOS 基于 Linux (Debian) 内核，支持：
 | ------------------------------------------------------ | ---------------------------------- |
 | [references/guide.md](references/guide.md)             | 平台概览                           |
 | [references/quick-started/](references/quick-started/) | 快速开始文档（4 篇）               |
-| [references/core-concepts/](references/core-concepts/) | 开发指南文档（12 篇）              |
+| [references/core-concepts/](references/core-concepts/) | 开发指南文档（13 篇）              |
 | [references/examples/](references/examples/)           | 应用案例文档（2 篇）               |
 | [references/cli/](references/cli/)                     | CLI 工具文档（2 篇）               |
-| [references/update-log/](references/update-log/)       | 文档更新日志（4 篇）               |
-| [scripts/fetch-docs.py](scripts/fetch-docs.py)         | 文档同步脚本（基于 llms-full.txt） |
+| [references/api/](references/api/)                     | 开放 API 文档（11 篇）             |
+| [references/update-log.md](references/update-log.md)   | 文档和开放 API 更新日志             |
+| [scripts/fetch-docs.py](scripts/fetch-docs.py)         | 文档同步脚本（基于 llms.txt 和 llms-full.txt） |
