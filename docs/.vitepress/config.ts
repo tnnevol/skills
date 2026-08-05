@@ -24,7 +24,7 @@ export default defineConfig({
           { text: 'openlist', link: '/skills/openlist/' },
         ],
       },
-      { text: '命令行工具', link: '/cli/openlist-cli' },
+      { text: 'openlist-cli', link: '/cli/openlist-cli' },
     ],
 
     sidebar: {
@@ -223,7 +223,7 @@ export default defineConfig({
         {
           text: '命令行工具',
           items: [
-            { text: '网盘命令行工具', link: '/cli/openlist-cli' },
+            { text: 'openlist-cli', link: '/cli/openlist-cli' },
           ],
         },
       ],
