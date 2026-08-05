@@ -26,7 +26,8 @@ export default defineConfig({
       { text: '命令行工具', link: '/cli/openlist-cli' },
     ],
 
-    sidebar: [
+    sidebar: {
+      '/guide/': [
       {
         text: '指南',
         items: [
@@ -35,6 +36,8 @@ export default defineConfig({
           { text: '技能开发规范', link: '/guide/skill-structure' },
         ],
       },
+      ],
+      '/skills/': [
       {
         text: '技能',
         items: [
@@ -205,13 +208,16 @@ export default defineConfig({
           },
         ],
       },
+      ],
+      '/cli/': [
       {
         text: '命令行工具',
         items: [
           { text: '网盘命令行工具', link: '/cli/openlist-cli' },
         ],
       },
-    ],
+      ],
+    },
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/tnnevol/skills' },
