@@ -9,7 +9,10 @@
     "test": "node scripts/app-runner.js test",
     "clean": "node scripts/app-runner.js clean",
     "bump": "node scripts/app-runner.js bump",
-    "publish": "node scripts/app-runner.js publish"
+    "publish": "node scripts/app-runner.js publish",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress serve docs"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^7.7.2",
@@ -19,7 +22,8 @@
     "eslint": "^10.0.3",
     "lint-staged": "^16.3.3",
     "simple-git-hooks": "^2.13.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitepress": "^1.6.4"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"

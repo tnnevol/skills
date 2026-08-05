@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  base: process.env.GITHUB_ACTIONS ? '/skills/' : '/',
   title: 'Tnnevol 技能库',
   description: '智能技能合集 - 开发和发布技能与命令行工具',
   lang: 'zh-CN',
