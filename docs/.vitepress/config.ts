@@ -14,13 +14,13 @@ export default defineConfig({
         text: '技能',
         items: [
           { text: '总览', link: '/skills/' },
-          { text: '自动保存', link: '/skills/autosave/' },
-          { text: '禅道', link: '/skills/chandao/' },
-          { text: '钉钉', link: '/skills/ding/' },
-          { text: '飞牛文档', link: '/skills/fnnas-docs/' },
-          { text: '博客管理', link: '/skills/halo/' },
-          { text: '笔记管理', link: '/skills/memos/' },
-          { text: '网盘聚合', link: '/skills/openlist/' },
+          { text: 'autosave', link: '/skills/autosave/' },
+          { text: 'chandao', link: '/skills/chandao/' },
+          { text: 'ding', link: '/skills/ding/' },
+          { text: 'fnnas-docs', link: '/skills/fnnas-docs/' },
+          { text: 'halo', link: '/skills/halo/' },
+          { text: 'memos', link: '/skills/memos/' },
+          { text: 'openlist', link: '/skills/openlist/' },
         ],
       },
       { text: '命令行工具', link: '/cli/openlist-cli' },
@@ -45,7 +45,7 @@ export default defineConfig({
       ],
       '/skills/autosave/': [
         {
-          text: '自动保存',
+          text: 'autosave',
           items: [
             { text: '概述', link: '/skills/autosave/' },
             { text: '环境配置', link: '/skills/autosave/setup' },
@@ -59,7 +59,7 @@ export default defineConfig({
       ],
       '/skills/chandao/': [
         {
-          text: '禅道',
+          text: 'chandao',
           items: [
             { text: '概述', link: '/skills/chandao/' },
             { text: '环境配置', link: '/skills/chandao/setup' },
@@ -79,7 +79,7 @@ export default defineConfig({
       ],
       '/skills/ding/': [
         {
-          text: '钉钉',
+          text: 'ding',
           items: [
             { text: '概述', link: '/skills/ding/' },
             { text: '环境配置', link: '/skills/ding/setup' },
@@ -91,7 +91,7 @@ export default defineConfig({
       ],
       '/skills/fnnas-docs/': [
         {
-          text: '飞牛文档',
+          text: 'fnnas-docs',
           items: [
             { text: '概述', link: '/skills/fnnas-docs/' },
             { text: '平台概览', link: '/skills/fnnas-docs/guide' },
@@ -177,7 +177,7 @@ export default defineConfig({
       ],
       '/skills/halo/': [
         {
-          text: '博客管理',
+          text: 'halo',
           items: [
             { text: '概述', link: '/skills/halo/' },
             { text: '环境配置', link: '/skills/halo/setup' },
@@ -190,7 +190,7 @@ export default defineConfig({
       ],
       '/skills/memos/': [
         {
-          text: '笔记管理',
+          text: 'memos',
           items: [
             { text: '概述', link: '/skills/memos/' },
             { text: '环境配置', link: '/skills/memos/setup' },
@@ -209,7 +209,7 @@ export default defineConfig({
       ],
       '/skills/openlist/': [
         {
-          text: '网盘聚合',
+          text: 'openlist',
           items: [
             { text: '概述', link: '/skills/openlist/' },
             { text: '环境配置', link: '/skills/openlist/setup' },
