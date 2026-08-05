@@ -1,5 +1,7 @@
 # Setup — 安装、认证与环境变量
 
+首次安装请先阅读并遵循 [openlist-cli 首次安装引导](https://github.com/tnnevol/skills/blob/main/apps/openlist-cli/openlist-cli-installation-guide.md)，根据当前环境完成安装或升级，再进行认证配置。
+
 ## 安装 openlist-cli
 
 ```bash

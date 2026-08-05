@@ -11,9 +11,13 @@ metadata:
 
 用 `openlist-cli` 完成用户对 OpenList 的操作；不要凭记忆拼接 API 请求，优先用 CLI 的 `--help` 驱动下一步。CLI 内部已把命令映射到经真实服务端核验的 API 契约（见 [pitfalls](references/pitfalls.md)）。
 
+## 安装前置要求
+
+代理处理 openlist 任务前，必须先阅读并遵循 [openlist-cli 首次安装引导](https://github.com/tnnevol/skills/blob/main/apps/openlist-cli/openlist-cli-installation-guide.md)，根据用户环境完成 `openlist-cli` 的安装或升级。安装完成前，不得直接执行认证或业务命令。
+
 ## 新会话检查
 
-首次处理 openlist 任务时，先轻量确认 CLI 可用与已认证：
+首次处理 openlist 任务时，先按上述安装引导完成安装，再轻量确认 CLI 可用与已认证：
 
 ```bash
 openlist-cli --version        # 确认 CLI 可用
