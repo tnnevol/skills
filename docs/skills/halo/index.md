@@ -8,6 +8,10 @@ description: 通过脚本安全管理博客文章、标签、分类和独立页�
 Halo（[halo.run](https://halo.run)）是一款基于 Spring Boot 构建的开源网站管理工具。
 使用本技能可以通过 Halo 接口管理文章、标签、分类和独立页面。
 
+## 官方 API 站点
+
+- [Halo API 参考](https://docs.halo.run/category/api-%E5%8F%82%E8%80%83)：官方 API 参考入口，包含服务端 API、界面 API 和 API 变更日志。
+
 ## 安全规范
 
 1. **Never expose** the `HALO_PAT` (Personal Access Token) value in chat, files, code, or logs.

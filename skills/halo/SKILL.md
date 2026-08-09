@@ -9,6 +9,10 @@ description: >
 Halo ([halo.run](https://halo.run)) is a powerful open-source website building tool built with Spring Boot.
 Use this skill to manage blog posts, tags, categories, and singlepages via the Halo RESTful API.
 
+## 官方 API 站点
+
+- [Halo API 参考](https://docs.halo.run/category/api-%E5%8F%82%E8%80%83)：官方 API 参考入口，包含服务端 API、界面 API 和 API 变更日志。
+
 ## Security Guidelines
 
 1. **Never expose** the `HALO_PAT` (Personal Access Token) value in chat, files, code, or logs.
