@@ -21,6 +21,10 @@ core
 temp
 .pnpm-store
 
+# 本地工具生成的状态和证据文件
+.apifox/
+.qoder/
+
 # openlist-cli 测试运行时的临时产物（中断时可能残留）
 .tmp-home-*
 .tmp-upload-*
