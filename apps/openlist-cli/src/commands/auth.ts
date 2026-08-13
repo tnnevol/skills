@@ -24,6 +24,13 @@ type TokenValidator = (credentials: LoginCredentials) => Promise<{
   message?: string
 }>
 
+export interface LoginPromptDependencies {
+  isInteractive?: boolean
+  promptText?: typeof promptText
+  promptConfirm?: typeof promptConfirm
+  promptSecret?: typeof promptSecret
+}
+
 function hasInteractiveTerminal(): boolean {
   return stdin.isTTY === true && stderr.isTTY === true
 }
@@ -161,9 +168,10 @@ function normalizeBaseUrl(value: string): string {
   return value.trim().replace(TRAILING_SLASHES, '').toLowerCase()
 }
 
-async function resolveLoginOptions(
+export async function resolveLoginOptions(
   options: LoginOptions,
   validateToken?: TokenValidator,
+  dependencies: LoginPromptDependencies = {},
 ): Promise<LoginCredentials> {
   const fileConfig = loadConfig()
   const configuredBaseUrl = fileConfig?.baseUrl?.trim() || ''
@@ -184,14 +192,19 @@ async function resolveLoginOptions(
 
   clearStaleConfiguredToken()
 
-  if (!hasInteractiveTerminal()) {
+  const interactive = dependencies.isInteractive ?? hasInteractiveTerminal()
+  const askText = dependencies.promptText ?? promptText
+  const askConfirm = dependencies.promptConfirm ?? promptConfirm
+  const askSecret = dependencies.promptSecret ?? promptSecret
+
+  if (!interactive) {
     if (!baseUrl) {
       throw new Error('缺少登录参数。非交互模式至少需要提供 --base-url 或 OPENLIST_BASE_URL。')
     }
     return { baseUrl, token: token || undefined }
   }
 
-  baseUrl = await promptText(
+  baseUrl = await askText(
     'OpenList 服务地址',
     baseUrl,
     isValidBaseUrl,
@@ -200,14 +213,19 @@ async function resolveLoginOptions(
 
   clearStaleConfiguredToken()
 
-  const allowAnonymous = await promptConfirm('服务是否允许无 Token 访问')
+  const allowAnonymous = await askConfirm('服务是否允许无 Token 访问')
   if (allowAnonymous) {
     return { baseUrl }
   }
 
   let tokenDefault = token
   while (true) {
-    token = await promptSecret('API Token（输入时不显示）', tokenDefault)
+    token = await askSecret('API Token（输入时不显示）', tokenDefault)
+    if (!token) {
+      stderr.write('API Token 不能为空，请重新输入。\n')
+      tokenDefault = undefined
+      continue
+    }
     const credentials = { baseUrl, token }
     if (!validateToken) {
       return credentials

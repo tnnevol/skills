@@ -1,4 +1,11 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -14,6 +21,18 @@ describe('auth 命令', () => {
   let env: Record<string, string>
   let baseUrl: string
   let token: string
+
+  function configPath(): string {
+    return join(tmpHome, '.openlist', 'config.json')
+  }
+
+  function writeTestConfig(config: {
+    baseUrl: string
+    token?: string
+  }): void {
+    mkdirSync(join(tmpHome, '.openlist'), { recursive: true })
+    writeFileSync(configPath(), JSON.stringify(config), 'utf-8')
+  }
 
   beforeAll(() => {
     baseUrl = requireEnv('OPENLIST_BASE_URL')
@@ -36,6 +55,14 @@ describe('auth 命令', () => {
     expect(r.json.message).toContain('未登录')
   })
 
+  it('非交互模式缺少服务地址时登录失败', () => {
+    const r = runCli(['auth', 'login'], env)
+    expect(r.code).not.toBe(0)
+    expect(r.json.success).toBe(false)
+    expect(r.json.message).toContain('--base-url')
+    expect(existsSync(configPath())).toBe(false)
+  })
+
   it('错误 Token 登录失败且不会写入配置', () => {
     const r = runCli(
       ['auth', 'login', '--base-url', baseUrl, '--token', 'invalid-token'],
@@ -45,8 +72,21 @@ describe('auth 命令', () => {
     expect(r.json.success).toBe(false)
     expect(r.json.message).toMatch(/invalid|无效|失效/i)
 
-    const cfgPath = join(tmpHome, '.openlist', 'config.json')
-    expect(existsSync(cfgPath)).toBe(false)
+    expect(existsSync(configPath())).toBe(false)
+  })
+
+  it('配置地址变更时清除配置中的旧 Token', () => {
+    const oldBaseUrl = 'https://old-openlist.example.invalid'
+    const newBaseUrl = 'https://new-openlist.example.invalid'
+    writeTestConfig({ baseUrl: oldBaseUrl, token: 'old-token' })
+
+    const r = runCli(['auth', 'login', '--base-url', newBaseUrl], env)
+    expect(r.code).toBe(0)
+    expect(r.json.success).toBe(true)
+
+    const cfg = JSON.parse(readFileSync(configPath(), 'utf-8'))
+    expect(cfg.baseUrl).toBe(newBaseUrl)
+    expect(cfg.token).toBeUndefined()
   })
 
   it('参数模式允许省略 Token 且不执行令牌校验', () => {
@@ -55,8 +95,7 @@ describe('auth 命令', () => {
     expect(r.code).toBe(0)
     expect(r.json.success).toBe(true)
 
-    const cfgPath = join(tmpHome, '.openlist', 'config.json')
-    const cfg = JSON.parse(readFileSync(cfgPath, 'utf-8'))
+    const cfg = JSON.parse(readFileSync(configPath(), 'utf-8'))
     expect(cfg.baseUrl).toBe(publicBaseUrl)
     expect(cfg.token).toBeUndefined()
   })
@@ -72,9 +111,8 @@ describe('auth 命令', () => {
     expect(r.json.data.baseUrl).toBe(baseUrl)
 
     // 配置确实写入隔离 HOME
-    const cfgPath = join(tmpHome, '.openlist', 'config.json')
-    expect(existsSync(cfgPath)).toBe(true)
-    const cfg = JSON.parse(readFileSync(cfgPath, 'utf-8'))
+    expect(existsSync(configPath())).toBe(true)
+    const cfg = JSON.parse(readFileSync(configPath(), 'utf-8'))
     expect(cfg.baseUrl).toBe(baseUrl)
     expect(cfg.token).toBe(token)
   })
@@ -89,18 +127,12 @@ describe('auth 命令', () => {
     expect(typeof r.json.data.user.username).toBe('string')
   })
 
-  it('缺少 --base-url/--token 时 login 报错', () => {
-    const r = runCli(['auth', 'login'], env)
-    expect(r.json.success).toBe(false)
-  })
-
   it('logout 清除配置', () => {
     const r = runCli(['auth', 'logout'], env)
     expect(r.json.success).toBe(true)
     expect(r.json.operation).toBe('logout')
 
-    const cfgPath = join(tmpHome, '.openlist', 'config.json')
-    expect(existsSync(cfgPath)).toBe(false)
+    expect(existsSync(configPath())).toBe(false)
   })
 
   it('logout 后 status 恢复未登录', () => {
