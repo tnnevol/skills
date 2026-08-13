@@ -17,48 +17,69 @@ interface LoginCredentials {
   token?: string
 }
 
+type TokenValidator = (credentials: LoginCredentials) => Promise<{
+  valid: boolean
+  message?: string
+}>
+
 function hasInteractiveTerminal(): boolean {
   return stdin.isTTY === true && stderr.isTTY === true
 }
 
-async function promptConfirm(label: string, defaultValue = false): Promise<boolean> {
-  const readline = createInterface({
-    input: stdin,
-    output: stderr,
-    terminal: true,
-  })
+async function promptConfirm(label: string): Promise<boolean> {
+  while (true) {
+    const readline = createInterface({
+      input: stdin,
+      output: stderr,
+      terminal: true,
+    })
 
-  try {
-    const answer = await readline.question(`${label} [y/N]: `)
-    const normalized = answer.trim().toLowerCase()
-    if (!normalized) {
-      return defaultValue
+    try {
+      const answer = await readline.question(`${label} [y/n]: `)
+      const normalized = answer.trim().toLowerCase()
+      if (normalized === 'y') {
+        return true
+      }
+      if (normalized === 'n') {
+        return false
+      }
+      stderr.write('请输入 y 或 n。\n')
     }
-    return normalized === 'y' || normalized === 'yes' || normalized === '是'
-  }
-  finally {
-    readline.close()
-  }
-}
-
-async function promptText(label: string, defaultValue?: string): Promise<string> {
-  const readline = createInterface({
-    input: stdin,
-    output: stderr,
-    terminal: true,
-  })
-
-  try {
-    const suffix = defaultValue ? ` [${defaultValue}]` : ''
-    const answer = await readline.question(`${label}${suffix}: `)
-    return answer.trim() || defaultValue || ''
-  }
-  finally {
-    readline.close()
+    finally {
+      readline.close()
+    }
   }
 }
 
-function promptSecret(label: string, defaultValue?: string): Promise<string> {
+async function promptText(
+  label: string,
+  defaultValue: string | undefined,
+  validate: (value: string) => boolean,
+  errorMessage: string,
+): Promise<string> {
+  while (true) {
+    const readline = createInterface({
+      input: stdin,
+      output: stderr,
+      terminal: true,
+    })
+
+    try {
+      const suffix = defaultValue ? ` [${defaultValue}]` : ''
+      const answer = await readline.question(`${label}${suffix}: `)
+      const value = answer.trim() || defaultValue || ''
+      if (validate(value)) {
+        return value
+      }
+      stderr.write(`${errorMessage}\n`)
+    }
+    finally {
+      readline.close()
+    }
+  }
+}
+
+function promptSecretOnce(label: string, defaultValue?: string): Promise<string> {
   return new Promise((resolve, reject) => {
     let value = ''
     let settled = false
@@ -111,8 +132,29 @@ function promptSecret(label: string, defaultValue?: string): Promise<string> {
   })
 }
 
+async function promptSecret(label: string, defaultValue?: string): Promise<string> {
+  while (true) {
+    const value = await promptSecretOnce(label, defaultValue)
+    if (value) {
+      return value
+    }
+    stderr.write('API Token 不能为空，请重新输入。\n')
+  }
+}
+
+function isValidBaseUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return (url.protocol === 'http:' || url.protocol === 'https:') && Boolean(url.hostname)
+  }
+  catch {
+    return false
+  }
+}
+
 async function resolveLoginOptions(
   options: LoginOptions,
+  validateToken?: TokenValidator,
 ): Promise<LoginCredentials> {
   const fileConfig = loadConfig()
   const configuredBaseUrl = fileConfig?.baseUrl?.trim() || ''
@@ -127,26 +169,34 @@ async function resolveLoginOptions(
     return { baseUrl, token: token || undefined }
   }
 
-  baseUrl = await promptText('OpenList 服务地址', baseUrl)
+  baseUrl = await promptText(
+    'OpenList 服务地址',
+    baseUrl,
+    isValidBaseUrl,
+    '服务地址格式无效，请输入完整的 http:// 或 https:// 地址。',
+  )
 
-  if (!baseUrl) {
-    throw new Error('OpenList 服务地址不能为空')
-  }
-
-  const allowAnonymous = await promptConfirm('服务是否允许无 Token 访问', false)
+  const allowAnonymous = await promptConfirm('服务是否允许无 Token 访问')
   if (allowAnonymous) {
     return { baseUrl }
   }
 
-  if (!token) {
-    token = await promptSecret('API Token（输入时不显示）', configuredToken)
-  }
+  let tokenDefault = token
+  while (true) {
+    token = await promptSecret('API Token（输入时不显示）', tokenDefault)
+    const credentials = { baseUrl, token }
+    if (!validateToken) {
+      return credentials
+    }
 
-  if (!token) {
-    throw new Error('服务不允许无 Token 访问时，API Token 不能为空')
-  }
+    const result = await validateToken(credentials)
+    if (result.valid) {
+      return credentials
+    }
 
-  return { baseUrl, token }
+    stderr.write(`${result.message || 'API Token 无效'}，请重新输入。\n`)
+    tokenDefault = undefined
+  }
 }
 
 export function registerAuthCommand(program: Command): void {
@@ -164,10 +214,21 @@ export function registerAuthCommand(program: Command): void {
       // --base-url / --token 与全局选项同名，需通过 optsWithGlobals 读取
       const opts = cmd.optsWithGlobals() as LoginOptions
       try {
-        const credentials = await resolveLoginOptions(opts)
-        if (credentials.token) {
-          const client = createClient(credentials)
-          const response = await client.get('/api/me')
+        const interactive = hasInteractiveTerminal()
+        const credentials = await resolveLoginOptions(
+          opts,
+          interactive
+            ? async (loginCredentials) => {
+              const response = await createClient(loginCredentials).get('/api/me')
+              return {
+                valid: response.code === 200,
+                message: response.message || 'API Token 无效',
+              }
+            }
+            : undefined,
+        )
+        if (!interactive && credentials.token) {
+          const response = await createClient(credentials).get('/api/me')
           if (response.code !== 200) {
             printError(response.message || 'API Token 无效', response.code)
             return

@@ -12,7 +12,7 @@
 | `auth logout` | 清除本地配置                      | —                                               |
 | `auth status` | 查看登录状态（调用 /api/me 校验） | —                                               |
 
-在真实终端中运行 `openlist-cli auth login` 会先询问服务是否允许无 Token 访问，默认选择“否”。选择“是”会跳过 Token 输入和校验；选择“否”时，如果配置文件中已有 Token，直接回车会继续使用原配置，否则必须填写 Token。参数模式下 `--token` 可省略：提供 Token 时校验 `/api/me`，省略 Token 时跳过 Token 校验。管道、脚本和 CI 等非交互环境至少需要显式提供 `--base-url`。
+在真实终端中运行 `openlist-cli auth login` 始终进入交互式流程，即使配置文件已有值也会显示提示，并将配置值作为默认值。服务地址和 Token 会在提交后校验，校验失败会继续提示。服务是否允许无 Token 访问只接受 `y` 或 `n`，其他输入会继续提示。选择 `y` 会跳过 Token 输入和校验；选择 `n` 时直接回车会继续使用原配置。参数模式下 `--token` 可省略：提供 Token 时校验 `/api/me`，省略 Token 时跳过 Token 校验。管道、脚本和 CI 等非交互环境至少需要显式提供 `--base-url`。
 
 ## fs — 文件与目录
 
