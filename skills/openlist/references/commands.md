@@ -106,7 +106,7 @@ openlist-cli admin index progress
 
 ### admin storage create 工作流（重要）
 
-创建存储不要凭空拼参数，按以下步骤，并**创建前二次确认**：
+创建存储不要凭空拼参数，按[存储与高级设置](storage-advanced.md)中的官方通用项和以下步骤执行，并**创建前二次确认**：
 
 1. **确定驱动**：驱动值取自 `admin driver names`（返回驱动名数组，如 `SMB`、`Local`、`123Pan`…）。
    - **若用户未明确指定驱动 → 先提问用户使用哪个驱动**（可先跑 `admin driver names` 列出可选项供选择）。

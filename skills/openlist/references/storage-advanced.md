@@ -1,6 +1,6 @@
 # 存储与高级设置
 
-本参考只提取官方“添加存储”和“高级设置”中能直接通过当前 `openlist-cli` 操作的内容。驱动专属字段以服务端 `admin driver info` 返回的模板为准，不要把网页表单或其他版本的字段硬编码到请求中。
+本参考只提取官方[“添加存储”通用项](https://github.com/OpenListTeam/OpenList-Docs/blob/main/pages/guide/drivers/common.md)和“高级设置”中能直接通过当前 `openlist-cli` 操作的内容。驱动专属字段以服务端 `admin driver info` 返回的模板为准，不要把网页表单或其他版本的字段硬编码到请求中。
 
 ## 添加存储
 
@@ -11,6 +11,8 @@
 3. 组装存储对象；`addition` 必须是驱动专属配置的 JSON 字符串，不是嵌套对象。
 4. 创建前向用户回显非敏感参数并二次确认；密码、令牌等敏感字段只确认“已填写”，不得回显。
 5. 创建后使用 `admin storage get <id>` 或 `admin storage list` 验证，必要时执行 `admin storage load-all` 重新加载全部存储。
+
+官方网页中的“添加存储”对应 CLI 的 `admin storage create`；网页上的驱动表单不是固定 API。必须先查询当前服务的驱动模板，再将通用字段和 `addition` 合并提交。
 
 ```bash
 openlist-cli admin driver names
@@ -23,13 +25,19 @@ openlist-cli admin storage create --data '{"mount_path":"/smb","driver":"SMB","o
 - `mount_path` 必填且必须唯一；挂载到根目录使用 `/`。重复挂载路径会导致数据库唯一性错误。
 - `order` 用于挂载顺序，数值越小越靠前，也可以使用负数。
 - `remark` 用于备注。部分驱动支持引用已有存储的认证信息：备注第一行使用 `ref:/已有挂载路径`，其中 `ref:/` 必须小写。适用范围以官方文档和当前服务版本为准。
+- `driver` 是驱动名称，必须来自 `admin driver names`；`addition` 是驱动专属字段的 JSON 字符串。不要把 `addition` 写成对象，也不要把网页表单标签直接当作字段名。
+- `disabled` 控制存储是否停用；通常优先使用 `admin storage enable/disable <id>`，不要在创建请求中无意覆盖状态。
 - `cache_expiration` 是目录结构缓存时间，单位为分钟。`custom_cache_policies` 可按路径设置缓存，例如 `/剧集/已完结/*:60`；`*` 匹配一层目录，`**` 匹配多层目录。
 - `disable_index: true` 可禁止该存储参与索引；适合不需要搜索或不适合建立索引的存储。
 - `enable_sign: true` 只对当前存储启用直链签名。签名范围遵循“全局签名 > 元信息目录加密 > 单存储签名”。
 - `web_proxy: true` 让网页预览、下载和直链经过中转；启用后建议确认站点地址已配置。
 - `webdav_policy` 只影响 WebDAV：`302_redirect` 为重定向，`use_proxy_url` 为使用下载代理地址，`native_proxy` 为本机中转。它与 `web_proxy` 是不同配置。
 - `down_proxy_url` 是下载代理地址，启用代理但不填写时默认使用本机；地址末尾不要带 `/`。
+- `proxy_range: true` 控制代理是否支持范围请求；只有确认代理服务支持断点或范围请求时才启用。
+- `disable_proxy_sign: true` 可关闭下载代理 URL 的签名校验；这会降低代理链路的保护能力，修改前必须向用户说明风险。
 - `order_by`、`order_direction`、`extract_folder` 控制列表排序；部分驱动可能使用自己的排序方式。
+
+`id`、`status`、`modified` 属于服务端返回信息，通常不需要放入创建请求。读取存储详情时可以使用 `admin storage get <id>` 获取这些字段。
 
 ### 高级创建场景
 

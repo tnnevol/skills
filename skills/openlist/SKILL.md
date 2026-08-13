@@ -95,6 +95,7 @@ openlist-cli <group> <command> --help
 - "解压 X 到 Y" → `fs archive-decompress --path X --dst-dir Y`（目标目录须先存在，可先 `fs mkdir Y`）
 - "分享 X / 创建分享" → `share create --path X`（可带 `--password` / `--expires`）
 - "禁用/启用/删除分享 N" → `share disable/enable/delete N`
+- "添加/挂载存储" → 先阅读 [存储与高级设置](references/storage-advanced.md)，再按驱动模板执行 `admin driver names` → `admin driver info <driver>` → `admin storage create`
 - "列出用户/存储/设置" → `admin user/storage/setting list`
 - "看设置项 K" → `admin setting get K`
 
