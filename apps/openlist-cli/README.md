@@ -93,7 +93,7 @@ openlist-cli share create --path /share-dir
 openlist-cli auth login
 ```
 
-命令会先询问服务是否允许无 Token 访问，默认选择“否”。选择“是”会跳过 Token 输入和 Token 校验；选择“否”时，如果配置文件中已有 Token，直接回车会继续使用原配置，否则必须填写 Token。参数模式下 `--token` 为可选参数：提供 Token 时校验 `/api/me`，省略 Token 时跳过 Token 校验并保存无 Token 配置。管道、脚本和 CI 等非交互环境至少需要提供 `--base-url`。
+真实终端中的 `auth login` 始终进入交互式流程，即使配置文件已有值也会显示提示，并将配置值作为默认值。命令会先询问服务是否允许无 Token 访问，默认选择“否”。选择“是”会跳过 Token 输入和 Token 校验；选择“否”时直接回车会继续使用原配置。参数模式下 `--token` 为可选参数：提供 Token 时校验 `/api/me`，省略 Token 时跳过 Token 校验并保存无 Token 配置。管道、脚本和 CI 等非交互环境至少需要提供 `--base-url`。
 
 ### fs - 文件管理
 

@@ -120,10 +120,6 @@ async function resolveLoginOptions(
   let baseUrl = options.baseUrl?.trim() || env.OPENLIST_BASE_URL || configuredBaseUrl
   let token = options.token?.trim() || env.OPENLIST_TOKEN || configuredToken
 
-  if (baseUrl && !options.interactive) {
-    return { baseUrl, token: token || undefined }
-  }
-
   if (!hasInteractiveTerminal()) {
     if (!baseUrl) {
       throw new Error('缺少登录参数。非交互模式至少需要提供 --base-url 或 OPENLIST_BASE_URL。')

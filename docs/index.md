@@ -4,7 +4,7 @@ layout: home
 hero:
   name: Tnnevol 技能库
   text: 智能技能合集
-  tagline: 开发和发布技能与命令行工具，文档同时记录开发进度与计划
+  tagline: 集中管理技能与命令行工具，提供安装、使用和功能说明
   actions:
     - theme: brand
       text: 快速开始
@@ -18,8 +18,8 @@ hero:
 
 features:
   - icon: 🧩
-    title: 7 个智能技能
-    details: 涵盖网盘自动保存、禅道项目管理、钉钉代理通讯、博客管理、笔记管理、飞牛文档、网盘聚合等场景
+    title: 5 个智能技能
+    details: 涵盖禅道项目管理、飞牛应用开发、Halo 博客、Memos 笔记和 OpenList 网盘等场景
     link: /skills/
   - icon: 🚀
     title: 快速集成
@@ -30,9 +30,9 @@ features:
     details: 提供独立的网盘命令行工具，支持管理网盘文件
     link: /cli/openlist-cli
   - icon: 📋
-    title: 开发日志
-    details: 记录每个技能的开发进度、已完成功能、当前状态和未来计划
-    link: /guide/what-is-skills
+    title: 统一文档
+    details: 所有技能集中在一个文档模块中，按安装、使用和功能组织内容
+    link: /skills/
 ---
 
 ## 项目概览
@@ -41,7 +41,7 @@ features:
 
 | 类别 | 数量 | 说明 |
 |------|------|------|
-| 技能 | 7 个 | 自动保存、禅道、钉钉、飞牛文档、博客管理、笔记管理、网盘聚合 |
+| 技能 | 5 个 | 禅道、飞牛文档、博客管理、笔记管理、网盘聚合 |
 | 命令行应用 | 1 个 | 网盘命令行工具 |
 
-所有技能均遵循统一的技能规范，包含 `SKILL.md` 索引文件、文档和配套脚本。
+所有技能均遵循统一的技能规范，包含 `SKILL.md` 索引文件、参考资料和配套脚本。

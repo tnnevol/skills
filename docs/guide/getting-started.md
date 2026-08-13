@@ -36,7 +36,7 @@ npx skills add tnnevol/skills --skill=chandao -g -y
 npm install -g @tnnevol/openlist-cli
 ```
 
-安装后即可在终端中使用 `openlist` 命令管理网盘文件。
+安装后即可在终端中使用 `openlist-cli` 命令管理网盘文件。
 
 ## 环境变量配置
 
