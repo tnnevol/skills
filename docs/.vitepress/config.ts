@@ -15,6 +15,11 @@ export default defineConfig({
         text: '技能',
         items: [
           { text: '总览', link: '/skills/' },
+          { text: 'openlist', link: '/skills/openlist/' },
+          { text: 'memos', link: '/skills/memos/' },
+          { text: 'fnnas-docs', link: '/skills/fnnas-docs/' },
+          { text: 'halo', link: '/skills/halo/' },
+          { text: 'chandao', link: '/skills/chandao/' },
         ],
       },
       { text: 'openlist-cli', link: '/cli/openlist-cli' },
@@ -34,7 +39,14 @@ export default defineConfig({
       '/skills/': [
         {
           text: '技能',
-          items: [{ text: '总览', link: '/skills/' }],
+          items: [
+            { text: '总览', link: '/skills/' },
+            { text: 'openlist', link: '/skills/openlist/' },
+            { text: 'memos', link: '/skills/memos/' },
+            { text: 'fnnas-docs', link: '/skills/fnnas-docs/' },
+            { text: 'halo', link: '/skills/halo/' },
+            { text: 'chandao', link: '/skills/chandao/' },
+          ],
         },
       ],
       '/cli/': [
