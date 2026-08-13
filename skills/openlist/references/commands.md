@@ -12,7 +12,7 @@
 | `auth logout` | 清除本地配置                      | —                                               |
 | `auth status` | 查看登录状态（调用 /api/me 校验） | —                                               |
 
-在真实终端中运行 `openlist-cli auth login` 会交互式询问缺少的服务地址和 API Token，Token 输入时不会回显。管道、脚本和 CI 等非交互环境必须显式提供 `--base-url` 与 `--token`。
+在真实终端中运行 `openlist-cli auth login` 会交互式询问缺少的服务地址和 API Token，Token 输入时不会回显。登录前会调用 `/api/me` 校验 Token，校验失败时不会写入配置。管道、脚本和 CI 等非交互环境必须显式提供 `--base-url` 与 `--token`。
 
 ## fs — 文件与目录
 

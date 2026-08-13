@@ -39,7 +39,7 @@ openlist-cli --base-url http://localhost:5244 --token <token> fs list /
 
 ### 3. 登录保存到配置文件
 
-在真实终端中可直接使用交互式登录，Token 输入时不会回显：
+在真实终端中可直接使用交互式登录，Token 输入时不会回显。登录前会校验 Token，校验失败时不会保存配置：
 
 ```bash
 openlist-cli auth login

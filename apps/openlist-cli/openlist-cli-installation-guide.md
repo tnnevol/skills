@@ -41,7 +41,7 @@ openlist-cli --version
 
 ## Step 3: 登录 CLI
 
-在真实终端中可以使用交互式登录，Token 输入时不会回显：
+在真实终端中可以使用交互式登录，Token 输入时不会回显。登录前会校验 Token，校验失败时不会保存配置：
 
 ```bash
 openlist-cli auth login
