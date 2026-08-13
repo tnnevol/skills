@@ -26,6 +26,7 @@ node apps/openlist-cli/dist/cli.js <command>
 
 ```bash
 export OPENLIST_BASE_URL="http://localhost:5244"
+# 服务需要认证时再配置
 export OPENLIST_TOKEN="<your-api-token>"
 ```
 
@@ -39,7 +40,7 @@ openlist-cli --base-url http://localhost:5244 --token <token> fs list /
 
 ### 3. 登录保存到配置文件
 
-在真实终端中可直接使用交互式登录，Token 输入时不会回显。如果配置文件中已有服务地址或 Token，直接回车会继续使用原配置；没有配置时不能为空。填写完成后交互输入会立即结束，再校验 Token；校验失败时不会保存配置：
+在真实终端中可直接使用交互式登录。命令会先询问服务是否允许无 Token 访问，默认选择“否”；选择“是”会跳过 Token 输入和 Token 校验。选择“否”时，如果配置文件中已有 Token，直接回车会继续使用原配置，否则必须填写 Token。参数模式下 `--token` 为可选参数：提供 Token 时校验 `/api/me`，省略 Token 时跳过 Token 校验并保存无 Token 配置：
 
 ```bash
 openlist-cli auth login
@@ -49,7 +50,9 @@ openlist-cli auth login
 
 ```bash
 openlist-cli auth login --base-url http://localhost:5244 --token <token>
-# 写入 ~/.openlist/config.json（{ baseUrl, token }）
+# 无需 Token 的公开服务
+openlist-cli auth login --base-url http://localhost:5244
+# 写入 ~/.openlist/config.json（{ baseUrl, token? }）
 openlist-cli auth status    # 查看当前登录状态（会调用 /api/me 校验）
 openlist-cli auth logout    # 清除本地配置
 ```
@@ -62,15 +65,15 @@ openlist-cli auth logout    # 清除本地配置
 
 1. **不要**在对话、日志、文件、提交中回显 `OPENLIST_TOKEN`。
 2. 认证信息只经由环境变量 / `auth login` 配置文件传递，不要硬编码进脚本或命令历史。
-3. `auth login` 的 token 保存在 `~/.openlist/config.json`，注意该文件权限。
-4. 管道、脚本和 CI 等非交互环境必须显式传入 `--base-url` 与 `--token`，避免登录命令阻塞等待输入。
+3. `auth login` 提供 Token 时会将其保存在 `~/.openlist/config.json`，注意该文件权限。
+4. 管道、脚本和 CI 等非交互环境至少显式传入 `--base-url`；服务需要认证时再传入 `--token`，避免登录命令阻塞等待输入。
 
 ## 全局选项
 
 | 选项               | 说明                                     |
 | ------------------ | ---------------------------------------- |
 | `--base-url <url>` | OpenList 服务地址（覆盖 env / 配置文件） |
-| `--token <token>`  | API Token（覆盖 env / 配置文件）         |
+| `--token <token>`  | API Token（可选，覆盖 env / 配置文件）         |
 | `--pretty`         | 美化 JSON 输出                           |
 
 ## 输出格式

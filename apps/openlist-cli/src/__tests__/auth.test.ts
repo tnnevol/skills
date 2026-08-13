@@ -49,6 +49,18 @@ describe('auth 命令', () => {
     expect(existsSync(cfgPath)).toBe(false)
   })
 
+  it('参数模式允许省略 Token 且不执行令牌校验', () => {
+    const publicBaseUrl = 'https://public-openlist.example.invalid'
+    const r = runCli(['auth', 'login', '--base-url', publicBaseUrl], env)
+    expect(r.code).toBe(0)
+    expect(r.json.success).toBe(true)
+
+    const cfgPath = join(tmpHome, '.openlist', 'config.json')
+    const cfg = JSON.parse(readFileSync(cfgPath, 'utf-8'))
+    expect(cfg.baseUrl).toBe(publicBaseUrl)
+    expect(cfg.token).toBeUndefined()
+  })
+
   it('login 保存配置并回显 baseUrl', () => {
     const r = runCli(
       ['auth', 'login', '--base-url', baseUrl, '--token', token],

@@ -18,8 +18,10 @@ npx @tnnevol/openlist-cli <command>
 ## 快速开始
 
 ```bash
-# 1. 登录（使用 Token，在 Web 界面获取）
+# 1. 登录（Token 可选，取决于服务是否开放匿名访问）
 openlist-cli auth login --base-url http://localhost:5244 --token your-token
+# 无需 Token 的公开服务
+openlist-cli auth login --base-url http://localhost:5244
 
 # 2. 列出根目录
 openlist-cli fs list /
@@ -53,7 +55,7 @@ openlist-cli share create --path /share-dir
 | 变量                | 说明              |
 | ------------------- | ----------------- |
 | `OPENLIST_BASE_URL` | OpenList 服务地址 |
-| `OPENLIST_TOKEN`    | API Token         |
+| `OPENLIST_TOKEN`    | API Token（可选） |
 
 ### 全局选项
 
@@ -91,7 +93,7 @@ openlist-cli share create --path /share-dir
 openlist-cli auth login
 ```
 
-命令会询问服务地址和 API Token，输入 Token 时不会回显。如果配置文件中已有对应信息，直接回车会继续使用原配置；没有配置时不能为空。填写完成后交互输入会立即结束，再调用 `/api/me` 校验 Token；校验失败时不会写入配置。管道、脚本和 CI 等非交互环境必须显式提供 `--base-url` 与 `--token`，避免命令阻塞等待输入。
+命令会先询问服务是否允许无 Token 访问，默认选择“否”。选择“是”会跳过 Token 输入和 Token 校验；选择“否”时，如果配置文件中已有 Token，直接回车会继续使用原配置，否则必须填写 Token。参数模式下 `--token` 为可选参数：提供 Token 时校验 `/api/me`，省略 Token 时跳过 Token 校验并保存无 Token 配置。管道、脚本和 CI 等非交互环境至少需要提供 `--base-url`。
 
 ### fs - 文件管理
 

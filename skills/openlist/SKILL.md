@@ -35,11 +35,11 @@ openlist-cli me get           # 确认已认证（返回当前用户即 OK）
 | -------- | ------------------------------------------------------------------------------------------- |
 | 环境变量 | `OPENLIST_BASE_URL`、`OPENLIST_TOKEN`                                                       |
 | 全局选项 | `--base-url <url>`、`--token <token>`、`--pretty`（美化 JSON）                              |
-| 登录保存 | `openlist-cli auth login --base-url <url> --token <token>` → 写入 `~/.openlist/config.json` |
+| 登录保存 | `openlist-cli auth login --base-url <url> [--token <token>]` → 写入 `~/.openlist/config.json` |
 
 - Token 在 OpenList Web 界面获取。**不要在对话/日志/文件中回显 Token**。
-- 在真实终端中运行 `openlist-cli auth login` 会交互式询问缺少的服务地址和 Token，Token 输入时不会回显；如果配置文件中已有对应信息，直接回车会继续使用原配置，没有配置时不能为空。填写完成后交互输入会立即结束，再调用 `/api/me` 校验 Token；校验失败时不得写入配置。也可使用 `--interactive` 显式启用。
-- 管道、脚本和 CI 等非交互环境必须显式提供 `--base-url` 与 `--token`，不要让命令阻塞等待输入。
+- 在真实终端中运行 `openlist-cli auth login` 会先询问服务是否允许无 Token 访问，默认选择“否”。选择“是”会跳过 Token 输入和校验；选择“否”时，如果配置文件中已有 Token，直接回车会继续使用原配置，否则必须填写 Token。也可使用 `--interactive` 显式启用。
+- 参数模式下 Token 可选：提供 Token 时调用 `/api/me` 校验，省略 Token 时跳过 Token 校验并保存无 Token 配置。管道、脚本和 CI 等非交互环境至少需要显式提供 `--base-url`，不要让命令阻塞等待输入。
 - `openlist-cli auth status` 查看登录状态；`openlist-cli auth logout` 清除本地配置。
 
 ## 基础用法
@@ -98,7 +98,7 @@ openlist-cli <group> <command> --help
 
 ## 必须询问用户（不要自作主张）
 
-- 认证信息（Token）缺失时——引导配置，不要编造。
+- 服务地址缺失时——引导配置，不要编造；Token 是否需要配置取决于服务是否允许无 Token 访问。
 - **破坏性操作**：`fs remove` / `fs move`（覆盖）、`share delete`、`admin */delete`、`admin storage disable`、`admin setting delete/reset-token`、`admin index build/clear` 等——执行前先向用户确认。
 - 需要 JSON 体的 `admin create/update/save`——确认数据来源（`--file` 或 `--data`）。
 - **创建存储 `admin storage create`**：驱动值来自 `admin driver names`（用户未指定驱动时**先提问**）；表单字段来自 `admin driver info <driver>`（据此告知用户需填哪些参数）；参数凑齐后**创建前二次确认**。详见 [commands · admin storage create 工作流](references/commands.md)。

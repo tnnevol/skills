@@ -5,8 +5,8 @@
 ## 前置要求
 
 - 已安装 Node.js（≥ 20.0.0）和 npm/npx。
-- 已拥有可访问的 OpenList 服务地址（Base URL）与一个 API Token。
-- 如需后台管理操作，请确保该 Token 对应账号具备相应权限。
+- 已拥有可访问的 OpenList 服务地址（Base URL）。
+- 如果服务不允许匿名访问，再准备一个 API Token；如需后台管理操作，请确保该 Token 对应账号具备相应权限。
 
 ## Step 1: 安装或升级 CLI
 
@@ -28,9 +28,9 @@ openlist-cli --version
 
 > 也可免安装运行：`npx -y @tnnevol/openlist-cli <command>`。
 
-## Step 2: 获取 API Token
+## Step 2: 获取 API Token（服务需要认证时）
 
-在 OpenList Web 管理界面中获取 Token：
+如果 OpenList 服务允许无 Token 访问，可以跳过本节；否则在 OpenList Web 管理界面中获取 Token：
 
 1. 登录 OpenList 管理后台。
 2. 打开「管理 → 设置」。
@@ -41,7 +41,7 @@ openlist-cli --version
 
 ## Step 3: 登录 CLI
 
-在真实终端中可以使用交互式登录，Token 输入时不会回显。如果配置文件中已有服务地址或 Token，直接回车会继续使用原配置；没有配置时不能为空。填写完成后交互输入会立即结束，再校验 Token；校验失败时不会保存配置：
+在真实终端中可以使用交互式登录。命令会先询问服务是否允许无 Token 访问，默认选择“否”；选择“是”会跳过 Token 输入和 Token 校验。选择“否”时，如果配置文件中已有 Token，直接回车会继续使用原配置，否则必须填写 Token。填写完成后交互输入会立即结束，Token 校验失败时不会保存配置：
 
 ```bash
 openlist-cli auth login
@@ -51,6 +51,8 @@ openlist-cli auth login
 
 ```bash
 openlist-cli auth login --base-url <BASE_URL> --token <TOKEN>
+# 无需 Token 的公开服务
+openlist-cli auth login --base-url <BASE_URL>
 ```
 
 登录信息保存到 `~/.openlist/config.json`。例如：
@@ -61,7 +63,7 @@ openlist-cli auth login --base-url http://localhost:5244 --token <TOKEN>
 
 ## Step 4: 记录默认服务配置（推荐）
 
-`auth login` 已将 `baseUrl` 与 `token` 持久化到 `~/.openlist/config.json`，后续命令会自动读取。
+`auth login` 会将 `baseUrl` 和可选的 `token` 持久化到 `~/.openlist/config.json`，后续命令会自动读取。
 
 若在项目工作区中供 AI Agent 使用，也可用环境变量（优先级：CLI 选项 > 环境变量 > 配置文件）：
 
@@ -140,7 +142,7 @@ hermes skills install tnnevol/skills/openlist
 | 现象                              | 处理                                                                                      |
 | --------------------------------- | ----------------------------------------------------------------------------------------- |
 | `openlist-cli: command not found` | 重新执行全局安装，并确认 npm global bin 在 PATH 中；或改用 `npx -y @tnnevol/openlist-cli` |
-| 提示服务地址未配置 / Token 未配置 | 重新执行 `openlist-cli auth login --base-url <url> --token <token>`，或设置环境变量       |
+| 提示服务地址未配置 | 重新执行 `openlist-cli auth login --base-url <url>`，如服务需要认证再补充 `--token <token>`，或设置环境变量 |
 | 认证失败 / 401                    | 确认 Token 有效、`--base-url` 正确、账号具备相应权限                                      |
 | 命令参数不确定                    | 执行 `openlist-cli <group> <command> --help` 查看最新用法                                 |
 | Node 版本过低                     | 升级到 Node.js ≥ 20                                                                       |

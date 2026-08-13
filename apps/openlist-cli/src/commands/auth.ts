@@ -12,8 +12,33 @@ interface LoginOptions {
   interactive?: boolean
 }
 
+interface LoginCredentials {
+  baseUrl: string
+  token?: string
+}
+
 function hasInteractiveTerminal(): boolean {
   return stdin.isTTY === true && stderr.isTTY === true
+}
+
+async function promptConfirm(label: string, defaultValue = false): Promise<boolean> {
+  const readline = createInterface({
+    input: stdin,
+    output: stderr,
+    terminal: true,
+  })
+
+  try {
+    const answer = await readline.question(`${label} [y/N]: `)
+    const normalized = answer.trim().toLowerCase()
+    if (!normalized) {
+      return defaultValue
+    }
+    return normalized === 'y' || normalized === 'yes' || normalized === '是'
+  }
+  finally {
+    readline.close()
+  }
 }
 
 async function promptText(label: string, defaultValue?: string): Promise<string> {
@@ -88,32 +113,43 @@ function promptSecret(label: string, defaultValue?: string): Promise<string> {
 
 async function resolveLoginOptions(
   options: LoginOptions,
-): Promise<{ baseUrl: string, token: string }> {
+): Promise<LoginCredentials> {
   const fileConfig = loadConfig()
   const configuredBaseUrl = fileConfig?.baseUrl?.trim() || ''
   const configuredToken = fileConfig?.token?.trim() || ''
-  let baseUrl = options.baseUrl?.trim() || env.OPENLIST_BASE_URL || ''
-  let token = options.token?.trim() || env.OPENLIST_TOKEN || ''
+  let baseUrl = options.baseUrl?.trim() || env.OPENLIST_BASE_URL || configuredBaseUrl
+  let token = options.token?.trim() || env.OPENLIST_TOKEN || configuredToken
 
-  if (baseUrl && token && !options.interactive) {
-    return { baseUrl, token }
+  if (baseUrl && !options.interactive) {
+    return { baseUrl, token: token || undefined }
   }
 
   if (!hasInteractiveTerminal()) {
-    throw new Error(
-      '缺少登录参数。交互式登录需要真实终端，请提供 --base-url 和 --token，或使用 OPENLIST_BASE_URL 和 OPENLIST_TOKEN。',
-    )
+    if (!baseUrl) {
+      throw new Error('缺少登录参数。非交互模式至少需要提供 --base-url 或 OPENLIST_BASE_URL。')
+    }
+    return { baseUrl, token: token || undefined }
   }
 
   if (!baseUrl) {
     baseUrl = await promptText('OpenList 服务地址', configuredBaseUrl)
   }
+
+  if (!baseUrl) {
+    throw new Error('OpenList 服务地址不能为空')
+  }
+
+  const allowAnonymous = await promptConfirm('服务是否允许无 Token 访问', false)
+  if (allowAnonymous) {
+    return { baseUrl }
+  }
+
   if (!token) {
     token = await promptSecret('API Token（输入时不显示）', configuredToken)
   }
 
-  if (!baseUrl || !token) {
-    throw new Error('服务地址和 API Token 不能为空')
+  if (!token) {
+    throw new Error('服务不允许无 Token 访问时，API Token 不能为空')
   }
 
   return { baseUrl, token }
@@ -135,11 +171,13 @@ export function registerAuthCommand(program: Command): void {
       const opts = cmd.optsWithGlobals() as LoginOptions
       try {
         const credentials = await resolveLoginOptions(opts)
-        const client = createClient(credentials)
-        const response = await client.get('/api/me')
-        if (response.code !== 200) {
-          printError(response.message || 'API Token 无效', response.code)
-          return
+        if (credentials.token) {
+          const client = createClient(credentials)
+          const response = await client.get('/api/me')
+          if (response.code !== 200) {
+            printError(response.message || 'API Token 无效', response.code)
+            return
+          }
         }
 
         saveConfig(credentials)
