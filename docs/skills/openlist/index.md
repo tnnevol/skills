@@ -13,18 +13,25 @@ metadata:
 
 ## 安装
 
-安装技能：
+### 使用 Skills 安装
 
 ```bash
 npx skills add tnnevol/skills --skill=openlist -g -y
 ```
 
-安装命令行工具前，代理必须先阅读 [openlist-cli 首次安装引导](https://github.com/tnnevol/skills/blob/main/apps/openlist-cli/openlist-cli-installation-guide.md)，再按环境选择全局安装或免安装运行：
+### 使用 Agent 安装
 
-```bash
-npm install -g @tnnevol/openlist-cli
-npx -y @tnnevol/openlist-cli --help
-```
+#### 通过 AI Agent 安装
+
+将以下提示词发送给 AI Agent：
+
+> 阅读说明并帮我安装 openlist-cli：[https://github.com/tnnevol/skills/blob/main/apps/openlist-cli/openlist-cli-installation-guide.md](https://github.com/tnnevol/skills/blob/main/apps/openlist-cli/openlist-cli-installation-guide.md)
+
+#### 通过 SkillHub 安装
+
+将以下提示词发送给支持 SkillHub 的 Agent：
+
+> 请根据 https://skillhub.cn/install/skillhub.md，安装 @user_5c85a23c/openlist。
 
 ## 使用
 
@@ -57,5 +64,3 @@ openlist-cli share create --path /目录
 - 认证配置：支持命令参数、环境变量和本地配置文件，提供登录、状态查看和退出登录。
 - 结果处理：统一输出 JSON，列表结果包含分页信息，所有命令支持 `--help` 和 `--pretty`。
 - 意图引导：将“列目录”“搜索文件”“上传文件”“创建分享”“查看存储”等自然语言转换为对应命令，并在参数不明确时继续询问。
-
-完整命令、参数、分页和服务端差异见左侧的环境配置、命令参考和踩坑记录。

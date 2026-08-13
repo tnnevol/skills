@@ -42,5 +42,3 @@ node scripts/halo.mjs list-singlepages
 - 单页：查询、创建、获取、更新、删除、发布和取消发布。
 - 接口保护：统一认证、敏感信息清理、错误处理、版本锁和冲突重试。
 - 文档参考：提供 [Halo API 参考](https://docs.halo.run/category/api-%E5%8F%82%E8%80%83)入口，以及各资源的操作说明和接口说明。
-
-详细命令和资源字段见左侧的文章、分类、标签和单页文档。
