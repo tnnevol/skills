@@ -91,7 +91,7 @@ openlist-cli share create --path /share-dir
 openlist-cli auth login
 ```
 
-命令会询问服务地址和 API Token，输入 Token 时不会回显。登录前会调用 `/api/me` 校验 Token，校验失败时不会写入配置。管道、脚本和 CI 等非交互环境必须显式提供 `--base-url` 与 `--token`，避免命令阻塞等待输入。
+命令会询问服务地址和 API Token，输入 Token 时不会回显。如果配置文件中已有对应信息，直接回车会继续使用原配置；没有配置时不能为空。填写完成后交互输入会立即结束，再调用 `/api/me` 校验 Token；校验失败时不会写入配置。管道、脚本和 CI 等非交互环境必须显式提供 `--base-url` 与 `--token`，避免命令阻塞等待输入。
 
 ### fs - 文件管理
 

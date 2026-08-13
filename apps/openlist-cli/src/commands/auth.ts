@@ -33,7 +33,7 @@ async function promptText(label: string, defaultValue?: string): Promise<string>
   }
 }
 
-function promptSecret(label: string): Promise<string> {
+function promptSecret(label: string, defaultValue?: string): Promise<string> {
   return new Promise((resolve, reject) => {
     let value = ''
     let settled = false
@@ -49,12 +49,13 @@ function promptSecret(label: string): Promise<string> {
       if (stdin.isTTY) {
         stdin.setRawMode(previousRawMode)
       }
+      stdin.pause()
       stderr.write('\n')
       if (error) {
         reject(error)
       }
       else {
-        resolve(value.trim())
+        resolve(value.trim() || defaultValue || '')
       }
     }
 
@@ -76,7 +77,8 @@ function promptSecret(label: string): Promise<string> {
       }
     }
 
-    stderr.write(`${label}: `)
+    const suffix = defaultValue ? ' [已配置]' : ''
+    stderr.write(`${label}${suffix}: `)
     stdin.setEncoding('utf8')
     stdin.setRawMode(true)
     stdin.resume()
@@ -87,6 +89,9 @@ function promptSecret(label: string): Promise<string> {
 async function resolveLoginOptions(
   options: LoginOptions,
 ): Promise<{ baseUrl: string, token: string }> {
+  const fileConfig = loadConfig()
+  const configuredBaseUrl = fileConfig?.baseUrl?.trim() || ''
+  const configuredToken = fileConfig?.token?.trim() || ''
   let baseUrl = options.baseUrl?.trim() || env.OPENLIST_BASE_URL || ''
   let token = options.token?.trim() || env.OPENLIST_TOKEN || ''
 
@@ -101,10 +106,10 @@ async function resolveLoginOptions(
   }
 
   if (!baseUrl) {
-    baseUrl = await promptText('OpenList 服务地址', loadConfig()?.baseUrl)
+    baseUrl = await promptText('OpenList 服务地址', configuredBaseUrl)
   }
   if (!token) {
-    token = await promptSecret('API Token（输入时不显示）')
+    token = await promptSecret('API Token（输入时不显示）', configuredToken)
   }
 
   if (!baseUrl || !token) {
