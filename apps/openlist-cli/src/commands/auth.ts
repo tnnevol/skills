@@ -17,6 +17,8 @@ interface LoginCredentials {
   token?: string
 }
 
+const TRAILING_SLASHES = /\/+$/
+
 type TokenValidator = (credentials: LoginCredentials) => Promise<{
   valid: boolean
   message?: string
@@ -155,6 +157,10 @@ function isValidBaseUrl(value: string): boolean {
   }
 }
 
+function normalizeBaseUrl(value: string): string {
+  return value.trim().replace(TRAILING_SLASHES, '').toLowerCase()
+}
+
 async function resolveLoginOptions(
   options: LoginOptions,
   validateToken?: TokenValidator,
@@ -164,6 +170,19 @@ async function resolveLoginOptions(
   const configuredToken = fileConfig?.token?.trim() || ''
   let baseUrl = options.baseUrl?.trim() || env.OPENLIST_BASE_URL || configuredBaseUrl
   let token = options.token?.trim() || env.OPENLIST_TOKEN || configuredToken
+  const tokenFromConfig = !options.token?.trim() && !env.OPENLIST_TOKEN?.trim() && Boolean(configuredToken)
+
+  const clearStaleConfiguredToken = (): void => {
+    if (
+      tokenFromConfig
+      && configuredBaseUrl
+      && normalizeBaseUrl(baseUrl) !== normalizeBaseUrl(configuredBaseUrl)
+    ) {
+      token = undefined
+    }
+  }
+
+  clearStaleConfiguredToken()
 
   if (!hasInteractiveTerminal()) {
     if (!baseUrl) {
@@ -178,6 +197,8 @@ async function resolveLoginOptions(
     isValidBaseUrl,
     '服务地址格式无效，请输入完整的 http:// 或 https:// 地址。',
   )
+
+  clearStaleConfiguredToken()
 
   const allowAnonymous = await promptConfirm('服务是否允许无 Token 访问')
   if (allowAnonymous) {

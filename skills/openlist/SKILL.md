@@ -38,7 +38,7 @@ openlist-cli me get           # 确认已认证（返回当前用户即 OK）
 | 登录保存 | `openlist-cli auth login --base-url <url> [--token <token>]` → 写入 `~/.openlist/config.json` |
 
 - Token 在 OpenList Web 界面获取。**不要在对话/日志/文件中回显 Token**。
-- 在真实终端中运行 `openlist-cli auth login` 始终进入交互式流程，即使配置文件已有值也会显示提示，并将配置值作为默认值。服务地址和 Token 会在提交后校验，校验失败会继续提示。服务是否允许无 Token 访问默认是 `n`，直接回车表示 `n`；非空输入只接受 `y` 或 `n`，其他输入会继续提示。选择 `y` 会跳过 Token 输入和校验，选择 `n` 时直接回车会继续使用原配置。
+- 在真实终端中运行 `openlist-cli auth login` 始终进入交互式流程，即使配置文件已有值也会显示提示，并将配置值作为默认值。服务地址和 Token 会在提交后校验，校验失败会继续提示。若输入地址与配置地址不一致，会清除配置中的旧 Token；选择 `n` 后需要重新填写新服务的 Token。服务是否允许无 Token 访问默认是 `n`，直接回车表示 `n`；非空输入只接受 `y` 或 `n`，其他输入会继续提示。选择 `y` 会跳过 Token 输入和校验。
 - 参数模式下 Token 可选：提供 Token 时调用 `/api/me` 校验，省略 Token 时跳过 Token 校验并保存无 Token 配置。管道、脚本和 CI 等非交互环境至少需要显式提供 `--base-url`，不要让命令阻塞等待输入。
 - `openlist-cli auth status` 查看登录状态；`openlist-cli auth logout` 清除本地配置。
 
