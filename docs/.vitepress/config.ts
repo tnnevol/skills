@@ -20,8 +20,6 @@ export default defineConfig({
           { text: 'fnnas-docs', link: '/skills/fnnas-docs/' },
           { text: 'halo', link: '/skills/halo/' },
           { text: 'chandao', link: '/skills/chandao/' },
-          { text: 'autosave', link: '/skills/autosave/' },
-          { text: 'ding', link: '/skills/ding/' },
         ],
       },
       { text: 'openlist-cli', link: '/cli/openlist-cli' },
@@ -44,20 +42,6 @@ export default defineConfig({
           items: [{ text: '总览', link: '/skills/' }],
         },
       ],
-      '/skills/autosave/': [
-        {
-          text: 'autosave',
-          items: [
-            { text: '概述', link: '/skills/autosave/' },
-            { text: '环境配置', link: '/skills/autosave/setup' },
-            { text: '任务管理', link: '/skills/autosave/actions-tasks' },
-            { text: '配置管理', link: '/skills/autosave/actions-config' },
-            { text: '分享详情', link: '/skills/autosave/actions-detail' },
-            { text: '运行任务', link: '/skills/autosave/actions-run' },
-            { text: '帮助', link: '/skills/autosave/help' },
-          ],
-        },
-      ],
       '/skills/chandao/': [
         {
           text: 'chandao',
@@ -75,18 +59,6 @@ export default defineConfig({
             { text: '接口参考', link: '/skills/chandao/api-reference' },
             { text: '踩坑记录', link: '/skills/chandao/pitfalls' },
             { text: '帮助', link: '/skills/chandao/help' },
-          ],
-        },
-      ],
-      '/skills/ding/': [
-        {
-          text: 'ding',
-          items: [
-            { text: '概述', link: '/skills/ding/' },
-            { text: '环境配置', link: '/skills/ding/setup' },
-            { text: '联系代理', link: '/skills/ding/actions-contact' },
-            { text: '查询代理', link: '/skills/ding/actions-query' },
-            { text: '帮助', link: '/skills/ding/help' },
           ],
         },
       ],

@@ -1,65 +1,54 @@
 ---
-title: 笔记管理
+title: memos
 name: memos
-description: >-
-  通过脚本安全操作自建时间线式笔记服务。用户需要创建、查询、更新或删除笔记，管理标签、评论、表情、关联、附件或分享时使用。即使用户只说“查看我的笔记”“添加评论”“置顶笔记”“显示标签”或“记录想法”，也应使用本技能。所有接口调用均通过安全脚本完成，脚本会自动处理认证并清理凭据。该服务采用时间线组织，而不是文件夹笔记本，应使用标签整理笔记。
+description: 通过安全脚本操作自建时间线式笔记服务，支持笔记、标签、评论、附件、分享和关联。
 compatibility:
-  runtime: node >= 18 (or bun, deno)
-  dependencies: none (zero-dependency, uses native fetch)
-  environment: MEMOS_BASE_URL, MEMOS_ACCESS_TOKEN
+  runtime: node >= 18（或 bun、deno）
+  dependencies: 无（使用原生 fetch）
+  environment: MEMOS_BASE_URL、MEMOS_ACCESS_TOKEN
 ---
 
-# 技能：笔记管理
+# memos
 
-Memos（[usememos](https://usememos.com/)）是一款自托管的**时间线式笔记工具**，不是基于文件夹的笔记本。它遵循“先记录，后整理”的方式：使用 Markdown 快速记录，再通过标签整理，并将笔记保存在自己的服务器上。
+Memos 是时间线式笔记服务，不使用文件夹组织笔记，适合快速记录、稍后整理和按标签检索。
 
-本技能为代理提供安全、零依赖的命令行接口，通过服务接口操作 Memos。所有操作均通过 `scripts/api.cjs` 完成，该脚本会自动处理认证、错误和凭据清理。
+## 安装
 
-## 安全规范
+```bash
+npx skills add tnnevol/skills --skill=memos -g -y
+```
 
-`MEMOS_ACCESS_TOKEN` 属于敏感信息。脚本会自动清理输出中的令牌，避免它意外出现在聊天记录、文件或代码中。
+配置 Memos 地址和访问令牌：
 
-所有接口调用均通过 `scripts/api.cjs` 完成，以确保错误处理和凭据清理保持一致，并避免直接使用 `curl` 或 `wget` 等网络客户端时意外暴露令牌。
+```bash
+export MEMOS_BASE_URL="https://your-memos.example.com"
+export MEMOS_ACCESS_TOKEN="your-access-token"
+```
 
-环境文件（`.env`）和包含凭据的变量只能由脚本读取，不得展示在对话输出中。
+## 使用
 
-接口响应中的敏感值会通过 `scripts/sanitize.cjs` 自动清理。
+首次使用先阅读[环境配置](setup)，确认环境变量可用。所有接口调用必须通过技能脚本完成，不要直接使用 `curl` 或其他客户端访问服务。
 
-安全脚本必须保持原样使用。修改脚本以关闭遮蔽或重定向输出，可能导致敏感数据泄露。
+根据用户意图阅读对应操作文档并执行：
 
-## 使用方法
+```text
+查看笔记 → actions-memo
+添加评论 → actions-comment
+上传附件 → actions-attachment
+创建分享 → actions-share
+```
 
-1. **First invocation only** — read `${CLAUDE_SKILL_DIR}/references/setup.md` for configuration, auth headers, and runtime detection.
-2. 根据下方表格匹配操作。
-3. 阅读对应文档，按详细步骤执行。
-4. 没有参数或无法识别操作时，显示下方帮助表格。
-5. 用户询问笔记服务、命令用法或接口用法时，阅读 `${CLAUDE_SKILL_DIR}/references/help.md` 并遵循其中说明。
+没有明确操作时先展示帮助；删除笔记、附件或分享前确认目标。笔记优先使用标签整理，不要按文件夹思路引导用户。
 
-## 操作列表
+## 功能
 
-| 操作 | 描述 | 详细说明 |
-| -------- | ------------- | --------- |
-| `list` | 列出笔记（支持过滤） | `references/actions-memo.md` |
-| `create` | 创建笔记 | `references/actions-memo.md` |
-| `get` | 获取单条笔记 | `references/actions-memo.md` |
-| `update` | 更新笔记 | `references/actions-memo.md` |
-| `delete` | 删除笔记 | `references/actions-memo.md` |
-| `pin` | 切换置顶/取消置顶 | `references/actions-memo.md` |
-| `tags` | 列出所有标签 | `references/actions-tag.md` |
-| `comments` | 查看/添加/删除/更新评论 | `references/actions-comment.md` |
-| `whoami` | 显示当前用户信息 | `references/actions-user.md` |
-| `user-stats` | 显示用户统计 | `references/actions-user.md` |
-| `share` | 创建/撤销/列出分享链接 | `references/actions-share.md` |
-| `attachments` | 列出笔记附件 | `references/actions-attachment.md` |
-| `upload-attachment` | 上传附件（支持关联笔记） | `references/actions-attachment.md` |
-| `delete-attachment` | 删除附件 | `references/actions-attachment.md` |
-| `batch-delete-attachment` | 批量删除附件 | `references/actions-attachment.md` |
-| `reactions` | 查看表情回应 | `references/actions-reaction.md` |
-| `react` | 添加/切换表情 | `references/actions-reaction.md` |
-| `unreact` | 取消表情 | `references/actions-reaction.md` |
-| `relations` | 查看关联笔记 | `references/actions-relation.md` |
-| `relate` | 建立笔记关系 | `references/actions-relation.md` |
-| `unrelate` | 解除笔记关系 | `references/actions-relation.md` |
-| `help` | 回答 Memos 相关问题 | `references/help.md` |
+- 笔记：列表、过滤、创建、查询、更新、删除和置顶。
+- 标签：查询标签、按标签筛选和维护标签。
+- 评论：查看、添加、更新和删除评论。
+- 用户：查看当前用户和用户统计。
+- 附件：查询、上传、关联、删除和批量删除附件；上传前按服务要求获取存储策略和分组信息。
+- 分享：创建、查询和撤销分享链接。
+- 表情与关联：添加、切换、取消表情，建立和解除笔记关联。
+- 安全处理：统一认证、错误处理、敏感信息清理和脚本化调用。
 
-<!-- 修复完成时间：2026-04-29 -->
+常见意图包括“记录想法”“查看我的笔记”“显示标签”“给笔记添加评论”“上传附件”“分享这条笔记”等，技能会将自然语言映射到对应操作。
