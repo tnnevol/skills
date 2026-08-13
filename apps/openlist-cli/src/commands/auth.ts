@@ -127,9 +127,7 @@ async function resolveLoginOptions(
     return { baseUrl, token: token || undefined }
   }
 
-  if (!baseUrl) {
-    baseUrl = await promptText('OpenList 服务地址', configuredBaseUrl)
-  }
+  baseUrl = await promptText('OpenList 服务地址', baseUrl)
 
   if (!baseUrl) {
     throw new Error('OpenList 服务地址不能为空')
