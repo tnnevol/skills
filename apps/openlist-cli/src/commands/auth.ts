@@ -35,8 +35,11 @@ async function promptConfirm(label: string): Promise<boolean> {
     })
 
     try {
-      const answer = await readline.question(`${label} [y/n]: `)
+      const answer = await readline.question(`${label} [y/N]: `)
       const normalized = answer.trim().toLowerCase()
+      if (!normalized) {
+        return false
+      }
       if (normalized === 'y') {
         return true
       }
