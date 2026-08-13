@@ -25,7 +25,7 @@ openlist-cli me get           # 确认已认证（返回当前用户即 OK）
 ```
 
 - 若 `openlist-cli` 不存在：`npm i -g @tnnevol/openlist-cli`（或用 `npx -y @tnnevol/openlist-cli <command>`；本仓库开发态可用 `node apps/openlist-cli/dist/cli.js`，需先 `pnpm --filter @tnnevol/openlist-cli build`）。
-- 若 `me get` 报未配置：引导认证（见下）。
+- 若 `me get` 报未配置：默认使用交互式授权（见下），不要直接代用户填写或拼接认证参数。
 
 ## 认证与配置
 
@@ -35,9 +35,11 @@ openlist-cli me get           # 确认已认证（返回当前用户即 OK）
 | -------- | ------------------------------------------------------------------------------------------- |
 | 环境变量 | `OPENLIST_BASE_URL`、`OPENLIST_TOKEN`                                                       |
 | 全局选项 | `--base-url <url>`、`--token <token>`、`--pretty`（美化 JSON）                              |
-| 登录保存 | `openlist-cli auth login --base-url <url> [--token <token>]` → 写入 `~/.openlist/config.json` |
+| 登录保存 | `openlist-cli auth login` → 通过交互式授权填写信息并写入 `~/.openlist/config.json` |
 
 - Token 在 OpenList Web 界面获取。**不要在对话/日志/文件中回显 Token**。
+- 授权缺失时，必须使用终端交互式方式运行 `openlist-cli auth login`，让用户在提示中填写服务地址、是否允许无 Token 访问和 Token；需要明确告知用户当前正在等待其输入。
+- 不要默认改用 `--base-url`、`--token`、环境变量或配置文件代替交互式授权。只有用户明确要求脚本化、非交互式登录，或当前环境无法提供交互终端时，才使用参数、环境变量或配置文件。
 - 在真实终端中运行 `openlist-cli auth login` 始终进入交互式流程，即使配置文件已有值也会显示提示，并将配置值作为默认值。服务地址和 Token 会在提交后校验，填写 Token 后校验失败会继续提示；不填写 Token 时会直接调用授权接口，并返回接口的真实错误信息。若输入地址与配置地址不一致，会清除配置中的旧 Token；选择 `n` 后输入 Token，留空时会通过授权接口校验并返回真实错误。服务是否允许无 Token 访问默认是 `n`，直接回车表示 `n`；非空输入只接受 `y` 或 `n`，其他输入会继续提示。选择 `y` 会跳过 Token 输入和校验。
 - 参数模式下 Token 可选：提供 Token 时调用 `/api/me` 校验，省略 Token 时跳过 Token 校验并保存无 Token 配置。管道、脚本和 CI 等非交互环境至少需要显式提供 `--base-url`，不要让命令阻塞等待输入。
 - `openlist-cli auth status` 查看登录状态；`openlist-cli auth logout` 清除本地配置。
