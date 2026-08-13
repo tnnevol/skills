@@ -101,6 +101,15 @@ openlist-cli share create --path /share-dir
 | ------------------ | --------- |
 | `--base-url <url>` | 服务地址  |
 | `--token <token>`  | API Token |
+| `-i, --interactive` | 使用终端交互式补充缺少的登录信息 |
+
+在真实终端中可以直接运行交互式登录：
+
+```bash
+openlist-cli auth login
+```
+
+命令会依次询问服务地址和 API Token，输入 Token 时不会回显。管道、脚本和 CI 等非交互环境必须显式提供 `--base-url` 与 `--token`，避免命令阻塞等待输入。
 
 ### fs - 文件管理
 

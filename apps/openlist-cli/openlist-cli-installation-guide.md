@@ -41,6 +41,14 @@ openlist-cli --version
 
 ## Step 3: 登录 CLI
 
+在真实终端中可以使用交互式登录，Token 输入时不会回显：
+
+```bash
+openlist-cli auth login
+```
+
+也可以使用参数登录，适合脚本和 CI：
+
 ```bash
 openlist-cli auth login --base-url <BASE_URL> --token <TOKEN>
 ```

@@ -39,6 +39,14 @@ openlist-cli --base-url http://localhost:5244 --token <token> fs list /
 
 ### 3. 登录保存到配置文件
 
+在真实终端中可直接使用交互式登录，Token 输入时不会回显：
+
+```bash
+openlist-cli auth login
+```
+
+也可以显式传入参数，适合脚本和 CI：
+
 ```bash
 openlist-cli auth login --base-url http://localhost:5244 --token <token>
 # 写入 ~/.openlist/config.json（{ baseUrl, token }）
@@ -55,6 +63,7 @@ openlist-cli auth logout    # 清除本地配置
 1. **不要**在对话、日志、文件、提交中回显 `OPENLIST_TOKEN`。
 2. 认证信息只经由环境变量 / `auth login` 配置文件传递，不要硬编码进脚本或命令历史。
 3. `auth login` 的 token 保存在 `~/.openlist/config.json`，注意该文件权限。
+4. 管道、脚本和 CI 等非交互环境必须显式传入 `--base-url` 与 `--token`，避免登录命令阻塞等待输入。
 
 ## 全局选项
 
