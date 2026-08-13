@@ -121,6 +121,7 @@ openlist-cli <group> <command> --help
 | -------- | ------------------------------ | ---------------------------------- |
 | Setup    | 安装、认证与环境变量           | [setup](references/setup.md)       |
 | Commands | 全部命令与参数详解             | [commands](references/commands.md) |
+| Storage & Advanced | 添加存储与高级设置的 CLI 工作流 | [storage-advanced](references/storage-advanced.md) |
 | Pitfalls | 真实接口契约与踩坑（务必先读） | [pitfalls](references/pitfalls.md) |
 
 ## 关键提示摘要（详见 pitfalls）
