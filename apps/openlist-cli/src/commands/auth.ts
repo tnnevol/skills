@@ -22,7 +22,18 @@ const TRAILING_SLASHES = /\/+$/
 type TokenValidator = (credentials: LoginCredentials) => Promise<{
   valid: boolean
   message?: string
+  code?: number
 }>
+
+class LoginValidationError extends Error {
+  constructor(
+    message: string,
+    readonly code?: number,
+  ) {
+    super(message)
+    this.name = 'LoginValidationError'
+  }
+}
 
 export interface LoginPromptDependencies {
   isInteractive?: boolean
@@ -145,13 +156,7 @@ function promptSecretOnce(label: string, defaultValue?: string): Promise<string>
 }
 
 async function promptSecret(label: string, defaultValue?: string): Promise<string> {
-  while (true) {
-    const value = await promptSecretOnce(label, defaultValue)
-    if (value) {
-      return value
-    }
-    stderr.write('API Token 不能为空，请重新输入。\n')
-  }
+  return promptSecretOnce(label, defaultValue)
 }
 
 function isValidBaseUrl(value: string): boolean {
@@ -220,12 +225,7 @@ export async function resolveLoginOptions(
 
   let tokenDefault = token
   while (true) {
-    token = await askSecret('API Token（输入时不显示）', tokenDefault)
-    if (!token) {
-      stderr.write('API Token 不能为空，请重新输入。\n')
-      tokenDefault = undefined
-      continue
-    }
+    token = (await askSecret('API Token（输入时不显示）', tokenDefault)).trim() || undefined
     const credentials = { baseUrl, token }
     if (!validateToken) {
       return credentials
@@ -234,6 +234,13 @@ export async function resolveLoginOptions(
     const result = await validateToken(credentials)
     if (result.valid) {
       return credentials
+    }
+
+    if (!token) {
+      throw new LoginValidationError(
+        result.message || 'API Token 无效',
+        result.code,
+      )
     }
 
     stderr.write(`${result.message || 'API Token 无效'}，请重新输入。\n`)
@@ -265,6 +272,7 @@ export function registerAuthCommand(program: Command): void {
               return {
                 valid: response.code === 200,
                 message: response.message || 'API Token 无效',
+                code: response.code,
               }
             }
             : undefined,
@@ -281,6 +289,10 @@ export function registerAuthCommand(program: Command): void {
         printSuccess({ baseUrl: credentials.baseUrl }, 'login')
       }
       catch (error) {
+        if (error instanceof LoginValidationError) {
+          printError(error.message, error.code)
+          return
+        }
         printError(error instanceof Error ? error.message : '登录失败')
       }
     })

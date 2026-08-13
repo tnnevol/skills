@@ -38,27 +38,32 @@ describe('auth login 交互逻辑', () => {
     }
   })
 
-  it('不允许匿名访问且 Token 为空时继续要求填写', async () => {
+  it('不允许匿名访问且 Token 为空时返回授权接口真实错误', async () => {
     const promptText = vi.fn(async () => 'https://openlist.example.com')
     const promptConfirm = vi.fn(async () => false)
     const promptSecret = vi.fn(async () => '')
-    promptSecret.mockResolvedValueOnce('').mockResolvedValueOnce('new-token')
     const validateToken = vi.fn(async ({ token }: { token?: string }) => ({
-      valid: token === 'new-token',
+      valid: false,
+      message: token ? 'token is invalidated' : 'token is required',
+      code: 401,
     }))
 
-    const result = await resolveLoginOptions(
+    const promise = resolveLoginOptions(
       { baseUrl: 'https://openlist.example.com' },
       validateToken,
       { isInteractive: true, promptText, promptConfirm, promptSecret },
     )
 
-    expect(result).toEqual({
-      baseUrl: 'https://openlist.example.com',
-      token: 'new-token',
+    await expect(promise).rejects.toMatchObject({
+      message: 'token is required',
+      code: 401,
     })
-    expect(promptSecret).toHaveBeenCalledTimes(2)
+    expect(promptSecret).toHaveBeenCalledTimes(1)
     expect(validateToken).toHaveBeenCalledTimes(1)
+    expect(validateToken).toHaveBeenCalledWith({
+      baseUrl: 'https://openlist.example.com',
+      token: undefined,
+    })
   })
 
   it('令牌校验失败后重新填写并再次校验', async () => {
