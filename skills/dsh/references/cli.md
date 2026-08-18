@@ -2,6 +2,8 @@
 
 本文整理 apps/cli/reference/README.zh.md、docs/development.zh.md 和用户指南中的可操作内容。命令、配置键和环境变量保持源项目原名；解释使用中文。
 
+源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
+
 ## 运行方式
 
 ### 已发布版本
@@ -48,6 +50,8 @@ dsh --profile web --port 3080
 dsh web --host 127.0.0.1 --port 3080
 dsh --profile headless "检查测试并修复失败项"
 ~~~
+
+使用 `dsh -V` 或 `dsh --version` 查看启动器版本。
 
 随附 profile 的参数如下：
 
@@ -103,7 +107,9 @@ dsh web --trusted-host example.com
 
 默认服务地址为 http://127.0.0.1:3080。--host 和 --port 覆盖保留了命令行表达式的配置行；--trusted-host 可重复传入。当前 CLI 不接受 --host 0.0.0.0，需要按错误提示修正。
 
-所有模式都以当前调用目录作为默认 workspace 根目录，并读取适用的 AGENTS.md 或 CLAUDE.md。新会话默认使用 workspace-write 权限预设；DSH_PERMISSION_MODE 可改变进程级回退值，DSH_TOOLS_MODE 只接受 native、code 或 both。
+所有模式都以当前调用目录作为默认工作区根目录，并读取适用的 AGENTS.md 或 CLAUDE.md。新会话默认使用 workspace-write 权限预设；DSH_PERMISSION_MODE 可改变进程级回退值，DSH_TOOLS_MODE 只接受 native、code 或 both。
+
+首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。内置智能体模式包括标准模式、PTC 模式、极简模式和创造模式：标准模式提供完整编码能力，PTC 模式通过代码模式 SDK 组合多步 TypeScript 操作，极简模式只提供持久 bash 与 `str_replace_editor`，创造模式用于编写自定义智能体预设。
 
 ## 凭证与环境
 
@@ -112,9 +118,12 @@ dsh web --trusted-host example.com
 ~~~sh
 export DEEPSEEK_API_KEY=sk-...
 export DEEPSEEK_BASE_URL=https://...
+export DEEPSEEK_SEARCH_BASE_URL=https://...
 ~~~
 
-DEEPSEEK_BASE_URL 可选。不要提交真实密钥。遥测默认关闭；显式启用遥测前要确认会话文本、工具参数、结果和工作区路径可能被导出，并通过 DSH_TELEMETRY_DISABLED 设置硬性关闭。
+DEEPSEEK_BASE_URL 和 DEEPSEEK_SEARCH_BASE_URL 可选。不要提交真实密钥。遥测默认关闭；需要启用时，`DSH_TELEMETRY_MODE=FULL` 会导出完整遥测，`DSH_TELEMETRY_MODE=FEEDBACK_ONLY` 只导出反馈事件，`DSH_TELEMETRY_OTLP_URL` 指定接收端。遥测内容可能包含会话文本、工具参数、工具结果和工作区路径；非空的 `DSH_TELEMETRY_DISABLED` 具有最高优先级，可硬性关闭遥测。
+
+默认不会启用 MCP 服务。通过 patch 插入的 MCP 进程属于受信任的可执行文件，会在智能体沙箱之外运行，启用前要确认来源和权限。
 
 ## 源码开发检查
 

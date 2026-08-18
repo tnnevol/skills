@@ -18,6 +18,10 @@
 | 写配置、服务或事件 | [插件配置](https://deepseek-harness.github.io/deepseek-harness/develop/basic/config)、[服务与依赖](https://deepseek-harness.github.io/deepseek-harness/develop/framework/service)、[事件系统](https://deepseek-harness.github.io/deepseek-harness/develop/framework/events) | schema、依赖注入、事件分发和自动清理 |
 | 写模型适配器 | [添加 LLM 适配器](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-an-llm-adapter) | 流式协议、工具调用、取消和错误 |
 | 接入 Web 对话节点 | [添加 Web 对话节点](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-a-conversation-node) | 可回放事件族和三条摄入路径 |
+| 添加 Web 设置卡片 | [新增设置卡片](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-a-settings-card) | 宿主端配置命名空间、客户端卡片、凭据和版本号 |
+| 支持图片附件 | 本地源项目 `docs/subsystems/attachment.zh.md` | 校验、持久化、读取和可回放引用；当前线上文档清单未发布此页面 |
+| 使用子代理和后台任务 | [子代理](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/subagent)、[后台任务](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/jobs) | 一次性子代理、可继续激活、能力检查和任务生命周期 |
+| 查看内置智能体模式 | 本地源项目 `apps/cli/config/agent-presets/` | 标准、PTC、极简和创造模式的名称、工具集合与提示词 |
 | 发布和安装插件 | [打包与安装插件](https://deepseek-harness.github.io/deepseek-harness/develop/basic/publish) | dsh.bundle、dsh.profile 和安装顺序 |
 | 使用 Web UI 配置模型 | [使用 Web UI](https://deepseek-harness.github.io/deepseek-harness/guide/quickstart)、[配置模型](https://deepseek-harness.github.io/deepseek-harness/guide/providers) | 模型、提供方、凭据和工作区 |
 | 使用 Python SDK | [Python SDK](https://deepseek-harness.github.io/deepseek-harness/guide/python-sdk) | SDK 安装、示例、会话和工作区隔离 |
@@ -45,7 +49,8 @@ docs/subsystems/ 每个页面负责一个子系统，包含数据结构、服务
 - llm-streaming：消息、内容块、流式分片和适配器。
 - tools、approval、user-questions：工具注册、执行策略和用户交互。
 - filesystem、shell、subprocess、terminal、sandbox：进程与文件能力。
-- extensions、skills、subagent、workflow：动态扩展、技能、子 agent 和工作流。
+- extensions、skills、subagent、workflow、jobs：动态扩展、技能、子 agent、工作流和后台任务。
+- attachment：持久图片附件和不透明引用；当前线上文档清单未发布此页面，请读取本地 `docs/subsystems/attachment.zh.md`。
 - settings、credentials、storage、workspace：配置、凭据、非会话存储和工作区。
 - web、web-server、client-modules：网络提供方、HTTP 路由和浏览器插件图。
 

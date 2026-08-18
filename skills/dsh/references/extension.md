@@ -77,6 +77,16 @@ export function apply(ctx: Context, config: Config) {
 
 不同部署可能改变的值必须配置化，不能硬编码。无效配置应在插件加载时明确失败；配置变更会触发 HMR，旧实例的 effect 必须完整清理。
 
+## Web 设置卡片
+
+需要把插件配置放进 Web 设置页时，宿主端和客户端两侧必须使用同一个设置命名空间：
+
+1. Host 侧通过 `installSettingsSection` 注册 schema、当前配置、校验和变更回调；秘密字段使用 `role('secret')`，或者通过 `credentials` 领域引用凭据。
+2. 客户端在 `settings.plugin.item` 中注册同名卡片，通过 `ctx.settingsScope` 读取和写入设置，并使用读取时的版本号防止覆盖并发修改。
+3. 宿主端放在 `src/`，浏览器端放在 `src/client/`，通过 `./client` 导出并在 package.json 中声明 `dsh.client`；使用本地 `dsh.client` 入口测试，不要直接把浏览器代码塞进宿主端。
+
+设置卡片的完整流程见[新增设置卡片](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-a-settings-card)。
+
 ## 工具插件
 
 工具通过 ctx.tools.register(defineTool(...)) 注册。最小约定是：
@@ -122,9 +132,17 @@ export function apply(ctx: Context) {
 - 按首次出现顺序分配 block index，同一 block 后续分片复用该索引。
 - 传递 options.signal；不支持的生成字段抛出带稳定错误码的 LlmError。
 - 传输或协议故障抛出异常；提供方带内失败以 finish { kind: 'error' | 'aborted' } 结束，并保持消费方可区分。
-- 后续请求所需的响应 ID、签名等原生状态放入最小可回放的 finish.replayState，不要仅凭 provider 和 model 名称猜测恢复状态。
+- 后续请求所需的响应 ID、签名等原生状态放入最小可回放的 `finish.replayState`。如果适配器返回 `ReplayEnvelope`，要让 envelope 的 blocks 与已组装的响应 blocks 一一对应，并在裁剪响应时同步裁剪 replay state；不要仅凭 provider 和 model 名称猜测恢复状态。
 
 密钥使用 Cordis 配置和环境变量回退，不要自行读取约定的密钥文件。
+
+## 图片附件
+
+需要支持用户图片或模型图片输出时，使用 `ctx.attachments` 的 `validateImage`、`saveImage`、`saveImages` 和 `readImage`。`saveImages` 必须先校验整个批次，再开始写入；只有持久化成功后才能追加所属会话事件。会话和模型只保存 `ImageAttachmentRef` 及其 `ImageBlock` 元数据，不要保存浏览器对象 URL、宿主临时路径、提供方 URL 或 Base64。
+
+## 子代理与后台任务
+
+子代理是可选能力接缝，不属于智能体循环。使用前先检查 `ctx.subagents` 已注册的提供方和 `SubagentCapabilities`，再按需求选择一次性启动或可继续的后台子代理；可继续子代理以持久会话和激活状态承载后续消息，不要自行再造一套队列或任务包装层。生产 dsh 默认不安装 Codex 或 Claude Code 提供方，需要在 profile 中安装 `@deepseek-ai/dsh-subagent-codex` 或 `@deepseek-ai/dsh-subagent-claude-code`，并在宿主组合中挂载一次。所有子代理操作都要检查父子关系、权限、取消信号和清理时机。
 
 ## Web Client Conversation Node
 
@@ -166,6 +184,8 @@ export function apply(ctx: Context) {
 - [添加 workspace 包](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-a-package)
 - [工具编写参考](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-a-tool)
 - [添加 LLM 适配器](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-an-llm-adapter)
+- [新增设置卡片](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-a-settings-card)
 - [扩展插件形态](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/extension-cookbook)
 - [添加 Web Client Conversation Node](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-a-conversation-node)
+- [子代理子系统](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/subagent)
 - [打包与安装插件](https://deepseek-harness.github.io/deepseek-harness/develop/basic/publish)
