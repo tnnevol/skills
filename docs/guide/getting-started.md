@@ -26,6 +26,11 @@ npx skills add tnnevol/skills --skill='*' -g -y
 npx skills add tnnevol/skills --skill=chandao -g -y
 ```
 
+```bash
+# 安装 dsh 技能
+npx skills add tnnevol/skills --skill=dsh -g -y
+```
+
 了解更多命令行用法请参考[技能安装工具](https://github.com/vercel-labs/skills)。
 
 ## 安装命令行工具

@@ -2,7 +2,7 @@
 
 [Agent Skills](https://agentskills.io/home) 实用合集，用于 AI 辅助开发，涵盖常用工具、API 集成和最佳实践。
 
-当前包含：禅道项目管理、飞牛应用开发、Halo CMS 博客管理、Memos 笔记和 OpenList 网盘管理等技能。
+当前包含：禅道项目管理、飞牛应用开发、Halo CMS 博客管理、Memos 笔记、OpenList 网盘管理和 DeepSeek Harness 开发等技能。
 
 ## 安装
 
@@ -37,6 +37,7 @@ CLI 工具可直接被 AI Agent 调用，实现自动化管理。
 | [memos](skills/memos)           | Memos 自建笔记工具 - CRUD + 标签 API - Tnnevol                       |
 | [fnnas-docs](skills/fnnas-docs) | 飞牛 fnOS 应用开发文档 - 快速开始、开发指南、开放 API、CLI 工具 - Tnnevol |
 | [openlist](skills/openlist)     | OpenList 网盘聚合 - 通过 openlist-cli 管理文件、分享、后台 - Tnnevol |
+| [dsh](skills/dsh)               | DeepSeek Harness - 运行、配置和插件扩展 - Tnnevol                         |
 
 ## License
 

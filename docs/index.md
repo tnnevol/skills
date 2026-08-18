@@ -18,8 +18,8 @@ hero:
 
 features:
   - icon: 🧩
-    title: 5 个智能技能
-    details: 涵盖禅道项目管理、飞牛应用开发、Halo 博客、Memos 笔记和 OpenList 网盘等场景
+    title: 6 个智能技能
+    details: 涵盖禅道项目管理、飞牛应用开发、Halo 博客、Memos 笔记、OpenList 网盘和 DeepSeek Harness 开发等场景
     link: /skills/
   - icon: 🚀
     title: 快速集成
@@ -41,7 +41,7 @@ features:
 
 | 类别 | 数量 | 说明 |
 |------|------|------|
-| 技能 | 5 个 | 禅道、飞牛文档、博客管理、笔记管理、网盘聚合 |
+| 技能 | 6 个 | 禅道、飞牛文档、博客管理、笔记管理、网盘聚合、智能体运行时开发 |
 | 命令行应用 | 1 个 | 网盘命令行工具 |
 
 所有技能均遵循统一的技能规范，包含 `SKILL.md` 索引文件、参考资料和配套脚本。
