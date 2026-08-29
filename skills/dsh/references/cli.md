@@ -2,7 +2,7 @@
 
 本文整理 apps/cli/reference/README.zh.md、docs/development.zh.md 和用户指南中的可操作内容。命令、配置键和环境变量保持源项目原名；解释使用中文。
 
-源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
+当前源项目版本为 `0.1.2-alpha.1`。源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
 
 ## 运行方式
 
@@ -20,7 +20,7 @@ pnpm run build
 pnpm dsh web
 ~~~
 
-pnpm dsh 通过 node --import tsx/esm 运行 apps/cli/src/bin.ts。新检出或缺少构建产物时，先执行 pnpm run build；构建完成后缺少前端产物会在启动时明确提示继续构建。源码入口不会检查产物是否新鲜，旧产物可能继续提供旧版浏览器代码。
+pnpm dsh 通过 `node --import tsx/esm` 运行 `apps/cli/src/bin.ts`。新检出或缺少构建产物时，先执行 `pnpm run build`；构建完成后缺少前端产物会在启动时明确提示继续构建。源码入口不会检查产物是否新鲜，旧产物可能继续提供旧版浏览器代码。使用 `HTTP_PROXY` 或 `HTTPS_PROXY` 的 Node 版本还需设置 `NODE_USE_ENV_PROXY=1`。
 
 ## Profile 启动
 
@@ -30,7 +30,17 @@ dsh web
 dsh --profile headless "执行一项任务"
 ~~~
 
-web 是 --profile web 的固定别名。web 和 headless 在首次使用时从随发行版提供的模板自动初始化；其他不存在的 profile 需要先执行插件管理命令安装组合包。
+web 是 `--profile web` 的固定别名。`web`、`headless`、`sdk`、`sdk-minimal` 和 `acp` 在首次使用时从随发行版提供的模板自动初始化；其他不存在的 profile 需要先执行插件管理命令安装组合包。随附组合包还包括 `@deepseek-ai/dsh-sdk-app`、`@deepseek-ai/dsh-sdk-minimal` 和 `@deepseek-ai/dsh-acp-app`。
+
+各内置 profile 的运行边界如下：
+
+| profile | 运行方式 | 主要特点 |
+| --- | --- | --- |
+| `web` | HTTP 与浏览器客户端 | 提供 Web UI，支持实时 patch |
+| `headless` | 一次性命令 | 接收一条任务文本，不启动 HTTP 服务 |
+| `sdk` | 标准输入输出 JSON-RPC | 使用完整基础组合，适合 SDK 调用 |
+| `sdk-minimal` | 标准输入输出 JSON-RPC | 独立组合，固定 `danger-full-access`，不发现指令、不使用 SQLite |
+| `acp` | 标准输入输出 Agent Client Protocol | 通过 ACP 接入智能体 |
 
 profile 的有效配置树按以下顺序叠加到空根节点：
 
@@ -51,18 +61,21 @@ dsh web --host 127.0.0.1 --port 3080
 dsh --profile headless "检查测试并修复失败项"
 ~~~
 
-使用 `dsh -V` 或 `dsh --version` 查看启动器版本。
+使用 `dsh -V` 或 `dsh --version` 查看启动器版本；这两个参数必须位于应用参数边界之前。
 
 随附 profile 的参数如下：
 
 | profile | 参数 |
 | --- | --- |
-| web | --host、--port、可重复的 --trusted-host |
+| web | `--host`、`--port`、可重复的 `--trusted-host`、`--no-open` |
 | headless | 一条作为位置参数的任务文本 |
+| sdk | 无选项；标准输入输出承载 JSON-RPC |
+| sdk-minimal | 无选项；标准输入输出承载相同的 JSON-RPC |
+| acp | 无选项；标准输入输出承载 Agent Client Protocol |
 
 启动器自身会消费一个 --。如果应用必须收到字面量 --，需要写成 -- --。dsh --help 显示启动器帮助；dsh web --help 显示 Web 应用帮助并且不启动应用。
 
-无头任务会创建一个新的持久 Agent，提交任务，等待完全停稳，刷新会话，然后从持久事件区间读取最后一段非空 assistant 文本。没有任务文本属于用法错误；成功完成退出 0，其他结束原因退出 1。该 profile 不启动 HTTP 服务器、Web 运行时或浏览器客户端。
+无头任务会创建一个新的持久智能体，提交任务，等待完全停稳，刷新会话，然后从持久事件区间读取最后一段非空 assistant 文本。非空的提供方推理会以 `dsh: reasoning:` 前缀流式写入 stderr，最终文本只写入 stdout；没有任务文本属于用法错误，成功完成退出 0，其他结束原因退出 1。该 profile 不启动 HTTP 服务器、Web 运行时或浏览器客户端。
 
 ## 配置查看
 
@@ -93,9 +106,19 @@ dsh --profile <name>
 
 dsh plugin 在 profile 不存在时初始化它，然后在 profile 目录中把后续参数转发给 pnpm。相对路径 spec（例如 .、../plugin、file:、link:）优先相对于调用目录解析。
 
-成功执行后，dsh 会根据安装状态重建 dsh.profile.bundles：依赖的 manifest 声明了 dsh.bundle.patch 时，它的 patch 会加入组合层；没有组合声明的依赖仍会保留为普通依赖并提示一次；被移除的依赖会从组合层移除。
+成功执行后，dsh 会根据安装状态重建 dsh.profile.bundles：依赖的 manifest 声明了 dsh.bundle.patch 时，它的 patch 会加入组合层；没有组合声明的依赖仍会保留为普通依赖并提示一次；被移除的依赖会从组合层移除。该命令支持后续的所有 pnpm 子命令，不限于 add、remove、why 和 update。
 
 Git 插件如果依赖 prepare 构建脚本，pnpm 10+ 可能要求在 profile 的 pnpm-workspace.yaml 中允许该构建。首次安装失败时，按照 pnpm 输出的 allowBuilds 键添加后重试；已经构建好的压缩包或本地检出通常不需要该许可。
+
+Codex 与 Claude Code 是彼此独立的可选子代理组合包，可以单独安装或移除：
+
+~~~sh
+dsh plugin --profile <name> add @deepseek-ai/dsh-subagent-codex
+dsh plugin --profile <name> add @deepseek-ai/dsh-subagent-claude-code
+dsh plugin --profile <name> remove @deepseek-ai/dsh-subagent-codex
+~~~
+
+添加、移除或更新 Bundle 后，正在运行的 profile 仍保留启动时的 Bundle 集合，必须重启 profile。新启动的 Agent 还需要在复制出的 Preset 中启用对应工具行；只安装 provider 并不会自动让现有 Agent 看到工具。
 
 ## Web 行为
 
@@ -103,13 +126,18 @@ Git 插件如果依赖 prepare 构建脚本，pnpm 10+ 可能要求在 profile �
 dsh web
 dsh web --patch ./extra.cordis.yml
 dsh web --trusted-host example.com
+dsh web --no-open
 ~~~
 
-默认服务地址为 http://127.0.0.1:3080。--host 和 --port 覆盖保留了命令行表达式的配置行；--trusted-host 可重复传入。当前 CLI 不接受 --host 0.0.0.0，需要按错误提示修正。
+默认服务地址为 `http://127.0.0.1:3080`。`--host` 和 `--port` 覆盖保留了命令行表达式的配置行；`--trusted-host` 可重复传入，用于增加浏览器 `/api` 信任边界中的具名 authority；`--no-open` 只对本次调用关闭默认浏览器交接。当前 CLI 不接受 `--host 0.0.0.0`，需要按错误提示修正。
 
-所有模式都以当前调用目录作为默认工作区根目录，并读取适用的 AGENTS.md 或 CLAUDE.md。新会话默认使用 workspace-write 权限预设；DSH_PERMISSION_MODE 可改变进程级回退值，DSH_TOOLS_MODE 只接受 native、code 或 both。
+本机启动时，Web 服务会在 Loader 完整结算后用默认浏览器打开规范宿主机 URL；设置 `SSH_CONNECTION` 或 `SSH_TTY` 时会跳过浏览器交接但仍打印 URL。浏览器交接失败不会停止服务，stderr 会提供诊断和手动访问地址。插件树退出时最多等待 5 秒完成 dispose；首次 `SIGTERM` 以 0 退出，首次 `SIGINT` 报告 130，第二次信号直接强制退出。
 
-首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。内置智能体模式包括标准模式、PTC 模式、极简模式和创造模式：标准模式提供完整编码能力，PTC 模式通过代码模式 SDK 组合多步 TypeScript 操作，极简模式只提供持久 bash 与 `str_replace_editor`，创造模式用于编写自定义智能体预设。
+基于 base 的模式都以当前调用目录作为默认工作区根目录，并以 65,536 字节预算读取适用的 AGENTS.md 或 CLAUDE.md；会话索引使用内存 SQLite。独立的 `sdk-minimal` 以当前调用目录作为文件系统与沙箱根目录，但不发现指令、不使用 SQLite，权限固定为 `danger-full-access`，也不挂载审批或权限设置服务。
+
+新会话默认使用 `workspace-write` 权限预设；`DSH_PERMISSION_MODE` 可改变进程级回退值。`DSH_TOOLS_MODE` 只接受 `native`、`ptc` 或 `both`，其他值会导致启动失败。
+
+首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。内置智能体模式包括标准模式、PTC 模式、极简模式和创造模式：标准模式提供完整编码能力，PTC 模式通过 PTC SDK 组合多步 TypeScript 操作，极简模式只提供持久 bash 与 `str_replace_editor`，创造模式用于编写自定义智能体预设。极简模式固定使用 `You are a helpful software engineer assistant.` 作为完整系统提示词，不包含其他提示词段落。
 
 ## 凭证与环境
 
@@ -121,9 +149,24 @@ export DEEPSEEK_BASE_URL=https://...
 export DEEPSEEK_SEARCH_BASE_URL=https://...
 ~~~
 
-DEEPSEEK_BASE_URL 和 DEEPSEEK_SEARCH_BASE_URL 可选。不要提交真实密钥。遥测默认关闭；需要启用时，`DSH_TELEMETRY_MODE=FULL` 会导出完整遥测，`DSH_TELEMETRY_MODE=FEEDBACK_ONLY` 只导出反馈事件，`DSH_TELEMETRY_OTLP_URL` 指定接收端。遥测内容可能包含会话文本、工具参数、工具结果和工作区路径；非空的 `DSH_TELEMETRY_DISABLED` 具有最高优先级，可硬性关闭遥测。
+`DEEPSEEK_BASE_URL` 和 `DEEPSEEK_SEARCH_BASE_URL` 可选。搜索和 HTTP fetch 仍会拒绝非公网目标。不要提交真实密钥。
 
-默认不会启用 MCP 服务。通过 patch 插入的 MCP 进程属于受信任的可执行文件，会在智能体沙箱之外运行，启用前要确认来源和权限。
+遥测默认按反馈门控：用户记录 `/feedback` 前不上传数据，每条反馈会上传尚未共享的会话记录；恢复的会话只共享当前生命周期。通过环境变量覆盖时：
+
+- `DSH_TELEMETRY_MODE=FULL`：以 OTLP/HTTP 日志流式发送每条已投影的会话事件。
+- `DSH_TELEMETRY_MODE=DISABLED`：全部数据留在本地。
+- `DSH_TELEMETRY_OTLP_URL`：指定其他 collector。
+- 非空的 `DSH_TELEMETRY_DISABLED`：最终强制关闭遥测，优先级最高。
+
+基础配置没有默认脱敏规则，导出内容可能包含会话文本、工具参数、工具结果和工作区路径。默认不会启用 MCP 服务；CLI 虽然随附 `@deepseek-ai/dsh-mcp-client`，但通过 patch 启用的 MCP 服务器命令会在智能体沙箱之外作为受信任进程运行，启用前应确认来源和权限。
+
+## SDK、极简 SDK 与 ACP
+
+`sdk` 和 `sdk-minimal` profile 都通过标准输入输出承载 JSON-RPC；`acp` profile 通过标准输入输出承载 Agent Client Protocol。`sdk-minimal` 是独立组合，不继承基础 profile 的指令发现、SQLite 会话索引、审批和权限设置，权限固定为 `danger-full-access`，因此只适合明确受信任的调用方。
+
+Python SDK 支持 Linux x64/arm64、macOS arm64 14+ 和 Windows x64，要求 Python 3.10+。`deepseek-harness-sdk` 包含匹配的原生运行时 wheel 和 `dsh`，通常不需要另装 Node；使用 `--workspace`、`--dsh-home` 和 `--session-id` 可隔离工作区、配置目录和会话。完整安装与 API 示例见 [Python SDK](https://deepseek-harness.github.io/deepseek-harness/guide/python-sdk)。
+
+Linux 与 macOS 使用虚拟环境安装；Windows PowerShell 使用 `py -3.10 -m venv .venv`、`.venv\Scripts\Activate.ps1` 和 `python -m pip install deepseek-harness-sdk`。SDK 选定的 home 会保存 `sdk-minimal` profile、插件和 `sessions/` 下的 JSONL，不会静默读取 `~/.dsh`。
 
 ## 源码开发检查
 
@@ -132,9 +175,9 @@ pnpm run typecheck
 pnpm run lint
 pnpm run test
 pnpm run build
-pnpm run docs:check
+pnpm run doc-sync
 ~~~
 
-不要每次都盲目运行全部命令；根据修改的包、运行时入口、文档或快照选择最小相关集合。仓库的 pre-push 会运行类型检查，文档改动重点检查 pnpm run doc-sync 和对应链接、配对与生成目录门禁。
+不要每次都盲目运行全部命令；根据修改的包、运行时入口、文档或快照选择最小相关集合。仓库的 pre-push 会运行类型检查，文档改动重点检查 `pnpm run doc-sync`、对应链接、配对与生成目录门禁。
 
 线上参考：[快速开始](https://deepseek-harness.github.io/deepseek-harness/guide/quickstart)、[开发入口](https://deepseek-harness.github.io/deepseek-harness/develop/basic/)。CLI 的完整行为说明见本文件前文；线上站点暂未单独发布 CLI 参考页。

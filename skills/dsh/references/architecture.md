@@ -25,6 +25,9 @@ waterfall 是环绕式中间件。只做观察或标注的监听器必须调用 
 | @deepseek-ai/dsh-base | 模型、工具、持久化、沙箱、审批、设置、凭据和基础遥测 |
 | @deepseek-ai/dsh-web-app | 浏览器应用与 Web 运行时 |
 | @deepseek-ai/dsh-headless | 一次性任务运行器，不带服务器 |
+| @deepseek-ai/dsh-sdk-app | 通过标准输入输出提供 SDK 运行时 |
+| @deepseek-ai/dsh-sdk-minimal | 独立的极简 SDK 运行时，固定完整权限 |
+| @deepseek-ai/dsh-acp-app | 通过标准输入输出提供 ACP 运行时 |
 
 配置层按以下顺序生效：组合包列表 → profile 的 cordis.patch.yml → $DSH_HOME/cordis.patch.yml → 命令行 --patch。各层按顺序应用，同一行后应用的层覆盖前层；patch 替换整行 config，不是递归合并。因此修改时要保留依赖注入、!!js 表达式和其他未改动字段。
 
@@ -32,9 +35,9 @@ waterfall 是环绕式中间件。只做观察或标注的监听器必须调用 
 
 一个可替换能力由三种角色组成：
 
-1. Service Definition：定义接口、类型和事件契约。
-2. Service Provider：提供具体实现，例如本地文件系统、DeepSeek 模型或 SQLite 持久化。
-3. Consumer：使用该能力，常见形式是工具、agent 驱动器或 UI 适配器。
+1. 服务定义（Service Definition）：定义接口、类型和事件契约。
+2. 服务提供方（Service Provider）：提供具体实现，例如本地文件系统、DeepSeek 模型或 SQLite 持久化。
+3. 使用方（Consumer）：使用该能力，常见形式是工具、智能体驱动器或 UI 适配器。
 
 先找已有 seam，再决定是否新增接口。常用服务和归属：
 
@@ -54,11 +57,31 @@ waterfall 是环绕式中间件。只做观察或标注的监听器必须调用 
 | 添加 Web 会话节点 | 注册 ConversationNodeDefinition 和对应渲染器 |
 | 添加 Web 设置卡片 | 宿主端注册设置区块，客户端在同一设置命名空间注册设置项 |
 | 添加图片附件 | 使用 ctx.attachments 负责校验、持久化和读取 |
+| 添加 @file 补全 | 使用 ctx.fileReferences，并挂载与 read 工具一致的文件引用提供方 |
 | 添加跨会话读取 | 使用 ctx.sessionQuery 或 ctx.sessionReferenceResolver |
+| 添加宿主端与客户端 API | 宿主端控制器使用 @Remote，客户端通过 ctx.remote 调用生成契约 |
+
+## 宿主端、客户端与 Remote
+
+dsh 把运行时分为宿主端和客户端两个 aggregate。宿主端拥有模型、工具、会话、工作区、设置和文件等实际能力；客户端只持有浏览器状态、渲染模型和对宿主端的调用代理。不要因为两侧都有同名 Context 就把它们放进同一个 TypeScript program，否则会产生声明合并冲突。
+
+跨边界能力按以下路径流动：
+
+~~~text
+宿主端 Service / Controller
+  @Remote 或 @RemoteScope
+    -> Typert 生成客户端投影
+      -> 客户端 api-remotes 挂载 ctx.remote
+        -> Connection 负责认证、连接代际、相关性和流式载荷
+          -> Gateway 负责分发、取消、逻辑流和转发事件
+            -> 客户端模型与 UI 适配器
+~~~
+
+宿主端的控制器只声明可安全暴露的方法，生成的 `/remote` 类型和运行时贡献由构建流程维护。客户端应通过 `ctx.remote` 或作用域中的 `agentCtx.remote` 调用，不要自行拼接 HTTP 请求或直接暴露宿主服务。设置、文件引用、会话导出和对话节点都遵循这条边界。
 
 能力事件属于已有 seam 的策略扩展点，不要为了一个拦截器复制整个提供方。完整服务、包和事件关系见文档索引中的子系统与生成目录。
 
-## Agent 轮次与工具流水线
+## 智能体轮次与工具流水线
 
 一个步骤是一轮模型请求及其工具调用；一个轮次包含一个或多个步骤。典型顺序如下：
 
@@ -92,13 +115,32 @@ turn/end
 
 ## 图片附件与富内容
 
-图片附件属于持久化的跨层能力，不要把临时浏览器地址、文件路径或 Base64 直接塞进会话事件或模型消息。通过 `ctx.attachments` 完成以下操作：
+图片附件属于持久化的跨层能力，不要把临时浏览器地址、路径或提供方 URL 直接塞进会话事件或模型消息。通过 `ctx.attachments` 完成以下操作：
 
-- 使用 `validateImage` 校验 PNG、JPEG、WebP 或 GIF；批量上传使用 `saveImages` 时，先完成全部校验，再开始任何写入。
-- 使用 `saveImage` 或 `saveImages` 持久化图片，使用 `readImage` 读取内容；默认存储在 `<DSH_HOME>/attachments/v1`。
-- 会话事件和模型输入只携带不透明的 `ImageAttachmentRef`，跨层传递时转换成 `ImageBlock`；不要暴露存储路径或底层提供方地址。
+- 使用 `validateImage` 校验 PNG、JPEG、WebP 或 GIF；批量上传使用 `saveImages` 时，先完成整个批次的校验，再开始任何写入。
+- 使用 `saveImage` 或 `saveImages` 持久化规范化图片，使用 `readImage` 读取；默认存储在 `<DSH_HOME>/attachments/v1`。本地实现限制为每条消息最多 20 张、源图总量不超过 200 MiB、单张不超过 20 MiB、64,000,000 像素和单边 8192 像素，规范化默认长边 2048 像素且编码数据不超过 4 MiB。
+- 只有协议边界的 `EncodedImageAttachment` 可以承载规范 Base64，入口使用 `admitEncodedImages`；会话事件和模型输入只携带不透明的 `ImageAttachmentRef` 及元数据。
+- `readImageRequest` 按路由的像素和字节策略生成并缓存模型请求版本；`imageHostPath` 只询问提供方持有的宿主位置，不代表当前工具执行环境一定可读，使用前必须由当前执行文件系统判断。
 
-需要扩展图片能力时，先确认附件是否已经持久化，再设计事件、恢复和前端渲染路径；不能只在浏览器状态中保存图片。
+需要扩展图片能力时，先确认附件已经持久化，再设计事件、恢复、规范化和前端渲染路径；不能只在浏览器状态中保存图片。
+
+## 文件引用与 `@file`
+
+文件引用 seam 只负责路径发现和 mention 格式，不拥有文件系统访问，也不会把文件内容附在提示词中。`ctx.fileReferences.list(agent, query, signal)` 返回指定工作区内仅含路径的候选；选中后格式化为 `@path` 或 `@"path with spaces"`。浏览器通过 `fileReferences/list` Remote 使用同一能力。
+
+本地工作区使用 `@deepseek-ai/dsh-file-reference-local`，并确保它与实际生效的 `read` 工具使用同一命名空间。模型要查看被引用文件，仍必须显式调用 `read` 工具；`.gitignore` 不会自动改变补全范围，需使用提供方的排除目录配置。
+
+## 实验性智能体团队（Agent Teams）
+
+`ctx.agentTeams` 由持久化的 Lead 会话承载团队 roster、同伴邮箱和共享任务 DAG。成员拥有持久 Session id，消息先写入 Lead 会话再尝试投递；任务每次变更都会递增 `revision`，更新必须使用比较并交换，`writeScopes` 只是提示性路径前缀，不是文件锁。
+
+团队服务提供 `membership`、`listMembers`、`spawnTeammate`、`sendMessage`、`createTask`、`getTask`、`listTasks`、`updateTask`、`waitForChange` 和 `interrupt` 等方法；Lead 才能创建或中断成员。该功能仍是实验性的，需要持久化会话和 `@deepseek-ai/dsh-experimental-tool-agent-team` 工具包，不能把它当作普通一次性子代理队列。
+
+## 会话导出
+
+`@deepseek-ai/dsh-session-log-export` 为 Web 提供 `Session log` 操作和 `/export` 命令。浏览器先对 `GET /api/session.export?sessionId=<id>&includeDescendants=true` 发起预检，再下载包含当前会话、子会话和附件的 ZIP；目标位置由浏览器选择，不会写入宿主路径，也不会创建模型轮次。
+
+该能力依赖 Connection、命令注册表、会话查询与持久化、附件服务以及逐会话原始产物后端。导出读取 JSONL 原始产物，不是 SQLite 导出；活动根会话会在读取前 flush，冷会话不需要 flush。
 
 ## 生命周期与防御性规则
 
@@ -113,6 +155,6 @@ turn/end
 
 - [架构](https://deepseek-harness.github.io/deepseek-harness/reference/)
 - [Cordis 入门](https://deepseek-harness.github.io/deepseek-harness/reference/cordis-primer)
-- [Agent 生命周期](https://deepseek-harness.github.io/deepseek-harness/reference/agent-lifecycle)
+- [智能体生命周期](https://deepseek-harness.github.io/deepseek-harness/reference/agent-lifecycle)
 - [工具执行流水线](https://deepseek-harness.github.io/deepseek-harness/reference/tool-execution-pipeline)
 - [能力 seam](https://deepseek-harness.github.io/deepseek-harness/reference/capability-seams)
