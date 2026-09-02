@@ -161,6 +161,18 @@ export function apply(ctx: Context) {
 
 需要把宿主端能力提供给浏览器时，在宿主服务或控制器上使用 `@Remote`、`@RemoteScope` 声明方法，让 Typert 生成客户端投影；客户端通过 `ctx.remote` 或 `agentCtx.remote` 调用，不要自行拼接 HTTP 请求。Connection 负责认证、连接代际、请求相关性和流式载荷，Gateway 负责分发、取消、逻辑流与转发事件。
 
+### 新增 Remote API
+
+按当前实操手册分五步实现：
+
+1. 宿主端服务继承 `TypertRemoteService`，绑定服务键与命名空间，用 `@Remote` 暴露方法；lookup 对象只能占顶层参数，协作式取消的 `signal: AbortSignal` 放在最后。
+2. 用一个 `RemoteError` 表达跨传输协议失败，通过 TypeScript 声明合并把 `<domain>/<reason>` 加入 `RemoteErrorDetailsMap`。直接抛出业务域错误；只有需要把任意提供方异常归一化时才捕获并保留 `cause`。`gateway/bad-request`、`gateway/cancelled` 和 `gateway/internal` 已由基础设施提供，不要重复声明。
+3. 在 Loader 入口包中注册生成入口，维护 `./typert` 与 `./remote` 导出；签名、错误码、命名空间或导出名改变后运行 `pnpm run build:lib`。
+4. 客户端调用方在 `inject` 中同时声明 `remote` 与 `remote.<namespace>`，直接调用 `ctx.remote.<namespace>.<method>()`。返回值是 `RemoteResult<T>`，按 `result.ok` 和 `error.code` 分支；不要手写客户端方法签名、不要窄化成 `Pick`、不要用 `instanceof` 判断远程失败。需要向上层转成异常时抛出 `result.error`，捕获时用 `isRemoteFailure` 区分 Remote 失败和本地缺陷。
+5. 宿主端测试用 `remoteErrorOf` 检查 `code` 和 `details`，客户端测试用 `@deepseek-ai/dsh-client-test-runtime` 提供的 `RemoteError` 与 `TestRemote`。固定宿主信息通过 `ctx.remote.$host` 读取；取消一元调用时检查 `gateway/cancelled` 错误分支。
+
+完整步骤和示例见[新增 Remote API 实操手册](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cookbook/adding-a-remote-api.zh.md)与[API Gateway 参考](https://deepseek-harness.github.io/deepseek-harness/reference/api-gateway)。
+
 设置控制器的远程读取必须使用 `redactSecrets: true`。配置写入优先使用 settings service 的 `update`、`replace` 或带 `expectedRevision` 的 `mutate`；打开设置文档和用户 preset 目录时使用 `openSettingsDocument`、`openAgentPresetDirectory`，这两个方法不接受浏览器传入的宿主路径。
 
 ## 实验性智能体团队
@@ -210,6 +222,8 @@ export function apply(ctx: Context) {
 - [工具编写参考](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-a-tool)
 - [添加 LLM 适配器](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-an-llm-adapter)
 - [新增设置卡片](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-a-settings-card)
+- [API Gateway](https://deepseek-harness.github.io/deepseek-harness/reference/api-gateway)
+- [新增 Remote API 实操手册](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cookbook/adding-a-remote-api.zh.md)
 - [扩展插件形态](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/extension-cookbook)
 - [Web 客户端架构](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/web-client)
 - [客户端 Slots](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/slots)

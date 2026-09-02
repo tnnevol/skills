@@ -1,6 +1,6 @@
 # 架构与运行时
 
-本文整理 docs/architecture.zh.md、docs/cordis-primer.zh.md、docs/agent-lifecycle.zh.md、docs/tool-execution-pipeline.zh.md 和 docs/capability-seams.zh.md 的稳定规则。改动 packages/ 前先阅读源项目当前版本的架构文档。
+本文整理 docs/architecture.zh.md、docs/cordis-primer.zh.md、docs/agent-lifecycle.zh.md、docs/tool-execution-pipeline.zh.md、docs/capability-seams.zh.md、docs/api-gateway.zh.md 和 docs/subsystems/session-projection.zh.md 的稳定规则。改动 packages/ 前先阅读源项目当前版本的架构文档。
 
 ## Cordis 基础
 
@@ -59,6 +59,7 @@ waterfall 是环绕式中间件。只做观察或标注的监听器必须调用 
 | 添加图片附件 | 使用 ctx.attachments 负责校验、持久化和读取 |
 | 添加 @file 补全 | 使用 ctx.fileReferences，并挂载与 read 工具一致的文件引用提供方 |
 | 添加跨会话读取 | 使用 ctx.sessionQuery 或 ctx.sessionReferenceResolver |
+| 添加会话派生状态 | 使用 ctx.sessionProjections 注册投影单元，并由 stateOf() 或 snapshot() 读取 |
 | 添加宿主端与客户端 API | 宿主端控制器使用 @Remote，客户端通过 ctx.remote 调用生成契约 |
 
 ## 宿主端、客户端与 Remote
@@ -80,6 +81,12 @@ dsh 把运行时分为宿主端和客户端两个 aggregate。宿主端拥有模
 宿主端的控制器只声明可安全暴露的方法，生成的 `/remote` 类型和运行时贡献由构建流程维护。客户端应通过 `ctx.remote` 或作用域中的 `agentCtx.remote` 调用，不要自行拼接 HTTP 请求或直接暴露宿主服务。设置、文件引用、会话导出和对话节点都遵循这条边界。
 
 能力事件属于已有 seam 的策略扩展点，不要为了一个拦截器复制整个提供方。完整服务、包和事件关系见文档索引中的子系统与生成目录。
+
+### Remote 结果与失败
+
+Remote 端点是面向一元调用的类型化契约。客户端方法返回 `RemoteResult<T>`，不会因为宿主端业务失败而拒绝；调用方应在 `if (!result.ok)` 分支中检查 `error.code`，需要把失败交给上层时再 `throw result.error`。Remote 失败统一使用 `RemoteError`，通过 `RemoteErrorDetailsMap` 声明 `<domain>/<reason>` 错误码；Gateway 未归类的异常才折叠为 `gateway/internal`，取消一元调用使用 `gateway/cancelled`。不要创建异常类家族，也不要用 `instanceof` 判断传输协议失败。
+
+客户端通过 `ctx.remote.<namespace>` 或作用域中的 `agentCtx.remote` 调用。固定宿主事实从 `ctx.remote.$host` 读取；它提供 `home` 和 `isLoopback` 普通值，不提供订阅或代际计数器。Remote 仍只覆盖一元方法，流式数据、分页、会话投影等使用各自的协议。新增端点时按[新增 Remote API 实操手册](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cookbook/adding-a-remote-api.zh.md)执行。
 
 ## 智能体轮次与工具流水线
 
@@ -112,6 +119,14 @@ turn/end
 3. 用恢复、fork、快照或真实组合测试证明回放一致。
 
 实时 agent/* 事件可以协调工作，但不能代替需要持久化的 session 事件。agent.followup() 的回执不是完成结果，不要用单次 agent/status 或 whenIdle() 推断某条消息已经完成。
+
+## 会话投影
+
+`dsh-session-projection` 提供 `ctx.sessionProjections`。注册表只订阅一次 `session/event`，把每个已提交事件增量折叠到领域投影单元；领域贡献方只实现纯 `init` 与 `apply`，客户端收到的是已经计算好的完整视图，不需要自行折叠事件。
+
+宿主侧用 `stateOf(session, key)` 读取类型化状态，载体用 `snapshot(session, keys)` 读取一致的客户端视图。消费方应在依赖中声明 `sessionProjections`，缺少注册表或必需投影键时明确失败；不能用静默默认值掩盖能力缺失。投影结果按 `Object.is` 判断是否真正变化，必要时通过 `viewKey` 或变更流驱动客户端更新。
+
+会话的新类型约定还区分 `SessionSeq` 与 `SessionLogOffset`：前者表示事件在会话日志中的序号，后者表示日志范围、前缀长度或读取偏移。两种品牌虽然序列化后都是数字，但不能在 API、投影水位线或持久化边界中混用。
 
 ## 图片附件与富内容
 
@@ -158,3 +173,6 @@ turn/end
 - [智能体生命周期](https://deepseek-harness.github.io/deepseek-harness/reference/agent-lifecycle)
 - [工具执行流水线](https://deepseek-harness.github.io/deepseek-harness/reference/tool-execution-pipeline)
 - [能力 seam](https://deepseek-harness.github.io/deepseek-harness/reference/capability-seams)
+- [API Gateway](https://deepseek-harness.github.io/deepseek-harness/reference/api-gateway)
+- [会话投影](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/session-projection)
+- [新增 Remote API 实操手册](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cookbook/adding-a-remote-api.zh.md)

@@ -4,12 +4,12 @@ name: dsh
 description: DeepSeek Harness 插件化智能体运行时技能，支持运行、配置、SDK、ACP 和扩展 dsh。
 metadata:
   author: Tnnevol
-  version: "2026.08.29"
+  version: "2026.09.02"
 ---
 
 # dsh
 
-DeepSeek Harness（简称 dsh）是插件化的智能体运行时，支持 Web 界面、工作区、智能体模式预设、无头任务、SDK、ACP、profile 组合、Cordis 插件、工具、模型适配器、设置卡片、图片附件、文件引用、子代理、智能体团队和会话导出开发。
+DeepSeek Harness（简称 dsh）是插件化的智能体运行时，支持 Web 界面、工作区、智能体模式预设、无头任务、SDK、ACP、profile 组合、Cordis 插件、工具、模型适配器、设置卡片、图片附件、文件引用、Remote API、会话投影、子代理、智能体团队和会话导出开发。
 
 ## 安装
 
@@ -36,7 +36,7 @@ pnpm run build
 pnpm dsh web
 ~~~
 
-源码仓库当前版本为 `0.1.2-alpha.1`，固定使用 `pnpm@11.7.0`。真实模型调用需要配置 `DEEPSEEK_API_KEY`。
+源码仓库当前版本为 `0.1.2-alpha.4`，固定使用 `pnpm@11.7.0`。真实模型调用需要配置 `DEEPSEEK_API_KEY`。
 
 更多安装和使用说明见 [DeepSeek Harness 在线文档](https://deepseek-harness.github.io/deepseek-harness/guide/quickstart)。
 
@@ -64,12 +64,13 @@ dsh web 默认监听 `127.0.0.1:3080`，本机启动后会打开默认浏览器�
 
 - 运行 profile：组合 Web、无头和自定义 profile，按顺序叠加组合包与 patch。
 - 运行入口：使用 Web、无头、SDK、极简 SDK 和 ACP profile，按需选择交互方式。
-- 智能体模式：使用标准、PTC、极简和创造模式，分别满足完整编码、PTC 多步组合、最小工具集和自定义预设创作需求。
+- 智能体模式：使用标准、PTC、极简和创造模式，分别满足完整编码、PTC 多步组合、最小工具集和自定义预设创作需求；PTC 模式默认不提供 `workflow` 工具。
 - Cordis 插件：开发插件、服务、事件、配置和可逆生命周期资源。
 - 模型能力：注册 LLM 适配器，处理流式响应、工具调用、用量、取消和错误。
 - 工具扩展：注册模型工具、参数校验、执行策略、后台任务和界面展示。
 - 智能体与会话：处理轮次、步骤、实时事件、持久会话日志和可回放上下文。
-- Web 与富内容：通过设置卡片公开配置和凭据，通过持久图片附件引用支持模型与会话回放，并通过 Remote 接入客户端。
+- Web 与富内容：通过设置卡片公开配置和凭据，通过持久图片附件引用支持模型与会话回放，并通过 Remote 与会话投影接入客户端。
+- Remote 与会话状态：使用 `RemoteResult<T>`、`RemoteError` 和 `ctx.sessionProjections` 实现类型化的跨端调用与按会话派生状态。
 - 文件与会话：提供 `@file` 路径补全，通过 `/export` 下载包含会话树和附件的 ZIP；导出不会创建模型轮次。
 - 子代理与团队：使用子代理能力和实验性的 `ctx.agentTeams` 管理成员、消息与共享任务板。
 - 遥测与安全：遥测默认按反馈门控，`DSH_TELEMETRY_MODE=DISABLED` 可让数据全部留在本地。

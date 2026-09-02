@@ -2,7 +2,7 @@
 
 本文整理 apps/cli/reference/README.zh.md、docs/development.zh.md 和用户指南中的可操作内容。命令、配置键和环境变量保持源项目原名；解释使用中文。
 
-当前源项目版本为 `0.1.2-alpha.1`。源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
+当前源项目版本为 `0.1.2-alpha.4`。源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
 
 ## 运行方式
 
@@ -137,7 +137,7 @@ dsh web --no-open
 
 新会话默认使用 `workspace-write` 权限预设；`DSH_PERMISSION_MODE` 可改变进程级回退值。`DSH_TOOLS_MODE` 只接受 `native`、`ptc` 或 `both`，其他值会导致启动失败。
 
-首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。内置智能体模式包括标准模式、PTC 模式、极简模式和创造模式：标准模式提供完整编码能力，PTC 模式通过 PTC SDK 组合多步 TypeScript 操作，极简模式只提供持久 bash 与 `str_replace_editor`，创造模式用于编写自定义智能体预设。极简模式固定使用 `You are a helpful software engineer assistant.` 作为完整系统提示词，不包含其他提示词段落。
+首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。内置智能体模式包括标准模式、PTC 模式、极简模式和创造模式：标准模式提供完整编码能力，PTC 模式默认不提供 `workflow` 工具，而是通过 PTC SDK 组合多步 TypeScript 操作，极简模式只提供持久 bash 与 `str_replace_editor`，创造模式用于编写自定义智能体预设。极简模式固定使用 `You are a helpful software engineer assistant.` 作为完整系统提示词，不包含其他提示词段落。
 
 ## 凭证与环境
 
@@ -150,6 +150,8 @@ export DEEPSEEK_SEARCH_BASE_URL=https://...
 ~~~
 
 `DEEPSEEK_BASE_URL` 和 `DEEPSEEK_SEARCH_BASE_URL` 可选。搜索和 HTTP fetch 仍会拒绝非公网目标。不要提交真实密钥。
+
+基础组合包默认挂载原生 DeepSeek 适配器、设置与凭据提供方、稳定的 `web_search` 和 `web_fetch`、仅限公网的 HTTP 抓取提供方，以及按反馈门控的会话遥测。Web 应用会禁用基础工具配置项，再通过 `cordis`、`ptc` 与 `standard` 智能体预设暴露相同工具。已启用的抓取调用会在所有沙箱与审批模式下执行，无需逐次确认；提供方会在连接前拒绝非公开目的地址。
 
 遥测默认按反馈门控：用户记录 `/feedback` 前不上传数据，每条反馈会上传尚未共享的会话记录；恢复的会话只共享当前生命周期。通过环境变量覆盖时：
 
@@ -168,12 +170,19 @@ Python SDK 支持 Linux x64/arm64、macOS arm64 14+ 和 Windows x64，要求 Pyt
 
 Linux 与 macOS 使用虚拟环境安装；Windows PowerShell 使用 `py -3.10 -m venv .venv`、`.venv\Scripts\Activate.ps1` 和 `python -m pip install deepseek-harness-sdk`。SDK 选定的 home 会保存 `sdk-minimal` profile、插件和 `sessions/` 下的 JSONL，不会静默读取 `~/.dsh`。
 
+## Remote API 与会话投影
+
+Remote 是当前宿主端向客户端公开一元方法的契约。调用结果是 `RemoteResult<T>`，Remote 失败统一由 `RemoteError` 表示，错误码使用 `<domain>/<reason>`；客户端按 `result.ok` 和 `error.code` 处理，不要依赖 `instanceof`。取消一元调用时错误分支使用 `gateway/cancelled`，固定宿主信息从 `ctx.remote.$host` 读取。
+
+需要新增 Remote API 时，按“声明方法、声明失败、在包上注册、在客户端消费、写测试”执行；签名、错误码、命名空间或导出名变化后运行 `pnpm run build:lib`，然后再做类型检查和两侧测试。会话派生状态使用 `ctx.sessionProjections`，通过 `stateOf()` 读取宿主状态、通过 `snapshot()` 读取客户端视图；`SessionSeq` 事件序号与 `SessionLogOffset` 日志读取偏移必须分开。
+
 ## 源码开发检查
 
 ~~~sh
 pnpm run typecheck
 pnpm run lint
 pnpm run test
+pnpm run build:lib
 pnpm run build
 pnpm run doc-sync
 ~~~
