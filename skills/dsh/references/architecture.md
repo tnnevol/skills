@@ -1,6 +1,6 @@
 # 架构与运行时
 
-本文整理 docs/architecture.zh.md、docs/cordis-primer.zh.md、docs/agent-lifecycle.zh.md、docs/tool-execution-pipeline.zh.md、docs/capability-seams.zh.md、docs/api-gateway.zh.md 和 docs/subsystems/session-projection.zh.md 的稳定规则。改动 packages/ 前先阅读源项目当前版本的架构文档。
+本文整理 docs/architecture.zh.md、docs/cordis-primer.zh.md、docs/agent-lifecycle.zh.md、docs/tool-execution-pipeline.zh.md、docs/capability-seams.zh.md、docs/api-gateway.zh.md、docs/subsystems/persistence.zh.md 和 docs/subsystems/session-projection.zh.md 的稳定规则。改动 packages/ 前先阅读源项目当前版本的架构文档。
 
 ## Cordis 基础
 
@@ -36,7 +36,7 @@ waterfall 是环绕式中间件。只做观察或标注的监听器必须调用 
 一个可替换能力由三种角色组成：
 
 1. 服务定义（Service Definition）：定义接口、类型和事件契约。
-2. 服务提供方（Service Provider）：提供具体实现，例如本地文件系统、DeepSeek 模型或 SQLite 持久化。
+2. 服务提供方（Service Provider）：提供具体实现，例如本地文件系统、DeepSeek 模型或 JSONL 持久化。
 3. 使用方（Consumer）：使用该能力，常见形式是工具、智能体驱动器或 UI 适配器。
 
 先找已有 seam，再决定是否新增接口。常用服务和归属：
@@ -59,6 +59,7 @@ waterfall 是环绕式中间件。只做观察或标注的监听器必须调用 
 | 添加图片附件 | 使用 ctx.attachments 负责校验、持久化和读取 |
 | 添加 @file 补全 | 使用 ctx.fileReferences，并挂载与 read 工具一致的文件引用提供方 |
 | 添加跨会话读取 | 使用 ctx.sessionQuery 或 ctx.sessionReferenceResolver |
+| 持久化会话日志 | 使用 ctx.sessionPersistence 获取 SessionHandle，并由持久化提供方写入 |
 | 添加会话派生状态 | 使用 ctx.sessionProjections 注册投影单元，并由 stateOf() 或 snapshot() 读取 |
 | 添加宿主端与客户端 API | 宿主端控制器使用 @Remote，客户端通过 ctx.remote 调用生成契约 |
 
@@ -120,6 +121,14 @@ turn/end
 
 实时 agent/* 事件可以协调工作，但不能代替需要持久化的 session 事件。agent.followup() 的回执不是完成结果，不要用单次 agent/status 或 whenIdle() 推断某条消息已经完成。
 
+## 会话持久化句柄
+
+`ctx.sessionPersistence` 是会话日志的后端接缝，提供 `create()`、`open()`、`stat()` 和 `list()`；`create()` 与 `open(id, 'write')` 返回 `SessionHandle`。句柄统一提供 `read()`、`append()`、`flush()` 和 `close()`，避免消费方绕过后端直接按会话编号读写。
+
+只有通过句柄获取的会话才会持久化。`append()` 是尽力写入，`flush()` 是耐久屏障并会物化空会话；写句柄采用进程内单写者所有权，读句柄不能变更，关闭是幂等的并会等待待写操作完成。当前唯一随附的提供方是 `dsh-session-persistence-jsonl`，默认每个会话使用一个 `.jsonl.zstd` 追加文件，`compression: 'none'` 时使用换行文本。
+
+恢复时不要把中断轮次直接截断原始日志；agent-loop 通过写句柄补写合成的关闭事件，查询侧只在内存中平衡冷日志。新增持久化消费方时应覆盖句柄读写、单写者、刷盘和关闭语义。
+
 ## 会话投影
 
 `dsh-session-projection` 提供 `ctx.sessionProjections`。注册表只订阅一次 `session/event`，把每个已提交事件增量折叠到领域投影单元；领域贡献方只实现纯 `init` 与 `apply`，客户端收到的是已经计算好的完整视图，不需要自行折叠事件。
@@ -149,7 +158,7 @@ turn/end
 
 `ctx.agentTeams` 由持久化的 Lead 会话承载团队 roster、同伴邮箱和共享任务 DAG。成员拥有持久 Session id，消息先写入 Lead 会话再尝试投递；任务每次变更都会递增 `revision`，更新必须使用比较并交换，`writeScopes` 只是提示性路径前缀，不是文件锁。
 
-团队服务提供 `membership`、`listMembers`、`spawnTeammate`、`sendMessage`、`createTask`、`getTask`、`listTasks`、`updateTask`、`waitForChange` 和 `interrupt` 等方法；Lead 才能创建或中断成员。该功能仍是实验性的，需要持久化会话和 `@deepseek-ai/dsh-experimental-tool-agent-team` 工具包，不能把它当作普通一次性子代理队列。
+团队服务提供 `membership`、`listMembers`、`spawnTeammate`、`sendMessage`、`createTask`、`getTask`、`listTasks`、`updateTask`、`waitForChange` 和 `interrupt` 等方法；Lead 才能创建或中断成员。团队消息写入 Lead 会话后统一尝试通过 `Steer` 投递：运行中的成员在最近步骤边界收到，空闲成员被唤醒，非活动成员冷恢复；调用方不能选择 quiet 或 followup 调度模式，工具包当前提供 9 个工具。该功能仍是实验性的，需要持久化会话和 `@deepseek-ai/dsh-experimental-tool-agent-team` 工具包，不能把它当作普通一次性子代理队列。
 
 ## 会话导出
 
@@ -175,4 +184,6 @@ turn/end
 - [能力 seam](https://deepseek-harness.github.io/deepseek-harness/reference/capability-seams)
 - [API Gateway](https://deepseek-harness.github.io/deepseek-harness/reference/api-gateway)
 - [会话投影](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/session-projection)
+- [会话持久化](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/persistence)
+- [网络代理指南](https://deepseek-harness.github.io/deepseek-harness/guide/network-proxy)
 - [新增 Remote API 实操手册](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cookbook/adding-a-remote-api.zh.md)

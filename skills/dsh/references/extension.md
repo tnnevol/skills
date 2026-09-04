@@ -137,6 +137,8 @@ export function apply(ctx: Context) {
 
 密钥使用 Cordis 配置和环境变量回退，不要自行读取约定的密钥文件。
 
+模型目录发现由适配器按协议实现：`openai-completions` 和 `openai-responses` 请求 `{baseURL}/models`，`anthropic-messages` 请求 `/v1/models?limit=1000`，使用 `x-api-key` 与 `anthropic-version: 2023-06-01`。解析器应同时兼容标准 `data` 数组和 `models` 对象映射，并规范化模型 ID、名称、上下文长度和最大输出；配置 headers 要参与发现，类型化密钥优先，Anthropic 不跟随 `has_more`。
+
 ## 图片附件
 
 需要支持用户图片或模型图片输出时，使用 `ctx.attachments` 的 `validateImage`、`admitEncodedImages`、`saveImage`、`saveImages`、`readImage`、`readImageRequest` 和 `imageHostPath`。`saveImages` 必须先校验整个批次，再开始写入；只有持久化成功后才能追加所属会话事件。协议边界的 `EncodedImageAttachment` 可以使用规范 Base64，但会话和模型只保存 `ImageAttachmentRef` 及其 `ImageBlock` 元数据，不要保存浏览器对象 URL、提供方 URL 或未经抽象的路径。
@@ -175,9 +177,15 @@ export function apply(ctx: Context) {
 
 设置控制器的远程读取必须使用 `redactSecrets: true`。配置写入优先使用 settings service 的 `update`、`replace` 或带 `expectedRevision` 的 `mutate`；打开设置文档和用户 preset 目录时使用 `openSettingsDocument`、`openAgentPresetDirectory`，这两个方法不接受浏览器传入的宿主路径。
 
+## 会话持久化提供方
+
+实现持久化后端时接入 `ctx.sessionPersistence`，提供 `create()`、`open()`、`stat()` 和 `list()`，并让 `create()` 或 `open(id, 'write')` 返回 `SessionHandle`。消费方通过句柄的 `read()`、`append()`、`flush()` 和 `close()` 操作日志；不要再设计按会话编号直接 `append/load` 的旁路接口。
+
+只有通过句柄获取的会话才会持久化。写句柄需要提供进程内单写者保护，读句柄拒绝修改，`append()` 允许尽力写入而 `flush()` 提供耐久屏障，`close()` 需要等待待写内容并保持幂等。当前随附实现为 `dsh-session-persistence-jsonl`，默认使用 `.jsonl.zstd` 追加文件；实现或替换提供方时应覆盖句柄契约、并发写入、刷盘、关闭和崩溃恢复测试。
+
 ## 实验性智能体团队
 
-需要多个可继续的成员共享任务板时，选择实验性的 `@deepseek-ai/dsh-experimental-agent-team` 与 `@deepseek-ai/dsh-experimental-tool-agent-team`。通过 `ctx.agentTeams` 使用 `spawnTeammate`、`sendMessage`、`createTask`、`updateTask`、`waitForChange` 和 `interrupt` 等 API；成员、消息和任务快照由 Lead 会话持久化，任务更新必须携带预期 `revision`，`writeScopes` 只是提示性范围而不是锁。创建或中断成员仅允许 Lead，所有恢复、取消和权限错误都应按团队返回的类型处理。
+需要多个可继续的成员共享任务板时，选择实验性的 `@deepseek-ai/dsh-experimental-agent-team` 与 `@deepseek-ai/dsh-experimental-tool-agent-team`。通过 `ctx.agentTeams` 使用 `spawnTeammate`、`sendMessage`、`createTask`、`updateTask`、`waitForChange` 和 `interrupt` 等 API；成员、消息和任务快照由 Lead 会话持久化，任务更新必须携带预期 `revision`，`writeScopes` 只是提示性范围而不是锁。消息发送后统一尝试通过 `Steer` 投递：运行中的成员在最近步骤边界接收，空闲成员被唤醒，非活动成员冷恢复；调用方不能选择 quiet 或 followup 模式，工具包当前提供 9 个工具。创建或中断成员仅允许 Lead，所有恢复、取消和权限错误都应按团队返回的类型处理。
 
 源码 checkout 中需要把 `@deepseek-ai/dsh-experimental-agent-team-profile` 添加到已有的 `dsh-base` profile；它负责启用 Team domain 和 Team-scoped 工具。Web profile 还要在 `dsh-web-app` 与 Host 团队层之后添加 `@deepseek-ai/dsh-experimental-agent-team-web-profile`，以提供 roster、任务板和成员导航。两个 profile 层只在源码 checkout 中提供，正式发布不包含它们。
 
@@ -231,5 +239,7 @@ export function apply(ctx: Context) {
 - [添加 Web 客户端对话节点](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/conversation)
 - [子代理子系统](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/subagent)
 - [设置子系统](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/settings)
+- [会话持久化](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/persistence)
+- [网络代理指南](https://deepseek-harness.github.io/deepseek-harness/guide/network-proxy)
 - [会话引用](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/session-reference)
 - [打包与安装插件](https://deepseek-harness.github.io/deepseek-harness/develop/basic/publish)
