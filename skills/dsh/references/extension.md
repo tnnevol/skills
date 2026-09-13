@@ -123,6 +123,8 @@ export function apply(ctx: Context) {
 
 工具的 PTC 模式会直接调用规范 JSON 结果，不能依赖渲染后的自然语言解析标识符。工具的展示函数必须是纯函数，不做 I/O、不读会话状态、不使用时间或随机数。
 
+基于 `dsh-base` 的 profile 默认文件工具是 `read`、`write` 和 `edit`；`str_replace_editor` 不是默认工具，必须通过 profile、home 或逐次调用 patch 显式插入。用户要求接收文件时，使用 `present` 声明已存在且可由 Session 文件系统访问的路径；交付只保存路径和说明，不复制文件内容。
+
 ## 模型适配器
 
 实现 LlmAdapter 的 stream()，在 ctx.llm 注册提供方路由。必须遵守：
@@ -137,7 +139,15 @@ export function apply(ctx: Context) {
 
 密钥使用 Cordis 配置和环境变量回退，不要自行读取约定的密钥文件。
 
-模型目录发现由适配器按协议实现：`openai-completions` 和 `openai-responses` 请求 `{baseURL}/models`，`anthropic-messages` 请求 `/v1/models?limit=1000`，使用 `x-api-key` 与 `anthropic-version: 2023-06-01`。解析器应同时兼容标准 `data` 数组和 `models` 对象映射，并规范化模型 ID、名称、上下文长度和最大输出；配置 headers 要参与发现，类型化密钥优先，Anthropic 不跟随 `has_more`。
+模型目录发现由适配器按协议实现：`openai-completions` 和 `openai-responses` 请求带 bearer 鉴权的 `{baseURL}/models`，`anthropic-messages` 请求 `/v1/models?limit=1000`，使用 `x-api-key` 与 `anthropic-version: 2023-06-01`。已安装目录提供方不发网络请求；只有目录未描述的自定义路由才探测端点。Anthropic 的列表地址应规范化末尾的 `/v1`，但模型请求仍保留配置中的 `baseURL`。解析器应同时兼容标准 `data` 数组和 `models` 对象映射，并规范化模型 ID、名称、上下文长度和最大输出；配置 headers 要参与发现，新填写的密钥优先，Anthropic 不跟随 `has_more`。探测结果只供用户采纳，`settings.yaml` 中的模型列表才是持久事实。
+
+自定义提供方应在 `settings.yaml` 声明 `api`、`baseURL` 和非空 `models`；用 `input` 声明图片能力，用 `reasoningEfforts` 声明推理等级，用 `compat` 调整系统消息角色、输出上限字段和思考参数。设置变更会在下一个请求生效；配置错误的提供方应保留可编辑诊断，并在实际模型请求前以稳定错误码失败。
+
+## 会话格式迁移
+
+当前写入格式由 `SESSION_FORMAT_VERSION` 标识为 V3。新增格式时创建一个相邻迁移包；现有 V2→V3 迁移由 `@deepseek-ai/dsh-session-format-v2-to-v3` 提供。同步更新 `session-format-catalog` 和 `docs/session-format-status.zh.md`，并分别覆盖迁移、当前准入、拒绝和原生重新打开测试；不要直接修改已发布会话文件。
+
+迁移必须保持事件顺序、时间和历史请求含义，只在规范要求的位置插入节点或重映射已审计引用。JSONL provider 会从最高规范 generation 读取，写 open 在源文件旁排他发布最终版本命名的后继；源 generation 不重命名、不替换、不删除，未来格式应以 `SessionFormatUnsupportedError` 明确拒绝。
 
 ## 图片附件
 
@@ -145,19 +155,29 @@ export function apply(ctx: Context) {
 
 `readImageRequest` 用明确的像素和字节策略生成确定性的模型请求版本；`imageHostPath` 只返回附件提供方持有的宿主位置，调用方仍须确认当前执行文件系统能够读取该位置。图片规范化与批量限制以源项目 `docs/subsystems/attachment.zh.md` 为准。
 
+通用文件也由 `ctx.attachments` 持久化：按字节原样保存，不设图片格式限制，事件只保存不透明引用、文件名、字节数和摘要。浏览器上传使用 `ctx.fileUpload` 或 `ctx.fileUploads`，凭证按 Session 绑定，在 prompt 接纳时消费；流式上传应支持背压、进度和取消，且请求体只能消费一次。
+
 ## 子代理与后台任务
 
-子代理是可选能力接缝，不属于智能体循环。使用前先检查 `ctx.subagents` 已注册的提供方和 `SubagentCapabilities`，再按需求选择一次性启动或可继续的后台子代理；可继续子代理以持久会话和激活状态承载后续消息，不要自行再造一套队列或任务包装层。
+子代理是可选能力接缝，不属于智能体循环。使用前先检查 `ctx.subagents` 已注册的提供方和 `SubagentCapabilities`，再按需求选择一次性启动或可继续的后台子代理；可继续子代理以持久会话和激活状态承载后续消息，不要自行再造一套队列或任务包装层。`subagentCatalog` 投影用于按父会话事件顺序发现子级，不会为了列举而激活它们。
 
 `SubagentCapabilities.agentOptions` 为真时，`SubagentStartRequest.agentOptions` 才能覆盖 provider、model、reasoningEffort 和 token 限制；in-process 提供方在父配置上合并，SDK 提供方在默认值上合并，ACP、Codex 和 Claude Code 提供方会拒绝这些选项。当前提供方包名包括 `@deepseek-ai/dsh-subagent-spawn-in-process`、`@deepseek-ai/dsh-subagent-fork-in-process`、`@deepseek-ai/dsh-subagent-acp`、`@deepseek-ai/dsh-subagent-codex`、`@deepseek-ai/dsh-subagent-claude-code` 和 `@deepseek-ai/dsh-subagent-dsh-sdk`。
 
-生产 dsh 默认不安装 Codex 或 Claude Code 提供方，需要在 profile 中独立安装 `@deepseek-ai/dsh-subagent-codex` 或 `@deepseek-ai/dsh-subagent-claude-code`，并在宿主组合中挂载一次。添加、移除或更新 Bundle 后必须重启 profile；新 Agent 还要在复制出的 Preset 中启用对应工具行。所有子代理操作都要检查父子关系、权限、取消信号和清理时机。
+生产 dsh 默认不安装 Codex 或 Claude Code 提供方，需要在 profile 中独立安装 `@deepseek-ai/dsh-subagent-codex` 或 `@deepseek-ai/dsh-subagent-claude-code`，并在宿主组合中挂载一次。添加、移除或更新 Bundle 后必须重启 profile；新 Agent 还要在复制出的 Preset 中启用对应工具行。所有子代理操作都要检查父子关系、权限、取消信号和清理时机。`sendMessage()` 只允许相邻的在线 parent/child，调用方取消只影响收件箱接纳前的操作。
 
 ## 文件引用与 `@file`
 
 需要在 Web 或终端中提供文件补全时，挂载 `@deepseek-ai/dsh-file-reference` 以及与实际 `read` 工具使用同一命名空间的提供方。常用本地提供方是 `@deepseek-ai/dsh-file-reference-local`。
 
 `ctx.fileReferences.list(agent, query, signal)` 只返回路径候选；选中后插入 `@path` 或 `@"path with spaces"`，不会读取或附带文件内容。模型必须通过生效的 `read` 工具查看文件；提供方若与工具命名空间不一致，补全将不能代表模型实际可访问的路径。
+
+## 文件交付与工作区文件
+
+需要让模型把文件交给用户时，挂载 `@deepseek-ai/dsh-tool-present`。文件创建或修改成功后调用 `present`，使用 `files: [{ path, description? }]` 声明现有文件；文件必须是 Session 文件系统可访问的普通文件。失败的工具结果、目录、末端符号链接或不可访问路径不会产生交付事件。交付声明只保存路径和说明，文件内容仍由当前 Session 文件系统拥有。
+
+需要为 Web 提供文件预览、目录列举或变化观察时，使用 `@deepseek-ai/dsh-api-workspace-files`。其 `read` 是有界 UTF-8 行窗口，`readBytes` 是有界原始字节窗口，`readAll` 与 `readRelated` 受完整文件大小限制；`stat` 只返回元数据，`list` 与 `changes` 限定在 Session 工作区。所有 Remote 请求都要携带 Session 身份，不能让浏览器直接访问宿主路径。
+
+需要让浏览器上传文件时，使用 `@deepseek-ai/dsh-client-file-upload` 的 `ctx.fileUpload.upload(sessionId, body, name, signal, onProgress)`；Host 侧通过 `ctx.fileUploads` 接收流并生成暂存凭证。上传凭证必须绑定接收方 Session，并在 prompt 或命令接纳时消费，不能跨 Session 复用。
 
 ## 宿主端 Remote 与客户端适配
 
@@ -177,6 +197,10 @@ export function apply(ctx: Context) {
 
 设置控制器的远程读取必须使用 `redactSecrets: true`。配置写入优先使用 settings service 的 `update`、`replace` 或带 `expectedRevision` 的 `mutate`；打开设置文档和用户 preset 目录时使用 `openSettingsDocument`、`openAgentPresetDirectory`，这两个方法不接受浏览器传入的宿主路径。
 
+## 用户反馈
+
+`@deepseek-ai/dsh-command-feedback` 提供 Web `/feedback` 命令和 `sessionFeedback` Remote；`@deepseek-ai/dsh-message-feedback` 为已完成的 assistant 消息提供 `list`、`put`、`delete`。两类反馈都写入权威 Session 日志，不进入模型历史，也不启动模型工作。消息反馈必须以 `ifVersion` 进行乐观并发校验；空白备注、过长备注、过期版本和不存在的目标应返回稳定业务错误。
+
 ## 会话持久化提供方
 
 实现持久化后端时接入 `ctx.sessionPersistence`，提供 `create()`、`open()`、`stat()` 和 `list()`，并让 `create()` 或 `open(id, 'write')` 返回 `SessionHandle`。消费方通过句柄的 `read()`、`append()`、`flush()` 和 `close()` 操作日志；不要再设计按会话编号直接 `append/load` 的旁路接口。
@@ -185,9 +209,9 @@ export function apply(ctx: Context) {
 
 ## 实验性智能体团队
 
-需要多个可继续的成员共享任务板时，选择实验性的 `@deepseek-ai/dsh-experimental-agent-team` 与 `@deepseek-ai/dsh-experimental-tool-agent-team`。通过 `ctx.agentTeams` 使用 `spawnTeammate`、`sendMessage`、`createTask`、`updateTask`、`waitForChange` 和 `interrupt` 等 API；成员、消息和任务快照由 Lead 会话持久化，任务更新必须携带预期 `revision`，`writeScopes` 只是提示性范围而不是锁。消息发送后统一尝试通过 `Steer` 投递：运行中的成员在最近步骤边界接收，空闲成员被唤醒，非活动成员冷恢复；调用方不能选择 quiet 或 followup 模式，工具包当前提供 9 个工具。创建或中断成员仅允许 Lead，所有恢复、取消和权限错误都应按团队返回的类型处理。
+需要多个可继续的成员共享任务板时，显式安装并选择公开发布但仍属实验性的 `@deepseek-ai/dsh-experimental-agent-team` 与 `@deepseek-ai/dsh-experimental-tool-agent-team`。通过 `ctx.agentTeams` 使用 `spawnTeammate`、`sendMessage`、`createTask`、`updateTask`、`waitForChange` 和 `interrupt` 等 API；成员、消息和任务快照由 Lead 会话持久化，任务更新必须携带预期 `revision`，`writeScopes` 只是提示性范围而不是锁。消息发送后统一尝试通过 `Steer` 投递：运行中的成员在最近步骤边界接收，空闲成员被唤醒，非活动成员冷恢复；调用方不能选择 quiet 或 followup 模式，工具包当前提供 9 个工具。创建或中断成员仅允许 Lead，所有恢复、取消和权限错误都应按团队返回的类型处理。
 
-源码 checkout 中需要把 `@deepseek-ai/dsh-experimental-agent-team-profile` 添加到已有的 `dsh-base` profile；它负责启用 Team domain 和 Team-scoped 工具。Web profile 还要在 `dsh-web-app` 与 Host 团队层之后添加 `@deepseek-ai/dsh-experimental-agent-team-web-profile`，以提供 roster、任务板和成员导航。两个 profile 层只在源码 checkout 中提供，正式发布不包含它们。
+需要在已有的 `dsh-base` profile 中显式添加公开发布的 `@deepseek-ai/dsh-experimental-agent-team-profile`，它负责启用 Team domain 和 Team-scoped 工具；Web 还可以添加 `@deepseek-ai/dsh-experimental-agent-team-web-profile`，以提供 roster、任务板和成员导航。随附的 Web、headless、SDK、ACP 和 Python profile 默认不会启用这些实验性层。
 
 ## Web 客户端对话节点
 
@@ -240,6 +264,10 @@ export function apply(ctx: Context) {
 - [子代理子系统](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/subagent)
 - [设置子系统](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/settings)
 - [会话持久化](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/persistence)
+- [会话格式状态](https://github.com/deepseek-harness/deepseek-harness/blob/master/docs/session-format-status.zh.md)
+- [文件系统](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/filesystem)
+- [工作区](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/workspace)
+- [用户反馈](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/feedback.zh.md)
 - [网络代理指南](https://deepseek-harness.github.io/deepseek-harness/guide/network-proxy)
 - [会话引用](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/session-reference)
 - [打包与安装插件](https://deepseek-harness.github.io/deepseek-harness/develop/basic/publish)

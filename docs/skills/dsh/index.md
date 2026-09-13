@@ -1,15 +1,15 @@
 ---
 title: dsh
 name: dsh
-description: DeepSeek Harness 插件化智能体运行时技能，支持运行、配置、代理、会话持久化、SDK、ACP 和扩展 dsh。
+description: DeepSeek Harness 插件化智能体运行时技能，支持运行、配置、代理、会话、工作区文件、文件交付、反馈、SDK、ACP 和扩展 dsh。
 metadata:
   author: Tnnevol
-  version: "2026.09.04"
+  version: "2026.09.13"
 ---
 
 # dsh
 
-DeepSeek Harness（简称 dsh）是插件化的智能体运行时，支持 Web 界面、工作区、智能体模式预设、无头任务、SDK、ACP、profile 组合、Cordis 插件、工具、模型适配器、设置卡片、图片附件、文件引用、Remote API、会话持久化、网络代理、会话投影、子代理、智能体团队和会话导出开发。
+DeepSeek Harness（简称 dsh）是插件化的智能体运行时，支持 Web 界面、工作区、工作区文件、智能体模式预设、无头任务、SDK、ACP、profile 组合、Cordis 插件、工具、模型适配器、设置卡片、图片和文件附件、文件交付、反馈、文件引用、Remote API、会话格式迁移、会话持久化、网络代理、会话投影、子代理、智能体团队和会话导出开发。
 
 ## 安装
 
@@ -36,9 +36,11 @@ pnpm run build
 pnpm dsh web
 ~~~
 
-源码仓库当前版本为 `0.1.2-rc.1`，固定使用 `pnpm@11.7.0`。真实模型调用需要配置 `DEEPSEEK_API_KEY`。
+源码仓库当前版本为 `0.1.5-rc.2`，仍处于开发者预览阶段，未来可能包含破坏性变更；固定使用 `pnpm@11.7.0`。真实模型调用需要配置 `DEEPSEEK_API_KEY`。
 
 更多安装和使用说明见 [DeepSeek Harness 在线文档](https://deepseek-harness.github.io/deepseek-harness/guide/quickstart)。
+
+常用官方参考：[CLI 行为](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/reference/README.zh.md)、[模型配置](https://deepseek-harness.github.io/deepseek-harness/guide/providers)、[网络代理](https://deepseek-harness.github.io/deepseek-harness/guide/network-proxy)、[Python SDK](https://deepseek-harness.github.io/deepseek-harness/guide/python-sdk)。
 
 ## 使用
 
@@ -52,30 +54,32 @@ dsh --profile sdk
 dsh --profile sdk-minimal
 dsh --profile acp
 dsh --profile web --dump-config
+dsh --profile rescue --from-default-profile web
 dsh plugin --profile <name> add <package-or-git-spec>
 dsh -V
 ~~~
 
-dsh web 默认监听 `127.0.0.1:3080`，本机启动后会打开默认浏览器，`--no-open` 可关闭此行为。首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。无头任务接收一条任务文本；启动器参数必须放在应用参数之前，后续参数由 profile 处理。`sdk` 与 `sdk-minimal` 通过标准输入输出承载 JSON-RPC，`acp` 承载 Agent Client Protocol。
+dsh web 默认监听 `127.0.0.1:3080`，本机启动后会打开默认浏览器，`--no-open` 可关闭此行为。首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。无头任务接收一条任务文本；启动器参数必须放在应用参数之前，后续参数由 profile 处理。`sdk` 与 `sdk-minimal` 通过标准输入输出承载 JSON-RPC，`acp` 承载 Agent Client Protocol。其他 profile 可用 `--from-default-profile` 从内置模板创建，或通过 `dsh plugin` 以 base 为基础初始化。
 
-开发插件时先判断需求对应的服务、事件、工具、会话或其他能力 seam，再阅读[开发文档](https://deepseek-harness.github.io/deepseek-harness/develop/basic/)和[参考文档](https://deepseek-harness.github.io/deepseek-harness/reference/)。不要凭记忆猜测配置字段，优先使用 --help 和 --dump-config。网络代理从启动环境或 `$DSH_HOME/.env` 读取 `HTTP_PROXY`、`HTTPS_PROXY` 和 `NO_PROXY`，不需要额外的 Node 代理开关。
+开发插件时先判断需求对应的服务、事件、工具、会话、文件交付或其他能力 seam，再阅读[开发文档](https://deepseek-harness.github.io/deepseek-harness/develop/basic/)和[参考文档](https://deepseek-harness.github.io/deepseek-harness/reference/)。不要凭记忆猜测配置字段，优先使用 --help 和 --dump-config。网络代理从启动环境或 `$DSH_HOME/.env` 读取 `HTTP_PROXY`、`HTTPS_PROXY` 和 `NO_PROXY`，不需要额外的 Node 代理开关。
 
 ## 功能
 
 - 运行 profile：组合 Web、无头和自定义 profile，按顺序叠加组合包与 patch。
 - 运行入口：使用 Web、无头、SDK、极简 SDK 和 ACP profile，按需选择交互方式。
-- 智能体模式：使用标准、PTC、极简和创造模式，分别满足完整编码、PTC 多步组合、最小工具集和自定义预设创作需求；PTC 模式默认不提供 `workflow` 工具。
+- 智能体模式：使用标准、PTC、极简和创造模式，分别满足完整编码、PTC 多步组合、最小工具集和自定义预设创作需求；PTC 模式默认不提供 `workflow` 工具，极简模式只提供按平台选择的持久 shell。
 - Cordis 插件：开发插件、服务、事件、配置和可逆生命周期资源。
-- 模型能力：注册 LLM 适配器，处理流式响应、工具调用、用量、取消和错误；模型目录发现支持 `openai-completions`、`openai-responses` 和 `anthropic-messages`。
+- 模型能力：注册 LLM 适配器，处理流式响应、工具调用、用量、取消和错误；模型目录发现支持 `openai-completions`、`openai-responses` 和 `anthropic-messages`，DeepSeek 路由提供 V4/V41 建议性模型目录。
 - 工具扩展：注册模型工具、参数校验、执行策略、后台任务和界面展示。
-- 智能体与会话：处理轮次、步骤、实时事件、`SessionHandle` 持久会话日志和可回放上下文；只有通过句柄获取的会话才会持久化。
-- Web 与富内容：通过设置卡片公开配置和凭据，通过持久图片附件引用支持模型与会话回放，并通过 Remote 与会话投影接入客户端。
+- 智能体与会话：处理轮次、步骤、实时事件、`SessionHandle` 持久会话日志和可回放上下文；只有通过句柄获取的会话才会持久化，当前格式为 V3。
+- Web 与富内容：通过设置卡片公开配置和凭据，通过持久图片和文件附件、工作区文件预览、`present` 文件交付以及 Remote 与会话投影接入客户端。
 - Remote 与会话状态：使用 `RemoteResult<T>`、`RemoteError` 和 `ctx.sessionProjections` 实现类型化的跨端调用与按会话派生状态。
 - 网络代理与持久化：使用 `HTTP_PROXY`、`HTTPS_PROXY`、`NO_PROXY` 配置出站请求，使用 `ctx.sessionPersistence` 和 `dsh-session-persistence-jsonl` 管理会话日志。
-- 文件与会话：提供 `@file` 路径补全，通过 `/export` 下载包含会话树和附件的 ZIP；导出不会创建模型轮次。
+- 文件与会话：默认使用 `read`、`write`、`edit` 文件工具，`str_replace_editor` 可显式启用；提供 `@file` 路径补全，通过 `/export` 下载包含会话树和附件的 ZIP，导出不会创建模型轮次。
 - 子代理与团队：使用子代理能力和实验性的 `ctx.agentTeams` 管理成员、消息与共享任务板；团队消息通过 `Steer` 投递给运行中、空闲或非活动成员。
+- 用户反馈：通过 `/feedback`、`sessionFeedback` 和 `messageFeedback` 记录反馈，不启动模型轮次。
 - 遥测与安全：遥测默认按反馈门控，`DSH_TELEMETRY_MODE=DISABLED` 可让数据全部留在本地。
 - 能力替换：接入文件系统、shell、终端、沙箱、审批、子智能体、Web、存储和持久化提供方。
 - 插件分发：通过 dsh.bundle 和 dsh.profile 将扩展安装到 profile。
 
-常见意图包括“启动 dsh Web 界面”“配置工作区或智能体模式”“执行一次无头任务”“使用 SDK 或 ACP”“查看 profile 配置”“配置网络代理”“管理会话持久化”“添加工具”“接入模型适配器”“新增设置卡片、图片附件或文件引用”“导出会话”“使用子代理或智能体团队”和“解释 Cordis 生命周期”等。
+常见意图包括“启动 dsh Web 界面”“创建自定义 profile”“配置工作区或智能体模式”“执行一次无头任务”“使用 SDK 或 ACP”“查看 profile 配置”“配置网络代理”“管理会话格式和持久化”“添加工具”“接入模型适配器”“上传附件”“交付文件”“预览工作区文件”“记录反馈”“新增设置卡片或文件引用”“导出会话”“使用子代理或智能体团队”和“解释 Cordis 生命周期”等。

@@ -1,6 +1,6 @@
 # 架构与运行时
 
-本文整理 docs/architecture.zh.md、docs/cordis-primer.zh.md、docs/agent-lifecycle.zh.md、docs/tool-execution-pipeline.zh.md、docs/capability-seams.zh.md、docs/api-gateway.zh.md、docs/subsystems/persistence.zh.md 和 docs/subsystems/session-projection.zh.md 的稳定规则。改动 packages/ 前先阅读源项目当前版本的架构文档。
+本文整理 docs/architecture.zh.md、docs/cordis-primer.zh.md、docs/agent-lifecycle.zh.md、docs/tool-execution-pipeline.zh.md、docs/capability-seams.zh.md、docs/api-gateway.zh.md、docs/session-format-status.zh.md、docs/subsystems/persistence.zh.md、docs/subsystems/session-projection.zh.md、docs/subsystems/subagent.zh.md、docs/subsystems/attachment.zh.md、docs/subsystems/feedback.zh.md 和 docs/subsystems/workspace.zh.md 的稳定规则。改动 packages/ 前先阅读源项目当前版本的架构文档。
 
 ## Cordis 基础
 
@@ -29,6 +29,8 @@ waterfall 是环绕式中间件。只做观察或标注的监听器必须调用 
 | @deepseek-ai/dsh-sdk-minimal | 独立的极简 SDK 运行时，固定完整权限 |
 | @deepseek-ai/dsh-acp-app | 通过标准输入输出提供 ACP 运行时 |
 
+基于 `dsh-base` 的 profile 默认使用 `read`、`write` 和 `edit` 文件工具；`str_replace_editor` 需要通过 patch 显式启用。`dsh-sdk-minimal` 不继承 base，只提供按平台选择的持久 shell，并使用未压缩 JSONL 保存会话。
+
 配置层按以下顺序生效：组合包列表 → profile 的 cordis.patch.yml → $DSH_HOME/cordis.patch.yml → 命令行 --patch。各层按顺序应用，同一行后应用的层覆盖前层；patch 替换整行 config，不是递归合并。因此修改时要保留依赖注入、!!js 表达式和其他未改动字段。
 
 ## 服务、事件与能力 seam
@@ -56,10 +58,14 @@ waterfall 是环绕式中间件。只做观察或标注的监听器必须调用 
 | 添加 Web 检索 | 注册 ctx.web 提供方 |
 | 添加 Web 会话节点 | 注册 ConversationNodeDefinition 和对应渲染器 |
 | 添加 Web 设置卡片 | 宿主端注册设置区块，客户端在同一设置命名空间注册设置项 |
-| 添加图片附件 | 使用 ctx.attachments 负责校验、持久化和读取 |
+| 添加图片或文件附件 | 使用 ctx.attachments 负责校验、持久化和读取；通用文件按字节原样保存 |
+| 声明用户要接收的文件 | 使用 `present` 工具记录 Session 文件路径，不复制文件内容 |
+| 提供 Web 文件预览 | 使用 `ctx.workspaceFiles` 与 `ctx.resources`，按 Session 身份提供有界读取和变更流 |
 | 添加 @file 补全 | 使用 ctx.fileReferences，并挂载与 read 工具一致的文件引用提供方 |
 | 添加跨会话读取 | 使用 ctx.sessionQuery 或 ctx.sessionReferenceResolver |
 | 持久化会话日志 | 使用 ctx.sessionPersistence 获取 SessionHandle，并由持久化提供方写入 |
+| 添加会话格式版本 | 增加相邻迁移包、更新格式目录和发布状态，不直接改写旧 generation |
+| 添加用户反馈 | 使用 `sessionFeedback` 或 `messageFeedback` 写入日志，不启动模型轮次 |
 | 添加会话派生状态 | 使用 ctx.sessionProjections 注册投影单元，并由 stateOf() 或 snapshot() 读取 |
 | 添加宿主端与客户端 API | 宿主端控制器使用 @Remote，客户端通过 ctx.remote 调用生成契约 |
 
@@ -91,29 +97,29 @@ Remote 端点是面向一元调用的类型化契约。客户端方法返回 `Re
 
 ## 智能体轮次与工具流水线
 
-一个步骤是一轮模型请求及其工具调用；一个轮次包含一个或多个步骤。典型顺序如下：
+一个步骤是一轮模型请求及其工具调用；一个轮次包含零个或多个步骤。典型顺序如下：
 
 ~~~text
 turn/start
-  领取下一步输入
+  领取下一步输入与一条排队消息
   agent/pre-step
   step/start
-  user/message
-  system-prompt/assemble
-  agent/request -> llm/stream -> assistant/chunk* -> assistant/message
+  agent/request -> prepareCall -> request/header 与 request/context
+  system/message、user/message -> deriveMessages()
+  llm/stream -> agent/assistant-stream -> assistant/message 或 assistant/attempt
   tool/call* -> tools/pre-execute -> tools/execute -> tools/post-execute -> tool/result*
   step/end
   agent/turn-stopping
 turn/end
 ~~~
 
-持久会话事件包括 turn/*、step/*、user/message、assistant/*、tool/* 和 compaction/*；实时 agent/* 事件负责队列、状态、输入、请求、拦截、继续执行和错误恢复。需要模型可见事实时，监听 session/event 并检查事件类型，而不是只读取实时状态。
+持久会话事件包括 `turn/*`、`step/*`、`system/message`、`user/message`、`assistant/message`、`assistant/attempt`、`tool/*`、`request/*`、`agent/inbox/*` 和 `compaction/*`；实时 `agent/*` 事件负责队列、状态、输入、请求、流式输出、拦截、继续执行和错误恢复。模型可见内容必须从持久日志派生；`agent/assistant-stream` 的实时分片不能替代结算后的 assistant 事件。
 
-工具调用会先分类并按 barrier（屏障）和有界滚动池调度，再按顺序执行前置策略、并发主体和后置处理。执行过程中应使用单调 guard 防止后续监听器撤销拒绝；规范结果、错误和展示内容必须分别处理。新增工具时不要让 UI 卡片格式污染模型结果。
+工具调用会先分类并按屏障和有界滚动池调度，再按顺序执行前置策略、并发主体和后置处理。独占调用形成屏障，安全并行调用受 `maxParallelToolCalls` 限制。执行过程中应使用单调 guard 防止后续监听器撤销拒绝；规范结果、错误和展示内容必须分别处理。新增工具时不要让 UI 卡片格式污染模型结果。
 
 ## 会话日志与可回放性
 
-会话日志是模型所见上下文的唯一来源，deriveMessages() 从日志生成模型历史。模型请求中的每项输入都必须能从日志重建；如果新增模型可见上下文，应：
+会话日志是模型所见上下文的唯一来源，`deriveMessages()` 从日志生成模型历史。V3 将系统提示词作为 `system/message` surface 节点记录，`assistant/message` 保存精确的紧凑 stream，未提交模型尝试保存为 `assistant/attempt`，因此失败、重试和取消仍可审计但不会伪造模型历史。模型请求中的每项输入都必须能从日志重建；如果新增模型可见上下文，应：
 
 1. 扩展 SessionEventMap。
 2. 让日志渲染逻辑派生该内容。
@@ -121,13 +127,21 @@ turn/end
 
 实时 agent/* 事件可以协调工作，但不能代替需要持久化的 session 事件。agent.followup() 的回执不是完成结果，不要用单次 agent/status 或 whenIdle() 推断某条消息已经完成。
 
+## 会话格式与迁移
+
+当前写入格式由 `SESSION_FORMAT_VERSION` 标识为 V3；发布状态记录中的 `latestReleasedVersion: 3` 以 `dsh-v0.1.5-alpha.1` 作为发布证据。包版本、投影缓存版本和测试 fixture 文件名都不是格式权威。V3 的规范信封要求 `request/header` 不携带 `system`，空的 `tools` 与 `adapterDefaults` 省略，surface 事件使用受约束的 `surfaceOp` 与来源引用。
+
+已发布格式通过 v0→v1→v2→v3 的相邻迁移链恢复。JSONL 的 v0 产物是 `session.jsonl[.zstd]`，v1 及后续产物使用 `session.vN.jsonl[.zstd]`；`stat`、`list` 和 `open` 选择最高规范 generation，读取旧 generation 时只在内存中转换，写入时在源文件旁排他发布最终版本命名的后继。已发布文件不重命名、不替换、不删除，未来版本以格式不支持错误拒绝。
+
+V2 到 V3 会插入受保护的系统头节点、重映射已审计的序号引用、迁移 PTC 事件标签，并校验内容、surface 关系、继承切点和工具错误；它不修改设置或文件。新增格式时应创建相邻迁移包、更新格式目录与发布状态，并覆盖迁移、准入、拒绝和原生重新打开测试。
+
 ## 会话持久化句柄
 
-`ctx.sessionPersistence` 是会话日志的后端接缝，提供 `create()`、`open()`、`stat()` 和 `list()`；`create()` 与 `open(id, 'write')` 返回 `SessionHandle`。句柄统一提供 `read()`、`append()`、`flush()` 和 `close()`，避免消费方绕过后端直接按会话编号读写。
+`ctx.sessionPersistence` 是会话日志的后端接缝，提供 `create()`、`open()`、`stat()` 和 `list()`，并提供服务级 `flush()`；`create()` 与 `open(id, 'write')` 返回 `SessionHandle`。句柄统一提供 `read()`、`append()`、`flush()` 和 `close()`，避免消费方绕过后端直接按会话编号读写。
 
-只有通过句柄获取的会话才会持久化。`append()` 是尽力写入，`flush()` 是耐久屏障并会物化空会话；写句柄采用进程内单写者所有权，读句柄不能变更，关闭是幂等的并会等待待写操作完成。当前唯一随附的提供方是 `dsh-session-persistence-jsonl`，默认每个会话使用一个 `.jsonl.zstd` 追加文件，`compression: 'none'` 时使用换行文本。
+只有通过句柄获取的会话才会持久化。`append()` 是尽力写入，`flush()` 是耐久屏障并会物化空会话；写句柄采用进程内单写者所有权，读句柄不能变更，关闭是幂等的并会等待待写操作完成。随附的 `dsh-session-persistence-jsonl` 还使用跨进程租约排除其他进程写入同一会话，默认每个会话使用一个 `.jsonl.zstd` 追加文件，`compression: 'none'` 时使用换行文本。
 
-恢复时不要把中断轮次直接截断原始日志；agent-loop 通过写句柄补写合成的关闭事件，查询侧只在内存中平衡冷日志。新增持久化消费方时应覆盖句柄读写、单写者、刷盘和关闭语义。
+恢复时不要把中断轮次直接截断原始日志；agent-loop 通过写句柄补写合成的关闭事件，查询侧只在内存中平衡冷日志。新增持久化消费方时应覆盖句柄读写、单写者、刷盘、关闭、格式拒绝和崩溃尾部语义。
 
 ## 会话投影
 
@@ -148,17 +162,35 @@ turn/end
 
 需要扩展图片能力时，先确认附件已经持久化，再设计事件、恢复、规范化和前端渲染路径；不能只在浏览器状态中保存图片。
 
+通用文件附件沿用 `ctx.attachments` 的持久化边界，但按字节原样保存，不设图片格式或大小限制；会话事件只保存不透明的文件引用、文件名、字节数和摘要，模型通过文件工具按需读取。浏览器的 `ctx.fileUpload` 负责按 Session 上传、进度、取消和暂存凭证，凭证在 prompt 接纳时消费。
+
+## 文件交付与工作区文件
+
+`present` 是面向模型的显式交付工具：文件必须已经存在且能由当前 Session 文件系统访问，调用只把路径和可选说明写入 `deliverables/presented`，不会复制文件内容。用户要接收通过 shell 或代码运行时生成的文件时，创建或修改完成后应调用它，并在最终回复前完成调用；仅提及路径不构成交付。
+
+Web 的 `workspaceFiles` 服务按 Session 身份提供 `read`、`readBytes`、`readAll`、`readRelated`、`stat`、`list` 和 `changes`。文本读取是有界行窗口，字节读取是有界原始窗口；文件读取由组合文件系统决定是否可访问，`list` 与 `changes` 只允许 Session 工作区。客户端资源通过 `dsh-resource://file/session/<sessionId>/...` 地址订阅文件元数据和变更，不应自行拼接宿主路径或绕过 Remote。
+
+## 用户反馈
+
+`/feedback`、`ctx.sessionFeedback` 和 `ctx.messageFeedback` 将用户反馈作为仅写日志事件保存，不进入 `deriveMessages()`，也不会启动或中断模型轮次。Session 级反馈使用固定 `FeedbackCategory` 分类；逐消息 `put`、`delete` 通过 `ifVersion` 做乐观并发校验，过期版本返回冲突，删除不是隐私擦除。
+
 ## 文件引用与 `@file`
 
 文件引用 seam 只负责路径发现和 mention 格式，不拥有文件系统访问，也不会把文件内容附在提示词中。`ctx.fileReferences.list(agent, query, signal)` 返回指定工作区内仅含路径的候选；选中后格式化为 `@path` 或 `@"path with spaces"`。浏览器通过 `fileReferences/list` Remote 使用同一能力。
 
 本地工作区使用 `@deepseek-ai/dsh-file-reference-local`，并确保它与实际生效的 `read` 工具使用同一命名空间。模型要查看被引用文件，仍必须显式调用 `read` 工具；`.gitignore` 不会自动改变补全范围，需使用提供方的排除目录配置。
 
+## 子代理
+
+`ctx.subagents` 是按名称注册的可选提供方集合，支持一次性和可继续两种形态。一次性运行返回最终结果；可继续子代理拥有持久 Session、至多一个进程内 Activation，并通过 `sendMessage()`、`interrupt()` 和列表控制后续工作。提供方在启动前通过 `SubagentCapabilities` 声明是否支持路由覆盖、结构化输出、深度限制、工具过滤和 persona；缺少能力时应明确返回 `UNSUPPORTED_CAPABILITY`，不能静默忽略请求。
+
+可继续子代理的模型消息只允许相邻 parent/child 关系：running 目标在最近步骤边界接收，waiting 目标被唤醒，无 Activation 的目标冷恢复后接收。`subagentCatalog` 投影按父会话事件顺序列出直接子级的持久身份、模式和标签，不加载或恢复子代理；一次性子代理不进入可继续列表。中断只取消当前轮次并保留未领取的 inbox，消息接受后的调用方取消不撤销已发布运行。
+
 ## 实验性智能体团队（Agent Teams）
 
-`ctx.agentTeams` 由持久化的 Lead 会话承载团队 roster、同伴邮箱和共享任务 DAG。成员拥有持久 Session id，消息先写入 Lead 会话再尝试投递；任务每次变更都会递增 `revision`，更新必须使用比较并交换，`writeScopes` 只是提示性路径前缀，不是文件锁。
+`ctx.agentTeams` 是公开发布但仍属实验性的协作 seam，由持久化 Lead 会话承载团队 roster、同伴邮箱和共享任务 DAG。成员拥有持久 Session id，消息先写入 Lead 会话再尝试投递；任务每次变更都会递增 `revision`，更新必须使用比较并交换，`writeScopes` 只是提示性路径前缀，不是文件锁。
 
-团队服务提供 `membership`、`listMembers`、`spawnTeammate`、`sendMessage`、`createTask`、`getTask`、`listTasks`、`updateTask`、`waitForChange` 和 `interrupt` 等方法；Lead 才能创建或中断成员。团队消息写入 Lead 会话后统一尝试通过 `Steer` 投递：运行中的成员在最近步骤边界收到，空闲成员被唤醒，非活动成员冷恢复；调用方不能选择 quiet 或 followup 调度模式，工具包当前提供 9 个工具。该功能仍是实验性的，需要持久化会话和 `@deepseek-ai/dsh-experimental-tool-agent-team` 工具包，不能把它当作普通一次性子代理队列。
+团队服务提供 `membership`、`listMembers`、`spawnTeammate`、`sendMessage`、`createTask`、`getTask`、`listTasks`、`updateTask`、`waitForChange` 和 `interrupt` 等方法；Lead 才能创建或中断成员。团队消息写入 Lead 会话后统一尝试通过 `Steer` 投递：运行中的成员在最近步骤边界收到，空闲成员被唤醒，非活动成员冷恢复；调用方不能选择 quiet 或 followup 调度模式，工具包当前提供 9 个工具。使用时显式安装 `@deepseek-ai/dsh-experimental-agent-team` 与 `@deepseek-ai/dsh-experimental-tool-agent-team`，不能把它当作普通一次性子代理队列。
 
 ## 会话导出
 
@@ -183,7 +215,12 @@ turn/end
 - [工具执行流水线](https://deepseek-harness.github.io/deepseek-harness/reference/tool-execution-pipeline)
 - [能力 seam](https://deepseek-harness.github.io/deepseek-harness/reference/capability-seams)
 - [API Gateway](https://deepseek-harness.github.io/deepseek-harness/reference/api-gateway)
+- [模型配置](https://deepseek-harness.github.io/deepseek-harness/guide/providers)
 - [会话投影](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/session-projection)
 - [会话持久化](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/persistence)
+- [子代理](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/subagent)
+- [文件系统](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/filesystem)
+- [工作区](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/workspace)
+- [反馈](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/feedback.zh.md)
 - [网络代理指南](https://deepseek-harness.github.io/deepseek-harness/guide/network-proxy)
 - [新增 Remote API 实操手册](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cookbook/adding-a-remote-api.zh.md)

@@ -1,10 +1,10 @@
 ---
 name: dsh
 description: >-
-  用户需要安装、运行、配置、排错或扩展 DeepSeek Harness（dsh）时使用，包括 profile 组合、Web 界面、工作区、智能体模式预设、无头任务、SDK、ACP、插件、Cordis、工具、模型适配器、会话、会话持久化、网络代理、设置卡片、图片附件、文件引用、Remote API、会话投影、子代理、智能体团队、会话导出和能力接缝。
+  用户需要安装、运行、配置、排错或扩展 DeepSeek Harness（dsh）时使用，包括 profile 组合、Web 界面、工作区、工作区文件、智能体模式预设、无头任务、SDK、ACP、插件、Cordis、工具、模型适配器、会话、会话格式迁移、会话持久化、网络代理、设置卡片、图片和文件附件、文件交付、反馈、文件引用、Remote API、会话投影、子代理、智能体团队、会话导出和能力接缝。
 metadata:
   author: Tnnevol
-  version: "2026.09.04"
+  version: "2026.09.13"
 ---
 
 # dsh 技能
@@ -30,7 +30,7 @@ npx @deepseek-ai/dsh web
 
 ### 使用源码
 
-源码开发要求 Node.js 22.19+ 或 24+，并使用仓库固定的 pnpm 版本。当前源项目版本为 `0.1.2-rc.1`：
+源码开发要求 Node.js 22.19+ 或 24+，并使用仓库固定的 pnpm 版本。当前源项目版本为 `0.1.5-rc.2`，仍处于开发者预览阶段，未来可能包含破坏性变更：
 
 ~~~sh
 git clone https://github.com/deepseek-ai/deepseek-harness.git
@@ -73,7 +73,7 @@ dsh -V
 
 dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 可以关闭本机启动后的默认浏览器交接。无头模式接收一条任务文本，成功完成时退出码为 0，其他结束原因退出码为 1。`sdk` 与 `sdk-minimal` 通过标准输入输出承载 JSON-RPC，`acp` 承载 Agent Client Protocol。启动器参数必须出现在应用参数之前；应用参数从第一个无法识别的令牌开始交给 profile。
 
-首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。内置智能体模式包括标准模式、PTC 模式、极简模式和创造模式：标准模式功能完整，PTC 模式默认不提供 `workflow` 工具而通过 PTC SDK 组合多步操作，极简模式只提供持久 bash 与 `str_replace_editor`，创造模式用于编写自定义智能体预设。源码中的 `web`、`headless`、`sdk`、`sdk-minimal` 和 `acp` profile 会在首次使用时自动初始化。
+首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。内置智能体模式包括标准模式、PTC 模式、极简模式和创造模式：标准模式功能完整，PTC 模式默认不提供 `workflow` 工具而通过 PTC SDK 组合多步操作，极简模式只提供按平台选择的持久 shell，创造模式用于编写自定义智能体预设。基于 base 的默认文件编辑工具是 `read`、`write` 和 `edit`；`str_replace_editor` 需要显式通过 patch 启用。源码中的 `web`、`headless`、`sdk`、`sdk-minimal` 和 `acp` profile 会在首次使用时自动初始化。
 
 ## 关键规则
 
@@ -89,11 +89,15 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 10. **生命周期必须可逆。** 通过 ctx.on()、注册表或 ctx.effect() 建立的资源要能在插件卸载、HMR 和退出时清理；异步清理必须等待完全停稳。
 11. **不要凭记忆猜配置和类型。** 优先运行 --help、--dump-config，再查看当前分支的配置目录、子系统页面或源码。
 12. **会话投影必须通过既有能力接缝接入。** `ctx.sessionProjections` 负责按提交事件增量折叠领域状态，使用 `stateOf()` 读取宿主状态、使用 `snapshot()` 读取客户端视图；缺少注册表或必需的投影键时要明确失败，不能静默提供默认值。`SessionSeq` 是事件序号，`SessionLogOffset` 是日志读取偏移，二者不能混用。
+13. **当前会话格式是 V3。** `SESSION_FORMAT_VERSION` 和发布状态记录才是格式权威；已发布日志通过 v0→v1→v2→v3 相邻迁移链恢复，物理 generation 发布后不可重命名、替换或删除，未来格式要明确拒绝，不要手工改写会话文件。
+14. **模型需要用户接收文件时必须显式交付。** 文件创建或修改完成后，在最终回复前调用 `present`，传入 Session 文件系统可访问的文件路径；仅在回复中提及路径不等价于交付，`present` 不复制文件内容。
+15. **工作区文件读取遵守 Session 授权。** `workspaceFiles` 负责有界文本或字节读取、目录列举和变更流；文件读取可按文件系统权限访问工作区外路径，但 `list` 与 `changes` 只允许 Session 工作区，不能自行拼接宿主路径绕过检查。
+16. **反馈不启动模型轮次。** `/feedback`、`sessionFeedback` 和消息反馈都写入会话日志，不进入模型历史；消息反馈使用版本令牌做比较并交换，过期更新应报告冲突而不是覆盖。
 
 ## 扩展开发工作流
 
 1. 明确需求是运行配置、用户级插件，还是仓库内新包。
-2. 用架构与运行时把需求映射到服务、事件、工具、会话、设置卡片、图片附件、文件引用、Remote、子代理、智能体团队或 UI seam。
+2. 用架构与运行时把需求映射到服务、事件、工具、会话、会话格式、设置卡片、图片或文件附件、文件交付、工作区文件、文件引用、Remote、子代理、智能体团队或 UI seam。
 3. 阅读对应的中文教程或实操手册；复杂能力不要直接改 agent loop。
 4. 为注册、卸载、错误路径和真实组合入口补充测试；模型可见或用户可见变化需要快照或端到端覆盖。
 5. 运行与改动表面匹配的最小检查集；包或构建产物变化时再增加 pnpm run build、pnpm run typecheck、pnpm run lint 等检查。
@@ -106,11 +110,14 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 - **模型接入**：通过 ctx.llm 注册适配器，统一处理流式分片、工具调用、用量、取消和错误；模型目录发现支持 `openai-completions`、`openai-responses` 和 `anthropic-messages`。
 - **模型工具**：通过 ctx.tools.register() 注册 schema、执行器、策略钩子和 UI 展示投影。
 - **会话与 agent**：通过 `SessionHandle` 和 JSONL 持久化提供方记录模型可见事实，通过实时 agent 事件协调输入、步骤、请求、继续执行和错误恢复。
+- **会话格式**：使用 V3 当前逻辑格式和 v0→v1→v2→v3 相邻迁移链，保留旧 generation 并在不支持时报告格式错误。
 - **网络代理**：从启动环境或 `$DSH_HOME/.env` 读取 `HTTP_PROXY`、`HTTPS_PROXY`、`NO_PROXY`；支持企业 CA 配置，不支持 SOCKS 代理地址。
+- **工作区文件与交付**：通过 `workspaceFiles` 提供有界文件预览和变更观察，通过 `present` 声明用户要接收的文件，并支持默认应用打开。
 - **Web 扩展**：通过设置卡片暴露配置和凭据，通过可回放的图片附件引用传递富内容，通过 Remote 和客户端适配器接入浏览器；会话投影为客户端提供按会话派生的完整状态。
 - **文件与会话**：提供 `@file` 路径补全；通过 `/export` 将会话树、子会话和附件作为 ZIP 下载，导出不会创建模型轮次。
 - **子代理与任务**：通过子代理能力接缝启动一次性或可继续的后台工作，并检查能力、权限、可选 provider/model/reasoningEffort 和任务生命周期。
 - **智能体团队**：通过实验性的 `ctx.agentTeams` 管理成员、消息和共享任务板，使用 `Steer` 唤醒或继续成员。
+- **用户反馈**：通过 `/feedback`、`sessionFeedback` 和 `messageFeedback` 记录 Session 或单条 assistant 消息的反馈，不触发模型工作。
 - **隐私与遥测**：默认按反馈门控；`DSH_TELEMETRY_MODE=DISABLED` 可强制全部留在本地，详细规则见命令行参考。
 - **能力替换**：文件系统、shell、终端、沙箱、审批、子 agent、Web、存储和持久化均通过可替换 seam 接入。
 - **开发方式**：既可以用本地 cordis.yml 或 --patch 快速验证，也可以发布带 dsh.bundle 声明的插件包供 profile 安装。
@@ -121,6 +128,11 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 - 参数不生效：确认启动器参数位于应用参数边界之前，并检查 patch 是否整体替换掉了读取 ctx.cmdlineArgs 的 !!js 配置。
 - Web 首次使用异常：确认已在设置中保存模型并选择工作区，再检查工作区中的 AGENTS.md、权限模式和工具模式。
 - 工具模式启动失败：确认 `DSH_TOOLS_MODE` 只使用 `native`、`ptc` 或 `both`，不要使用旧的 `code` 值。
+- 文件编辑工具缺失：确认当前 profile 默认使用 `read`、`write`、`edit`；需要 `str_replace_editor` 时在 profile、home 或本次调用的 patch 中显式插入对应配置。
+- 会话格式无法读取：确认当前写入器为 V3，检查持久化 provider 是否包含所需的相邻迁移；不要删除旧 generation 或把未来格式强行降级。
+- 文件没有出现在交付卡片：确认文件已经创建且可由当前 Session 文件系统访问，并在最终回复前调用 `present`；仅输出文件路径不会生成交付声明。
+- 工作区文件预览失败：确认请求携带正确的 Session 身份和工作区作用域；文本读取使用行窗口，字节读取使用 `readBytes`，目录与变更观察不能越过工作区。
+- 反馈操作失败：消息反馈使用当前 `version` 做 `ifVersion` 比较并交换；Session 级反馈只接受 live Session，反馈事件不会进入模型上下文。
 - 网络代理不生效：确认 `HTTP_PROXY`、`HTTPS_PROXY` 在启动前已设置，或写入 `$DSH_HOME/.env`；用 `NO_PROXY` 排除目标，用 `NODE_EXTRA_CA_CERTS` 处理 TLS 拦截代理，并注意 SOCKS 地址不受支持。
 - 会话没有落盘：确认代码使用 `ctx.sessionPersistence.create()` 或 `ctx.sessionPersistence.open()` 获取 `SessionHandle`，并在结束前调用 `flush()`；只调用 `ctx.sessions.create` 不会让会话日志自动持久化。
 - 模型列表为空：检查适配器协议、`baseURL`、凭据和发现接口；`anthropic-messages` 使用 `/v1/models?limit=1000`，不会继续读取 `has_more`。
@@ -142,3 +154,12 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 - [扩展开发](references/extension.md)
 - [文档索引](references/docs-map.md)
 - [网络代理指南](https://deepseek-harness.github.io/deepseek-harness/guide/network-proxy)
+- [模型配置指南](https://deepseek-harness.github.io/deepseek-harness/guide/providers)
+- [Python SDK](https://deepseek-harness.github.io/deepseek-harness/guide/python-sdk)
+- [官方 CLI 参考](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/reference/README.zh.md)
+- [会话格式状态](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/session-format-status.zh.md)
+- [工作区文件 API](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/api/workspace-files/README.zh.md)
+- [文件交付工具](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/fs/tool-present/README.zh.md)
+- [GitHub 评审会话](https://deepseek-harness.github.io/deepseek-harness/guide/github-review)
+- [会话内提醒](https://deepseek-harness.github.io/deepseek-harness/guide/schedule)
+- [记忆 MCP](https://deepseek-harness.github.io/deepseek-harness/guide/mcp-memory)

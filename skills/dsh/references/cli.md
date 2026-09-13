@@ -2,7 +2,7 @@
 
 本文整理 apps/cli/reference/README.zh.md、docs/development.zh.md 和用户指南中的可操作内容。命令、配置键和环境变量保持源项目原名；解释使用中文。
 
-当前源项目版本为 `0.1.2-rc.1`。源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
+当前源项目版本为 `0.1.5-rc.2`。项目仍处于开发者预览阶段，未来可能包含破坏性变更。源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
 
 ## 运行方式
 
@@ -39,9 +39,10 @@ dsh 会为模型、Web 搜索、Web 抓取和 HTTP MCP 服务器请求读取标�
 dsh --profile <name>
 dsh web
 dsh --profile headless "执行一项任务"
+dsh --profile <name> --from-default-profile <template>
 ~~~
 
-web 是 `--profile web` 的固定别名。`web`、`headless`、`sdk`、`sdk-minimal` 和 `acp` 在首次使用时从随发行版提供的模板自动初始化；其他不存在的 profile 需要先执行插件管理命令安装组合包。随附组合包还包括 `@deepseek-ai/dsh-sdk-app`、`@deepseek-ai/dsh-sdk-minimal` 和 `@deepseek-ai/dsh-acp-app`。
+web 是 `--profile web` 的固定别名。`web`、`headless`、`sdk`、`sdk-minimal` 和 `acp` 在首次使用时从随发行版提供的模板自动初始化；其他不存在的 profile 需要先执行插件管理命令安装组合包，或使用 `--from-default-profile` 从随附模板创建。随附组合包还包括 `@deepseek-ai/dsh-sdk-app`、`@deepseek-ai/dsh-sdk-minimal` 和 `@deepseek-ai/dsh-acp-app`。
 
 各内置 profile 的运行边界如下：
 
@@ -53,7 +54,7 @@ web 是 `--profile web` 的固定别名。`web`、`headless`、`sdk`、`sdk-mini
 | `sdk-minimal` | 标准输入输出 JSON-RPC | 独立组合，固定 `danger-full-access`，不发现指令、不使用 SQLite |
 | `acp` | 标准输入输出 Agent Client Protocol | 通过 ACP 接入智能体 |
 
-profile 的 `patchReload` 行为也按入口区分：自定义默认配置支持实时重载，`web` 支持实时重载；`headless`、`sdk`、`sdk-minimal` 和 `acp` 只在启动时读取配置，修改后需要重启进程。
+profile 的 `patchReload` 行为也按入口区分：自定义 profile 和 `web` 支持实时重载；`headless`、`sdk`、`sdk-minimal` 和 `acp` 只在启动时读取配置，修改后需要重启进程。`desktop` 是 Electron 保留的 profile 名称，CLI 不负责启动、dump 或管理它。
 
 profile 的有效配置树按以下顺序叠加到空根节点：
 
@@ -63,6 +64,15 @@ profile 的有效配置树按以下顺序叠加到空根节点：
 4. 命令行中按顺序传入的每个 --patch <path>。
 
 后应用的层优先级更高。patch 按 id 定位配置行，可以插入新行，也可以替换目标行；替换时整个 config 值都会被替换，不会做深度合并。组合包从 dsh 安装目录或 profile 的依赖中解析，普通 patch 中的裸插件名从 profile 目录按 Node 模块规则向上查找。
+
+使用 `dsh --profile <name> --from-default-profile <template>` 可以从 `web`、`headless`、`sdk`、`sdk-minimal` 或 `acp` 模板创建新的自定义 profile。目标名称不能是内置 profile，目标目录必须尚不存在；该命令只复制模板的 bundle 列表和 `patchReload`，不会复制模板依赖、用户 patch 或继承字段。创建成功后会继续启动目标 profile：
+
+~~~sh
+dsh --profile rescue --from-default-profile web
+dsh --profile rescue
+~~~
+
+目标目录已经存在、模板未知或目标名称为 `desktop` 时，命令在修改或启动前失败。`--dump-config` 与 `--dump-default-config` 也接受该选项，会初始化并输出配置树但不启动应用；后续应用启动失败不会自动删除已创建的 profile。
 
 ## 应用参数边界
 
@@ -88,7 +98,7 @@ dsh --profile headless "检查测试并修复失败项"
 
 启动器自身会消费一个 --。如果应用必须收到字面量 --，需要写成 -- --。dsh --help 显示启动器帮助；dsh web --help 显示 Web 应用帮助并且不启动应用。
 
-无头任务会创建一个新的持久智能体，提交任务，等待完全停稳，刷新会话并读取最终的 `turn/end` 原因，然后从持久事件区间读取最后一段非空 assistant 文本。非空的提供方推理会以 `dsh: reasoning:` 前缀流式写入 stderr，最终文本只写入 stdout；没有任务文本属于用法错误，成功完成退出 0，其他结束原因退出 1。该 profile 不启动 HTTP 服务器、Web 运行时或浏览器客户端。
+无头任务会创建一个新的持久智能体，提交任务，等待完全停稳，刷新会话并读取最终的 `turn/end` 原因，然后从持久事件区间读取最后一段非空 assistant 文本。非空的提供方推理会以 `dsh: reasoning:` 前缀流式写入 stderr，最终文本只写入 stdout；没有任务文本属于用法错误，只有 `completed` 原因成功退出 0，其他结束原因退出 1，错误原因还会输出 `dsh: <code>: <message>`。该 profile 不启动 HTTP 服务器、Web 运行时或浏览器客户端。
 
 ## 配置查看
 
@@ -105,7 +115,7 @@ dsh web --dump-config
 - 未匹配的 patch 目标输出到标准错误。
 - dump 不运行应用参数提供方；带应用参数的 dump 会被拒绝。
 
-需要改配置时，先保存 dump 结果，再以最小 patch 覆盖目标行，避免无意删除组合包提供的字段或运行时表达式。
+需要改配置时，先保存 dump 结果，再以最小 patch 覆盖目标行，避免无意删除组合包提供的字段或运行时表达式。dump 初始化缺失的 profile 文件，但不会准备 `$DSH_HOME/profiles/node_modules` 的运行时后备链接；插入行中的相对插件名按对应 patch 文件所在目录解析。
 
 ## 插件管理
 
@@ -117,9 +127,9 @@ dsh plugin --profile <name> update
 dsh --profile <name>
 ~~~
 
-dsh plugin 在 profile 不存在时初始化它，然后在 profile 目录中把后续参数转发给 pnpm。相对路径 spec（例如 .、../plugin、file:、link:）优先相对于调用目录解析。
+dsh plugin 在 profile 不存在时初始化它：有随附模板的 profile 使用对应模板，其他名称只安装 `@deepseek-ai/dsh-base`；然后在 profile 目录中把后续参数转发给 pnpm。相对路径 spec（例如 .、../plugin、file:、link:）优先相对于调用目录解析，因此在插件 checkout 中执行 `add .` 时安装的是当前 checkout。
 
-成功执行后，dsh 会根据安装状态重建 dsh.profile.bundles：依赖的 manifest 声明了 dsh.bundle.patch 时，它的 patch 会加入组合层；没有组合声明的依赖仍会保留为普通依赖并提示一次；被移除的依赖会从组合层移除。该命令支持后续的所有 pnpm 子命令，不限于 add、remove、why 和 update。
+成功执行后，dsh 会根据安装状态重建 dsh.profile.bundles：依赖的 manifest 声明了 `dsh.bundle.patch` 时，它的 patch 会加入组合层；依赖在 `update` 后新增该声明也会随即激活；没有组合声明的依赖仍会保留为普通依赖并提示一次；被移除的依赖会从组合层移除。该命令支持后续的所有 pnpm 子命令，不限于 add、remove、why 和 update。
 
 Git 插件如果依赖 prepare 构建脚本，pnpm 10+ 可能要求在 profile 的 pnpm-workspace.yaml 中允许该构建。首次安装失败时，按照 pnpm 输出的 allowBuilds 键添加后重试；已经构建好的压缩包或本地检出通常不需要该许可。
 
@@ -131,7 +141,7 @@ dsh plugin --profile <name> add @deepseek-ai/dsh-subagent-claude-code
 dsh plugin --profile <name> remove @deepseek-ai/dsh-subagent-codex
 ~~~
 
-添加、移除或更新 Bundle 后，正在运行的 profile 仍保留启动时的 Bundle 集合，必须重启 profile。新启动的 Agent 还需要在复制出的 Preset 中启用对应工具行；只安装 provider 并不会自动让现有 Agent 看到工具。
+添加、移除或更新 Bundle 后，正在运行的 profile 仍保留启动时的 Bundle 集合，必须重启 profile；普通 profile 或 home 的 `cordis.patch.yml` 修改则按 `patchReload` 设置处理。新启动的 Agent 还需要在复制出的 Preset 中启用对应工具行；只安装 provider 并不会自动让现有 Agent 看到工具。
 
 ## Web 行为
 
@@ -150,7 +160,11 @@ dsh web --no-open
 
 新会话默认使用 `workspace-write` 权限预设；`DSH_PERMISSION_MODE` 可改变进程级回退值。`DSH_TOOLS_MODE` 只接受 `native`、`ptc` 或 `both`，其他值会导致启动失败。
 
-首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。内置智能体模式包括标准模式、PTC 模式、极简模式和创造模式：标准模式提供完整编码能力，PTC 模式默认不提供 `workflow` 工具，而是通过 PTC SDK 组合多步 TypeScript 操作，极简模式只提供持久 bash 与 `str_replace_editor`，创造模式用于编写自定义智能体预设。极简模式固定使用 `You are a helpful software engineer assistant.` 作为完整系统提示词，不包含其他提示词段落。
+首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。内置智能体模式包括标准模式、PTC 模式、极简模式和创造模式：标准模式提供完整编码能力，PTC 模式默认不提供 `workflow` 工具，而是通过 PTC SDK 组合多步 TypeScript 操作，极简模式只提供按平台选择的持久 shell，创造模式用于编写自定义智能体预设。基于 base 的默认文件编辑工具为 `read`、`write` 和 `edit`；`str_replace_editor` 需要显式通过 patch 启用。极简模式固定使用 `You are a helpful software engineer assistant.` 作为完整系统提示词，不包含其他提示词段落。
+
+标准、PTC 和 Cordis preset 还提供 `present` 文件交付工具。模型创建或修改了用户需要接收的文件后，应在最终回复前调用 `present` 声明路径；该工具只记录文件路径和说明，不复制文件内容。Web 交付卡片可在右侧 Sidebar 预览文件，也可调用宿主默认应用打开。
+
+Web 的文件预览通过 `workspaceFiles` 按 Session 身份读取：`read` 提供有界 UTF-8 行窗口，`readBytes` 提供有界原始字节窗口，`readAll` 与 `readRelated` 提供受限完整读取，`list` 与 `changes` 只作用于 Session 工作区。不要把宿主路径直接交给浏览器绕过 Session 授权。
 
 ## 凭证与环境
 
@@ -164,22 +178,26 @@ export DEEPSEEK_SEARCH_BASE_URL=https://...
 
 `DEEPSEEK_BASE_URL` 和 `DEEPSEEK_SEARCH_BASE_URL` 可选。搜索和 HTTP fetch 仍会拒绝非公网目标。不要提交真实密钥。
 
-模型目录发现支持 `openai-completions`、`openai-responses` 和 `anthropic-messages`。OpenAI 协议请求 `{baseURL}/models`；Anthropic 协议请求 `/v1/models?limit=1000`，使用 `x-api-key` 和 `anthropic-version: 2023-06-01`。响应可以是标准 `data` 数组或 `models` 对象映射；Anthropic 只读取前 1000 条，不跟随 `has_more`。配置 profile 的 headers 会参与发现，类型化密钥优先。
+模型配置可以使用已安装提供方目录，也可以在 `$DSH_HOME/settings.yaml` 中声明自定义提供方。协议支持 `openai-completions`、`openai-responses` 和 `anthropic-messages`；一个提供方只使用一种协议。模型目录中的 `models` 列表会整体替换该路由的目录，`modelOverrides` 用于只修改某个已安装模型，`reasoningEfforts`、`input` 和 `compat` 用于声明推理等级、图片能力和网关兼容性。
 
-基础组合包默认挂载原生 DeepSeek 适配器、设置与凭据提供方、稳定的 `web_search` 和 `web_fetch`、仅限公网的 HTTP 抓取提供方，以及按反馈门控的会话遥测。Web 应用会禁用基础工具配置项，再通过 `cordis`、`ptc` 与 `standard` 智能体预设暴露相同工具。已启用的抓取调用会在所有沙箱与审批模式下执行，无需逐次确认；提供方会在连接前拒绝非公开目的地址。
+“获取可用模型”只对目录未描述的自定义路由发起网络请求：OpenAI 协议请求带 bearer 鉴权的 `GET {baseURL}/models`，Anthropic 协议请求 `/v1/models?limit=1000`，使用 `x-api-key` 和 `anthropic-version: 2023-06-01`；列表地址会规范化末尾的 `/v1`，模型请求仍使用配置中的原始 `baseURL`。响应可以是标准 `data` 数组或 `models` 对象映射；Anthropic 只读取前 1000 条，不跟随 `has_more`。配置 profile 的 headers 会参与发现，新填写的密钥优先于已存凭据。探测失败时手动填写模型 ID，结果等价。
 
-遥测默认按反馈门控：用户记录 `/feedback` 前不上传数据，每条反馈会上传尚未共享的会话记录；恢复的会话只共享当前生命周期。通过环境变量覆盖时：
+`deepseek-official` 路由默认提供建议性目录：`deepseek-flash`、`deepseek-v4-flash-vision-exp`（支持图片）以及 `deepseek-v4-flash`、`deepseek-v4-pro`（仅文本），默认上下文窗口为 1,000,000 token。显式写入 `models` 会替换这份目录；已配置模型 ID 会原样发送到协议，因此网关必须实际支持所选 ID。DeepSeek 路由默认推理强度为 `high`，可选 `off`、`low`、`high` 和 `max`。
 
-- `DSH_TELEMETRY_MODE=FULL`：以 OTLP/HTTP 日志流式发送每条已投影的会话事件。
-- `DSH_TELEMETRY_MODE=DISABLED`：全部数据留在本地。
+基础组合包默认挂载原生 DeepSeek 适配器、设置与凭据提供方、稳定的 `web_search` 和 `web_fetch`、仅限公网的 HTTP 抓取提供方、`present` 文件交付工具，以及 OTel 会话上传。Web 应用会禁用基础工具配置项，再通过 `cordis`、`ptc` 与 `standard` 智能体预设暴露相同工具。已启用的抓取调用会在所有沙箱与审批模式下执行，无需逐次确认；提供方会在连接前拒绝非公开目的地址。
+
+反馈记录在会话日志中，不会启动模型工作。OTel 会话上传默认对所有用户和提供方使用 `FEEDBACK_ONLY`：新的文本反馈、消息评分、编辑或撤回会释放截至该事件的完整权威日志前缀，包含存储的上下文；后续记录等待下一次显式反馈。主动开启的 DeepSeek 会话日志贡献器是独立的请求路径，不由以下 OTel 设置控制。通过环境变量覆盖时：
+
+- `DSH_TELEMETRY_MODE=DISABLED`：禁止 OTel 捕获，全部数据留在本地。
+- `DSH_TELEMETRY_MODE=FULL`：当前构建拒绝该值，不要用它开启全量上传。
 - `DSH_TELEMETRY_OTLP_URL`：指定其他 collector。
-- 非空的 `DSH_TELEMETRY_DISABLED`：最终强制关闭遥测，优先级最高。
+- 非空的 `DSH_TELEMETRY_DISABLED`：最终强制关闭 OTel，优先级最高。
 
-基础配置没有默认脱敏规则，导出内容可能包含会话文本、工具参数、工具结果和工作区路径。默认不会启用 MCP 服务；CLI 虽然随附 `@deepseek-ai/dsh-mcp-client`，但通过 patch 启用的 MCP 服务器命令会在智能体沙箱之外作为受信任进程运行，启用前应确认来源和权限。
+基础配置没有默认脱敏规则，导出内容可能包含会话文本、工具参数、工具结果和工作区路径。默认不会启用 MCP 服务；CLI 虽然随附 `@deepseek-ai/dsh-mcp-client`，但通过 patch 启用的 MCP 服务器命令会在智能体沙箱之外作为受信任进程运行，启用前应确认来源和权限。基础组合的 `read`、`write`、`edit` 是默认文件编辑工具，`str_replace_editor` 不再默认启用；`sdk-minimal` 只提供按平台选择的持久 shell，不包含文件系统工具、workspace 指令、skills、jobs 或 subagent。
 
 ## SDK、极简 SDK 与 ACP
 
-`sdk` 和 `sdk-minimal` profile 都通过标准输入输出承载 JSON-RPC；`acp` profile 通过标准输入输出承载 Agent Client Protocol。`sdk-minimal` 是独立组合，不继承基础 profile 的指令发现、SQLite 会话索引、审批和权限设置，权限固定为 `danger-full-access`，因此只适合明确受信任的调用方。
+`sdk` 和 `sdk-minimal` profile 都通过标准输入输出承载 JSON-RPC；`acp` profile 通过标准输入输出承载 Agent Client Protocol。`sdk` 基于 base，默认文件编辑工具是 `read`、`write`、`edit`；`sdk-minimal` 是独立组合，只提供按平台选择的持久 shell，以未压缩 JSONL 保存会话，不继承基础 profile 的指令发现、文件系统工具、SQLite 会话索引、审批、权限设置、skills、jobs 或 subagent，权限固定为 `danger-full-access`，因此只适合明确受信任且隔离的调用方。需要在 `sdk-minimal` 中使用 `str_replace_editor` 时，必须通过 patch 显式加入它及所需的文件系统提供方。
 
 Python SDK 支持 Linux x64/arm64、macOS arm64 14+ 和 Windows x64，要求 Python 3.10+。`deepseek-harness-sdk` 包含匹配的原生运行时 wheel 和 `dsh`，通常不需要另装 Node；使用 `--workspace`、`--dsh-home` 和 `--session-id` 可隔离工作区、配置目录和会话。完整安装与 API 示例见 [Python SDK](https://deepseek-harness.github.io/deepseek-harness/guide/python-sdk)。
 
@@ -196,6 +214,22 @@ Remote 是当前宿主端向客户端公开一元方法的契约。调用结果�
 持久会话日志通过 `ctx.sessionPersistence` 管理：`create()`、`open()`、`stat()` 和 `list()` 负责会话生命周期，`create()` 与 `open(id, 'write')` 返回 `SessionHandle`。句柄提供 `read()`、`append()`、`flush()` 和 `close()`；`append()` 是尽力写入，`flush()` 才是耐久屏障，写句柄遵守单写者约束，关闭操作会等待待写内容完成。
 
 只有通过句柄获取的会话才会持久化；仅调用 `ctx.sessions.create` 再执行 `session/flush` 不会写入持久会话日志。当前唯一随附的提供方是 `dsh-session-persistence-jsonl`，默认使用每个会话一个 `.jsonl.zstd` 文件，配置 `compression: 'none'` 时使用换行文本。会话持久化日志与基础 profile 的内存 SQLite 会话索引是两层不同能力。
+
+## 会话格式与迁移
+
+当前写入格式由 `SESSION_FORMAT_VERSION` 标识为 V3；发布状态记录中的 `latestReleasedVersion: 3` 以 `dsh-v0.1.5-alpha.1` 作为发布证据。包版本、投影缓存版本和 fixture 文件名都不是会话格式的权威来源。
+
+JSONL provider 使用 v0 的 `session.jsonl[.zstd]` 和 v1 及后续版本的 `session.vN.jsonl[.zstd]` generation。读取 `stat`、`list` 或 `open` 时会选择最高的规范 generation，并通过 v0→v1→v2→v3 的相邻迁移链恢复当前逻辑记录；写入旧日志时在源文件旁排他发布最终版本命名的后继。已经发布的 generation 不重命名、不替换、不删除，未来格式必须明确拒绝。
+
+V3 将系统提示词作为 `system/message` surface 节点记录，并保留 `assistant/attempt`、内嵌 assistant stream、精确的 `request/header` 和工具结果语义。V2 到 V3 的迁移还会插入系统头节点、重映射受审计的序号引用，并把旧 PTC 事件标签转换为当前标签；迁移不会修改设置或文件。格式开发应增加相邻迁移包、更新格式目录和发布状态，而不是直接改写已有会话文件。
+
+## Web 文件与反馈能力
+
+用户在 Web 中附加的图片会在消息接受前完成校验、规范化和持久化；通用文件按字节原样保存并以不透明引用传递，模型需要时通过文件工具读取。`fileUpload` 为 Session 提供有进度、可取消的流式上传和暂存凭证，凭证在 prompt 接纳时消费。
+
+用户要求接收文件时，模型应在最终回复前调用 `present` 声明路径；`present` 只记录可访问文件，不复制文件内容。`workspaceFiles` 提供按 Session 授权的文本分页、字节窗口、完整文件读取、目录列举和变更流；文件读取遵循文件系统权限，`list` 与 `changes` 仍限制在工作区内。
+
+Web 中的 `/feedback`、`sessionFeedback` 和消息反馈写入会话日志但不启动模型轮次。逐消息反馈的 `put`、`delete` 使用 `ifVersion` 做乐观并发校验，过期版本返回冲突；Session 级反馈只接受 live Session。
 
 ## 源码开发检查
 
