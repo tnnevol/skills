@@ -1,7 +1,12 @@
 ---
 name: memos
+displayName: memos
+slug: tnnevol-memos
 description: >-
   Secure, script-based interface for Memos — a self-hosted timeline for quick notes, daily logs, and snippets. Use this skill whenever the user wants to interact with Memos: creating, listing, updating, or deleting notes; managing tags, comments, reactions, or relations; uploading attachments; or managing shares. Even if the user just says "check my notes", "add a comment", "pin that", "show my tags", "what did I write about X", or "capture this thought", use this skill. All API calls go through secure scripts that handle authentication and sanitize credentials automatically. Memos works as a timeline (not a folder-based notebook) — use tags to organize notes instead of directories.
+metadata:
+  author: Tnnevol
+  version: "1.0.2"
 compatibility:
   runtime: node >= 18 (or bun, deno)
   dependencies: none (zero-dependency, uses native fetch)

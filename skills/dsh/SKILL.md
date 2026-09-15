@@ -1,10 +1,13 @@
 ---
 name: dsh
+displayName: dsh
+slug: dsh
+iconUrl: "https://skillhub-1388575217.cos.accelerate.myqcloud.com/skill-comments/uploads/612977/da575d0cd3fd423383975219fcf3695a.jpg"
 description: >-
   用户需要安装、运行、配置、排错或扩展 DeepSeek Harness（dsh）时使用，包括 profile 组合、Web 界面、工作区、工作区文件、智能体模式预设、无头任务、SDK、ACP、插件、Cordis、工具、模型适配器、会话、会话格式迁移、会话持久化、网络代理、设置卡片、图片和文件附件、文件交付、反馈、文件引用、Remote API、会话投影、子代理、智能体团队、会话导出和能力接缝。
 metadata:
   author: Tnnevol
-  version: "2026.09.13"
+  version: "1.0.2"
 ---
 
 # dsh 技能

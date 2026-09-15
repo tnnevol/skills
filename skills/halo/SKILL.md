@@ -1,7 +1,12 @@
 ---
 name: halo
+displayName: halo
+slug: tnnevol-halo
 description: >
   Assistant for Halo CMS (https://www.halo.run/). Use when the user types /halo commands or asks about Halo blog posts management, tags, categories, singlepages. Triggers: /halo help, /halo list, /halo create, /halo get, /halo update, /halo delete, /halo publish, /halo list-tags, /halo create-tag, /halo get-tag, /halo update-tag, /halo delete-tag, /halo list-categories, /halo create-category, /halo get-category, /halo update-category, /halo delete-category, /halo list-singlepages, /halo create-singlepage, /halo get-singlepage, /halo update-singlepage, /halo delete-singlepage, /halo publish-singlepage, /halo unpublish-singlepage, managing Halo blog posts, creating articles in Halo, listing tags, creating tags, updating tags, deleting tags, listing categories, creating categories, updating categories, deleting categories, listing singlepages, creating singlepages, updating singlepages, deleting singlepages.
+metadata:
+  author: Tnnevol
+  version: "1.0.2"
 ---
 
 # SKILL: halo

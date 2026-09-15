@@ -1,9 +1,11 @@
 ---
 name: chandao
+displayName: chandao
+slug: chandao
 description: Assistant for 禅道 (ZenTao) project management system via JS scripts. Use when the user asks about 禅道, lists/creates/updates projects, products, users, tasks, bugs, or manages project workflow via natural language commands.
 metadata:
   author: Tnnevol
-  version: "2026.05.29"
+  version: "1.0.2"
 ---
 
 # SKILL: chandao (禅道)
