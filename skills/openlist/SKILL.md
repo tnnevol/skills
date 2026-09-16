@@ -17,6 +17,8 @@ metadata:
 
 代理处理 openlist 任务前，必须先阅读并遵循 [openlist-cli 首次安装引导](https://github.com/tnnevol/skills/blob/main/apps/openlist-cli/openlist-cli-installation-guide.md)，根据用户环境完成 `openlist-cli` 的安装或升级。安装完成前，不得直接执行认证或业务命令。
 
+若当前环境已经登录（`openlist-cli me get` 或 `openlist-cli auth status` 能正常返回当前用户），则无需再次引导，直接执行业务命令即可。
+
 ## 新会话检查
 
 首次处理 openlist 任务时，先按上述安装引导完成安装，再轻量确认 CLI 可用与已认证：

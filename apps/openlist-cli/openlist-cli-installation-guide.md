@@ -2,6 +2,8 @@
 
 本引导用于帮助 AI Agent 或用户完成 OpenList CLI 的首次安装、认证和基础验证。完成后，AI Agent 可通过 `openlist-cli` 管理文件与目录、创建分享、查看用户信息以及进行后台管理（用户/存储/元信息/设置/驱动/索引）。
 
+> 若当前环境已经登录（`openlist-cli me get` 或 `openlist-cli auth status` 能正常返回当前用户），则无需再次引导，直接执行业务命令即可。
+
 ## 前置要求
 
 - 已安装 Node.js（≥ 20.0.0）和 npm/npx。

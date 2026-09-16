@@ -39,7 +39,7 @@ npx skills add tnnevol/skills --skill=openlist -g -y
 
 ## 使用
 
-首次处理 OpenList 任务时先确认工具和认证状态：
+首次处理 OpenList 任务时先确认工具和认证状态（`me get` 能返回当前用户即已登录，无需再次走安装引导）：
 
 ```bash
 openlist-cli --version

@@ -2,6 +2,8 @@
 
 首次安装请先阅读并遵循 [openlist-cli 首次安装引导](https://github.com/tnnevol/skills/blob/main/apps/openlist-cli/openlist-cli-installation-guide.md)，根据当前环境完成安装或升级，再进行认证配置。
 
+若当前环境已经登录（`openlist-cli me get` 或 `openlist-cli auth status` 能正常返回当前用户），则无需再次引导，直接执行业务命令即可。
+
 ## 安装 openlist-cli
 
 ```bash
