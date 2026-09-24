@@ -1,6 +1,6 @@
 # 技能总览
 
-本项目提供 6 个技能和 1 个命令行应用，覆盖项目管理、应用开发、博客、笔记、网盘管理和智能体运行时开发。
+本项目提供 7 个技能和 1 个命令行应用，覆盖项目管理、应用开发、博客、笔记、网盘管理、智能体运行时开发和 VitePress Mermaid 文档。
 
 ## 技能列表
 
@@ -12,6 +12,7 @@
 | [memos](/skills/memos/) | 时间线笔记、标签、评论、附件、分享和关联管理 | 接口集成 |
 | [openlist](/skills/openlist/) | OpenList 文件、目录、分享、存储和后台管理 | 工具 |
 | [dsh](/skills/dsh/) | DeepSeek Harness 运行、配置和插件扩展 | 开发 |
+| [vitepress-mermaid-renderer](/skills/vitepress-mermaid-renderer/) | VitePress Mermaid Renderer 安装、配置、工具栏、示例和排错 | 文档 |
 
 ## 命令行应用
 

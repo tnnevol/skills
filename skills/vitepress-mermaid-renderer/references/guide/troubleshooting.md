@@ -1,0 +1,69 @@
+---
+sidebarDepth: 2
+---
+
+# 故障排除与最佳实践
+
+即使安装正确，VitePress 文档站点在生产环境中也可能遇到 Mermaid 渲染问题。此清单聚焦 renderer、主题、工具栏和可访问性。
+
+## 1. 安装或更新问题
+
+安装包或升级版本后如果出现意外错误，请清理 VitePress 缓存和构建产物。删除
+`.vitepress/cache` 和 `dist`
+后重新启动开发服务器，通常可以解决陈旧依赖导致的问题。
+
+## 2. 图表没有显示
+
+- 确认 Mermaid 代码块使用 `mermaid` 语言标签。拼写错误会阻止检测。
+- 预览页面并检查控制台中的 hydration 错误。
+- 将 renderer 初始化放在客户端 VitePress 主题文件中，而不是 server-only
+  config 文件中。
+
+## 3. 工具栏按钮缺失
+
+- 检查 `setToolbar()` 配置。部分嵌套选项会针对每个断点分别与默认值合并。
+- 如果需要为图表使用更精简的 toolbar，请在首次 render 前调用
+  `mermaidRenderer.setToolbar()`。
+- 移动端 toolbar 会在窄视口下更精简。使用 `positions`
+  让控件在不同断点中固定到一致角落。
+
+## 4. 深色模式渲染不正确
+
+- 确认你监听了
+  `useData().isDark`。没有这个 hook 时，Mermaid 会停留在初次加载时的主题。
+- 在 watcher 中调用
+  `createMermaidRenderer({ theme: isDark.value ? "dark" : "forest" })`。
+
+## 5. 构建时 SVG 出错
+
+当 Mermaid 依赖发生变化时，在 `vitepress build` 前清理
+`.vitepress/cache`。陈旧缓存可能保留旧 renderer 版本的结果。
+
+## 6. 可访问性检查
+
+- `showLanguageLabel` 只控制原始可见的 VitePress `mermaid`
+  标签，不控制图表包装器的 ARIA 属性。包装器本身已经提供 `role="img"` 和
+  `aria-label`。
+- 每个图表包装器具有 `role="img"` 和 `aria-label`，屏幕阅读器会播报图表用途。
+- 键盘用户可以在图表获得焦点时缩放（`+`/`-`）、重置（`0`）、平移（方向键）和切换全屏（`f`）。
+- 视觉隐藏的状态播报器会朗读"正在加载图表…"和"图表已加载"状态。
+- 错误容器使用 `role="alert"`，屏幕阅读器会立即播报渲染失败。
+- `prefers-reduced-motion`
+  会被自动遵守；对请求减少动画的用户，所有动画和过渡效果将被禁用。
+- 对承载关键信息的图表，请在正文中提供等价说明。
+- 工具栏文字应同时能作为有意义的 `aria-label`，而不只是视觉 tooltip。
+
+## 6.5. 安全性说明
+
+- 默认 `securityLevel` 为 `'strict'`，禁用 Mermaid 图表中的 inline
+  HTML 以防止 XSS。仅在你信任站点上所有图表来源时使用 `'loose'`。
+- SVG 下载在导出前会进行消毒——`<script>`、`<iframe>`、`<object>`、`<embed>`、stylesheet
+  `<link>` 元素和 `on*` 事件处理属性无论 `securityLevel` 设置如何都会被移除。
+
+## 7. 最佳实践回顾
+
+- 保持安装示例和使用细节与当前文档描述的包行为一致。
+- 部署前确认 Mermaid 代码块、主题切换、工具栏和错误状态都能正常工作。
+- 升级插件后清理缓存并重新检查关键页面。
+
+遵循此清单可以让交互式 Mermaid 图表保持稳定、高性能，并符合搜索引擎预期。
