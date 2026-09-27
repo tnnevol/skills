@@ -123,6 +123,8 @@ export function apply(ctx: Context) {
 
 工具的 PTC 模式会直接调用规范 JSON 结果，不能依赖渲染后的自然语言解析标识符。工具的展示函数必须是纯函数，不做 I/O、不读会话状态、不使用时间或随机数。
 
+支持动态工具更新的路由可以在运行期间添加或移除工具。更新必须由运行时能力决定，并追加可回放的工具更新事件；后续请求重建工具 schema，客户端可将准备、开始和结果阶段作为展示状态。不要只更新实时注册表或 UI，因为恢复和缓存边界需要读取持久事实。
+
 基于 `dsh-base` 的 profile 默认文件工具是 `read`、`write` 和 `edit`；`str_replace_editor` 不是默认工具，必须通过 profile、home 或逐次调用 patch 显式插入。用户要求接收文件时，使用 `present` 声明已存在且可由 Session 文件系统访问的路径；交付只保存路径和说明，不复制文件内容。
 
 ## 模型适配器
@@ -145,7 +147,7 @@ export function apply(ctx: Context) {
 
 ## 会话格式迁移
 
-当前写入格式由 `SESSION_FORMAT_VERSION` 标识为 V3。新增格式时创建一个相邻迁移包；现有 V2→V3 迁移由 `@deepseek-ai/dsh-session-format-v2-to-v3` 提供。同步更新 `session-format-catalog` 和 `docs/session-format-status.zh.md`，并分别覆盖迁移、当前准入、拒绝和原生重新打开测试；不要直接修改已发布会话文件。
+当前写入格式由 `SESSION_FORMAT_VERSION` 标识为 V4。新增格式时创建一个相邻迁移包；现有 V3→V4 迁移由 `@deepseek-ai/dsh-session-format-v3-to-v4` 提供。同步更新 `session-format-catalog`、定稿/发布状态记录和对应 schema，并分别覆盖迁移、当前准入、拒绝和原生重新打开测试；不要直接修改已发布会话文件。
 
 迁移必须保持事件顺序、时间和历史请求含义，只在规范要求的位置插入节点或重映射已审计引用。JSONL provider 会从最高规范 generation 读取，写 open 在源文件旁排他发布最终版本命名的后继；源 generation 不重命名、不替换、不删除，未来格式应以 `SessionFormatUnsupportedError` 明确拒绝。
 
@@ -173,7 +175,9 @@ export function apply(ctx: Context) {
 
 ## 文件交付与工作区文件
 
-需要让模型把文件交给用户时，挂载 `@deepseek-ai/dsh-tool-present`。文件创建或修改成功后调用 `present`，使用 `files: [{ path, description? }]` 声明现有文件；文件必须是 Session 文件系统可访问的普通文件。失败的工具结果、目录、末端符号链接或不可访问路径不会产生交付事件。交付声明只保存路径和说明，文件内容仍由当前 Session 文件系统拥有。
+需要让模型把文件交给用户时，挂载 `@deepseek-ai/dsh-tool-present`。文件创建或修改成功后调用 `present`，使用 `files: [{ path, description? }]` 声明 1–4 个重点文件；文件必须是 Session 文件系统可访问的普通文件。失败的工具结果、目录、末端符号链接或不可访问路径不会产生交付事件。交付声明只保存路径和说明，文件内容仍由当前 Session 文件系统拥有。
+
+需要记录每轮文件改动时，挂载 `@deepseek-ai/dsh-workspace-changes`。它在轮次开始和结束时使用 git 快照及文件工具捕获，追加 `workspace/changes` 事件；`ctx.workspaceChanges.summary()` 与 `diff()` 只在当前 Host/Session 存活期间可读，不会把完整文件内容放进模型上下文。
 
 需要为 Web 提供文件预览、目录列举或变化观察时，使用 `@deepseek-ai/dsh-api-workspace-files`。其 `read` 是有界 UTF-8 行窗口，`readBytes` 是有界原始字节窗口，`readAll` 与 `readRelated` 受完整文件大小限制；`stat` 只返回元数据，`list` 与 `changes` 限定在 Session 工作区。所有 Remote 请求都要携带 Session 身份，不能让浏览器直接访问宿主路径。
 
@@ -206,6 +210,14 @@ export function apply(ctx: Context) {
 实现持久化后端时接入 `ctx.sessionPersistence`，提供 `create()`、`open()`、`stat()` 和 `list()`，并让 `create()` 或 `open(id, 'write')` 返回 `SessionHandle`。消费方通过句柄的 `read()`、`append()`、`flush()` 和 `close()` 操作日志；不要再设计按会话编号直接 `append/load` 的旁路接口。
 
 只有通过句柄获取的会话才会持久化。写句柄需要提供进程内单写者保护，读句柄拒绝修改，`append()` 允许尽力写入而 `flush()` 提供耐久屏障，`close()` 需要等待待写内容并保持幂等。当前随附实现为 `dsh-session-persistence-jsonl`，默认使用 `.jsonl.zstd` 追加文件；实现或替换提供方时应覆盖句柄契约、并发写入、刷盘、关闭和崩溃恢复测试。
+
+## PTC 运行时
+
+使用 `@deepseek-ai/dsh-ptc-runtime` 为 PTC 模式或工作流提供执行 seam。调用方先用 `ctx.ptcRuntime.resolve()` 校验程序、绑定、cwd、超时和沙箱能力，再调用 `run()`；结果返回 JSON 值、按通道有序的日志或结构化错误。运行时不拥有工具或 Session 语义，Node 后端在受管进程中执行，Python 后端是实验性选择。绑定全局名和错误类名必须满足可移植标识符规则，并避开后端保留槽位。
+
+## 用户问题与 Schedule
+
+需要暂停等待人类决定时使用 `ctx.userQuestions.ask()`；带 `agent` 的请求必须来自精确的运行时根 Agent，委托子 Agent 不能等待 Web answerer。`plan-review` 只改变呈现，不改变答案结构。Schedule 是宿主级能力，模型通过 `schedule_create`、`schedule_list`、`schedule_update` 和 `schedule_delete` 管理绑定原始 Session 的提醒；默认 Web 组合保留但禁用 `schedule`、`ui-schedule` 和 `time-context`，启用时必须显式配置三者。
 
 ## 实验性智能体团队
 
@@ -265,6 +277,11 @@ export function apply(ctx: Context) {
 - [设置子系统](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/settings)
 - [会话持久化](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/persistence)
 - [会话格式状态](https://github.com/deepseek-harness/deepseek-harness/blob/master/docs/session-format-status.zh.md)
+- [V3 到 V4 迁移](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/session/session-format-v3-to-v4/README.zh.md)
+- [PTC 运行时](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/ptc-runtime)
+- [用户交互](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/user-questions)
+- [宿主级 Schedule](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/schedule)
+- [交付物子系统](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/deliverables.zh.md)
 - [文件系统](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/filesystem)
 - [工作区](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/workspace)
 - [用户反馈](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/feedback.zh.md)

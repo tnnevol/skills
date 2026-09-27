@@ -2,7 +2,7 @@
 
 本文整理 apps/cli/reference/README.zh.md、docs/development.zh.md 和用户指南中的可操作内容。命令、配置键和环境变量保持源项目原名；解释使用中文。
 
-当前源项目版本为 `0.1.5-rc.2`。项目仍处于开发者预览阶段，未来可能包含破坏性变更。源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
+当前源项目版本为 `0.1.7-rc.2`。项目仍处于开发者预览阶段，未来可能包含破坏性变更。源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
 
 ## 运行方式
 
@@ -37,12 +37,13 @@ dsh 会为模型、Web 搜索、Web 抓取和 HTTP MCP 服务器请求读取标�
 
 ~~~sh
 dsh --profile <name>
+dsh <name>
 dsh web
 dsh --profile headless "执行一项任务"
 dsh --profile <name> --from-default-profile <template>
 ~~~
 
-web 是 `--profile web` 的固定别名。`web`、`headless`、`sdk`、`sdk-minimal` 和 `acp` 在首次使用时从随发行版提供的模板自动初始化；其他不存在的 profile 需要先执行插件管理命令安装组合包，或使用 `--from-default-profile` 从随附模板创建。随附组合包还包括 `@deepseek-ai/dsh-sdk-app`、`@deepseek-ai/dsh-sdk-minimal` 和 `@deepseek-ai/dsh-acp-app`。
+`dsh <name>` 是 `dsh --profile <name>` 的简写，但名称必须紧跟 `dsh`；`plugin` 仍表示插件管理命令，启动同名 profile 必须写成 `dsh --profile plugin`。`web` 是固定别名。`web`、`headless`、`sdk`、`sdk-minimal` 和 `acp` 在首次使用时从随发行版提供的模板自动初始化；其他不存在的 profile 需要先执行插件管理命令安装组合包，或使用 `--from-default-profile` 从随附模板创建。随附组合包还包括 `@deepseek-ai/dsh-sdk-app`、`@deepseek-ai/dsh-sdk-minimal` 和 `@deepseek-ai/dsh-acp-app`。
 
 各内置 profile 的运行边界如下：
 
@@ -54,7 +55,7 @@ web 是 `--profile web` 的固定别名。`web`、`headless`、`sdk`、`sdk-mini
 | `sdk-minimal` | 标准输入输出 JSON-RPC | 独立组合，固定 `danger-full-access`，不发现指令、不使用 SQLite |
 | `acp` | 标准输入输出 Agent Client Protocol | 通过 ACP 接入智能体 |
 
-profile 的 `patchReload` 行为也按入口区分：自定义 profile 和 `web` 支持实时重载；`headless`、`sdk`、`sdk-minimal` 和 `acp` 只在启动时读取配置，修改后需要重启进程。`desktop` 是 Electron 保留的 profile 名称，CLI 不负责启动、dump 或管理它。
+profile 的重载行为由 `dsh-hmr` 配置行决定：base 默认只监视配置的 HMR，`headless`、`sdk` 和 `acp` 禁用它，`sdk-minimal` 不包含它，profile patch 可以覆盖这些默认值。启用 HMR 时，修改 profile/home patch 会串行重组配置；未启用时需要重启进程。`desktop` 是 Electron 保留的 profile 名称，CLI 不负责启动、dump 或管理它。
 
 profile 的有效配置树按以下顺序叠加到空根节点：
 
@@ -86,6 +87,8 @@ dsh --profile headless "检查测试并修复失败项"
 
 使用 `dsh -V` 或 `dsh --version` 查看启动器版本；这两个参数必须位于应用参数边界之前。
 
+`plugin` 仅在紧跟 `dsh` 时选择插件管理命令；选定 profile 后，`plugin` 和 `web` 都是普通应用参数。应用参数开始前重复指定 `--profile` 会被拒绝。应用帮助会直接退出，不会启动应用。
+
 随附 profile 的参数如下：
 
 | profile | 参数 |
@@ -105,6 +108,7 @@ dsh --profile headless "检查测试并修复失败项"
 ~~~sh
 dsh --profile web --dump-default-config
 dsh --profile web --patch ./extra.yml --dump-config
+dsh --profile web --dump-config-schema
 dsh web --dump-config
 ~~~
 
@@ -116,6 +120,16 @@ dsh web --dump-config
 - dump 不运行应用参数提供方；带应用参数的 dump 会被拒绝。
 
 需要改配置时，先保存 dump 结果，再以最小 patch 覆盖目标行，避免无意删除组合包提供的字段或运行时表达式。dump 初始化缺失的 profile 文件，但不会准备 `$DSH_HOME/profiles/node_modules` 的运行时后备链接；插入行中的相对插件名按对应 patch 文件所在目录解析。
+
+### 配置 schema dump
+
+`--dump-config-schema` 使用与 `--dump-config` 相同的组合包、profile、home 和 argv patch 层，支持重复 `--patch` 与 `--from-default-profile`，但不接受应用参数，也不能用于保留的 `desktop` profile。成功时 stdout 输出 JSON Schema 2020-12 文档：根 schema 描述配置 entry 列表，`$defs.patchList` 描述 profile、home 和 CLI overlay；它输出的是插件声明的 schema，不是实际配置值。
+
+三种 dump flag 互斥。schema 收集或投影失败时可能输出部分 schema 并以退出码 1 结束，诊断写入 stderr；检查不受信任插件前，应把 schema dump 视为会导入并执行其配置声明的操作。需要来源文件和 overlay 标签时，使用 `--dump-config`。
+
+### 启动诊断
+
+必需插件激活失败时，CLI 会列出失败插件、等待中的插件和缺失服务，并在 `$DSH_HOME/logs/`（默认 `~/.dsh/logs/`）写入唯一的 `startup-<timestamp>-<uuid>.log`。诊断报告不脱敏，分享前必须检查其中的配置、路径和凭据内容；可选插件失败仅产生警告，通常不创建报告。
 
 ## 插件管理
 
@@ -132,6 +146,8 @@ dsh plugin 在 profile 不存在时初始化它：有随附模板的 profile 使
 成功执行后，dsh 会根据安装状态重建 dsh.profile.bundles：依赖的 manifest 声明了 `dsh.bundle.patch` 时，它的 patch 会加入组合层；依赖在 `update` 后新增该声明也会随即激活；没有组合声明的依赖仍会保留为普通依赖并提示一次；被移除的依赖会从组合层移除。该命令支持后续的所有 pnpm 子命令，不限于 add、remove、why 和 update。
 
 Git 插件如果依赖 prepare 构建脚本，pnpm 10+ 可能要求在 profile 的 pnpm-workspace.yaml 中允许该构建。首次安装失败时，按照 pnpm 输出的 allowBuilds 键添加后重试；已经构建好的压缩包或本地检出通常不需要该许可。
+
+安装和 profile 启动会按插件声明的 DSH peer 范围，检查插件是否兼容 `dsh --version` 的运行时版本。不兼容插件会被明确拒绝；只有用户明确确认精确版本豁免才允许继续。`version-exemptions`、`allow-version` 与 `revoke-version` 会持久化在 profile 插件配置中，使用前应理解其会绕过版本兼容门禁。
 
 Codex 与 Claude Code 是彼此独立的可选子代理组合包，可以单独安装或移除：
 
@@ -152,7 +168,7 @@ dsh web --trusted-host example.com
 dsh web --no-open
 ~~~
 
-默认服务地址为 `http://127.0.0.1:3080`。`--host` 和 `--port` 覆盖保留了命令行表达式的配置行；`--trusted-host` 可重复传入，用于增加浏览器 `/api` 信任边界中的具名 authority；`--no-open` 只对本次调用关闭默认浏览器交接。当前 CLI 不接受 `--host 0.0.0.0`，需要按错误提示修正。
+默认服务地址为 `http://127.0.0.1:3080`。`--host` 和 `--port` 覆盖保留了命令行表达式的配置行；`--trusted-host` 可重复传入，用于增加浏览器 `/api` 信任边界中的具名 authority；`--no-open` 只对本次调用关闭默认浏览器交接。当前 CLI 不接受 `--host 0.0.0.0`，需要按错误提示修正。`dsh-hmr` 会在组合启用时统一监听 profile 与 home patch；`pnpm run dev:web` 先构建一次并持续重建客户端 bundle，`--no-serve` 只运行 watcher。
 
 本机启动时，Web 服务会在 Loader 完整结算后用默认浏览器打开规范宿主机 URL；设置 `SSH_CONNECTION` 或 `SSH_TTY` 时会跳过浏览器交接但仍打印 URL。浏览器交接失败不会停止服务，stderr 会提供诊断和手动访问地址。插件树退出时最多等待 5 秒完成 dispose；首次 `SIGTERM` 以 0 退出，首次 `SIGINT` 报告 130，第二次信号直接强制退出。
 
@@ -160,11 +176,13 @@ dsh web --no-open
 
 新会话默认使用 `workspace-write` 权限预设；`DSH_PERMISSION_MODE` 可改变进程级回退值。`DSH_TOOLS_MODE` 只接受 `native`、`ptc` 或 `both`，其他值会导致启动失败。
 
-首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。内置智能体模式包括标准模式、PTC 模式、极简模式和创造模式：标准模式提供完整编码能力，PTC 模式默认不提供 `workflow` 工具，而是通过 PTC SDK 组合多步 TypeScript 操作，极简模式只提供按平台选择的持久 shell，创造模式用于编写自定义智能体预设。基于 base 的默认文件编辑工具为 `read`、`write` 和 `edit`；`str_replace_editor` 需要显式通过 patch 启用。极简模式固定使用 `You are a helpful software engineer assistant.` 作为完整系统提示词，不包含其他提示词段落。
+首次打开 Web 界面时，先在“设置 → 模型”中保存模型配置，再选择工作区；未选择工作区前不能输入任务。默认模型为 `deepseek-official` / `deepseek-flash`。内置智能体模式包括标准模式、PTC 模式、极简模式和创造模式：标准模式提供完整编码能力，PTC 模式默认不提供 `workflow` 工具，而是通过 PTC SDK 组合多步 TypeScript 操作，极简模式只提供按平台选择的持久 shell，创造模式用于编写自定义智能体预设。基于 base 的默认文件编辑工具为 `read`、`write` 和 `edit`；`str_replace_editor` 需要显式通过 patch 启用。极简模式固定使用 `You are a helpful software engineer assistant.` 作为完整系统提示词，不包含其他提示词段落。
 
 标准、PTC 和 Cordis preset 还提供 `present` 文件交付工具。模型创建或修改了用户需要接收的文件后，应在最终回复前调用 `present` 声明路径；该工具只记录文件路径和说明，不复制文件内容。Web 交付卡片可在右侧 Sidebar 预览文件，也可调用宿主默认应用打开。
 
 Web 的文件预览通过 `workspaceFiles` 按 Session 身份读取：`read` 提供有界 UTF-8 行窗口，`readBytes` 提供有界原始字节窗口，`readAll` 与 `readRelated` 提供受限完整读取，`list` 与 `changes` 只作用于 Session 工作区。不要把宿主路径直接交给浏览器绕过 Session 授权。
+
+随发行版 Web 组合保留 `schedule`、`ui-schedule` 和 `time-context` 配置行但默认禁用；需要提醒功能时必须在 profile patch 中显式启用三者，并确认模型工具和页面组合同时加载。当前 Web 还提供用户反馈、插件管理、工作区改动摘要和文件交付卡片。
 
 ## 凭证与环境
 
@@ -184,16 +202,18 @@ export DEEPSEEK_SEARCH_BASE_URL=https://...
 
 `deepseek-official` 路由默认提供建议性目录：`deepseek-flash`、`deepseek-v4-flash-vision-exp`（支持图片）以及 `deepseek-v4-flash`、`deepseek-v4-pro`（仅文本），默认上下文窗口为 1,000,000 token。显式写入 `models` 会替换这份目录；已配置模型 ID 会原样发送到协议，因此网关必须实际支持所选 ID。DeepSeek 路由默认推理强度为 `high`，可选 `off`、`low`、`high` 和 `max`。
 
+基于 base 的 Web 组合还提供可选的 DeepSeek 账号登录和 `deepseek-account` 模型路由。账号路由只使用本地账号授权，不会回退到 API key；未登录时返回 `ACCOUNT_SIGN_IN_REQUIRED`，无效 token 返回 `ACCOUNT_TOKEN_INVALID`，账号路由配额错误使用 `ACCOUNT_QUOTA`。账号控制器 Remote 只返回状态和操作结果，不把 token 或 PKCE 私密数据交给浏览器。
+
 基础组合包默认挂载原生 DeepSeek 适配器、设置与凭据提供方、稳定的 `web_search` 和 `web_fetch`、仅限公网的 HTTP 抓取提供方、`present` 文件交付工具，以及 OTel 会话上传。Web 应用会禁用基础工具配置项，再通过 `cordis`、`ptc` 与 `standard` 智能体预设暴露相同工具。已启用的抓取调用会在所有沙箱与审批模式下执行，无需逐次确认；提供方会在连接前拒绝非公开目的地址。
 
-反馈记录在会话日志中，不会启动模型工作。OTel 会话上传默认对所有用户和提供方使用 `FEEDBACK_ONLY`：新的文本反馈、消息评分、编辑或撤回会释放截至该事件的完整权威日志前缀，包含存储的上下文；后续记录等待下一次显式反馈。主动开启的 DeepSeek 会话日志贡献器是独立的请求路径，不由以下 OTel 设置控制。通过环境变量覆盖时：
+反馈记录在会话日志中，不会启动模型工作。默认开启的 DeepSeek 会话日志贡献器会随之后的 DeepSeek 请求发送尚未确认接收的完整日志后缀；将其 `enabled` 设为 `false` 可关闭。OTel 会话上传默认对所有用户和提供方使用 `FEEDBACK_ONLY`：新的文本反馈、消息评分、编辑或撤回会释放截至该事件的完整规范日志前缀，包含存储的上下文；后续记录等待下一次显式反馈。两条路径分别配置，通过环境变量覆盖 OTel 时：
 
 - `DSH_TELEMETRY_MODE=DISABLED`：禁止 OTel 捕获，全部数据留在本地。
 - `DSH_TELEMETRY_MODE=FULL`：当前构建拒绝该值，不要用它开启全量上传。
 - `DSH_TELEMETRY_OTLP_URL`：指定其他 collector。
 - 非空的 `DSH_TELEMETRY_DISABLED`：最终强制关闭 OTel，优先级最高。
 
-基础配置没有默认脱敏规则，导出内容可能包含会话文本、工具参数、工具结果和工作区路径。默认不会启用 MCP 服务；CLI 虽然随附 `@deepseek-ai/dsh-mcp-client`，但通过 patch 启用的 MCP 服务器命令会在智能体沙箱之外作为受信任进程运行，启用前应确认来源和权限。基础组合的 `read`、`write`、`edit` 是默认文件编辑工具，`str_replace_editor` 不再默认启用；`sdk-minimal` 只提供按平台选择的持久 shell，不包含文件系统工具、workspace 指令、skills、jobs 或 subagent。
+基础配置没有默认脱敏规则，导出内容可能包含会话文本、工具参数、工具结果和工作区路径。基础组合会挂载 MCP 资源能力，但默认不会启用任何 MCP 服务器或服务器工具；CLI 虽然随附 `@deepseek-ai/dsh-mcp-client`，但通过 patch 启用的 MCP 服务器命令会在智能体沙箱之外作为受信任进程运行，启用前应确认来源和权限。基础组合的 `read`、`write`、`edit` 是默认文件编辑工具，`str_replace_editor` 不再默认启用；`sdk-minimal` 只提供按平台选择的持久 shell，不包含文件系统工具、workspace 指令、skills、jobs 或 subagent。
 
 ## SDK、极简 SDK 与 ACP
 
@@ -217,19 +237,33 @@ Remote 是当前宿主端向客户端公开一元方法的契约。调用结果�
 
 ## 会话格式与迁移
 
-当前写入格式由 `SESSION_FORMAT_VERSION` 标识为 V3；发布状态记录中的 `latestReleasedVersion: 3` 以 `dsh-v0.1.5-alpha.1` 作为发布证据。包版本、投影缓存版本和 fixture 文件名都不是会话格式的权威来源。
+当前写入格式由 `SESSION_FORMAT_VERSION` 标识为 V4；定稿状态为 `latestFinalizedVersion: 4`，发布记录仍以 `latestReleasedVersion: 3` 标识已公开发布基线。包版本、投影缓存版本和 fixture 文件名都不是会话格式的权威来源。
 
-JSONL provider 使用 v0 的 `session.jsonl[.zstd]` 和 v1 及后续版本的 `session.vN.jsonl[.zstd]` generation。读取 `stat`、`list` 或 `open` 时会选择最高的规范 generation，并通过 v0→v1→v2→v3 的相邻迁移链恢复当前逻辑记录；写入旧日志时在源文件旁排他发布最终版本命名的后继。已经发布的 generation 不重命名、不替换、不删除，未来格式必须明确拒绝。
+JSONL provider 使用 v0 的 `session.jsonl[.zstd]` 和 v1 及后续版本的 `session.vN.jsonl[.zstd]` generation。读取 `stat`、`list` 或 `open` 时会选择最高的规范 generation，并通过 v0→v1→v2→v3→v4 的相邻迁移链恢复当前逻辑记录；V3 到 V4 由 `@deepseek-ai/dsh-session-format-v3-to-v4` 负责。V4 将工具结果提升为 `tool` 角色消息，引入 `developer/message`、生产者来源、父目录证据和 `forked` 轮次结束原因；写入旧日志时在源文件旁排他发布最终版本命名的后继。已经发布的 generation 不重命名、不替换、不删除，未来格式必须明确拒绝。
 
-V3 将系统提示词作为 `system/message` surface 节点记录，并保留 `assistant/attempt`、内嵌 assistant stream、精确的 `request/header` 和工具结果语义。V2 到 V3 的迁移还会插入系统头节点、重映射受审计的序号引用，并把旧 PTC 事件标签转换为当前标签；迁移不会修改设置或文件。格式开发应增加相邻迁移包、更新格式目录和发布状态，而不是直接改写已有会话文件。
+V4 保留系统提示词 surface、`assistant/attempt`、内嵌 assistant stream、精确的 `request/header` 和工具来源语义。V3 到 V4 的迁移还会从直属子会话证据补齐父级 `subagent/catalog`，提升 canonical 工具结果并重映射受审计的序号引用；迁移不会修改设置或文件。格式开发应增加相邻迁移包、更新格式目录和发布状态，而不是直接改写已有会话文件。
 
 ## Web 文件与反馈能力
 
 用户在 Web 中附加的图片会在消息接受前完成校验、规范化和持久化；通用文件按字节原样保存并以不透明引用传递，模型需要时通过文件工具读取。`fileUpload` 为 Session 提供有进度、可取消的流式上传和暂存凭证，凭证在 prompt 接纳时消费。
 
-用户要求接收文件时，模型应在最终回复前调用 `present` 声明路径；`present` 只记录可访问文件，不复制文件内容。`workspaceFiles` 提供按 Session 授权的文本分页、字节窗口、完整文件读取、目录列举和变更流；文件读取遵循文件系统权限，`list` 与 `changes` 仍限制在工作区内。
+用户要求接收文件时，模型应在最终回复前调用 `present` 声明路径；`present` 只记录可访问文件，不复制文件内容。当前包为 `@deepseek-ai/dsh-tool-present`，最多一次声明 4 个重点文件。`@deepseek-ai/dsh-workspace-changes` 按顶层轮次记录 `workspace/changes` 摘要和文件对比，摘要及 diff 只在当前 Host/Session 存活期间提供；`workspaceFiles` 提供按 Session 授权的文本分页、字节窗口、完整文件读取、目录列举和变更流，文件读取遵循文件系统权限，`list` 与 `changes` 仍限制在工作区内。
 
 Web 中的 `/feedback`、`sessionFeedback` 和消息反馈写入会话日志但不启动模型轮次。逐消息反馈的 `put`、`delete` 使用 `ifVersion` 做乐观并发校验，过期版本返回冲突；Session 级反馈只接受 live Session。
+
+## PTC 运行时与代码工作工具
+
+PTC 模式通过 `ctx.ptcRuntime` 执行模型编写的 TypeScript 程序。运行时先解析绑定、cwd、超时和沙箱能力，再执行程序并返回 JSON 值、按通道有序的日志或结构化错误；`dsh-ptc-runtime-node` 在受管 Node 进程中执行，程序失败作为结果返回，不把普通运行失败伪装成 Promise reject。代码工作工具是否可见由 preset 和 `DSH_TOOLS_MODE=native|ptc|both` 共同决定，用户界面中已将相关开关称为“代码工作工具”。
+
+具备路由能力的 agent 可以在运行期间更新工具集合；更新以持久事件记录并在后续请求中重建 schema，工具增删会被客户端以准备/更新状态展示。扩展工具时不要只改实时 UI 状态，必须验证工具事件、请求重建和恢复后的行为。
+
+## 用户问题、提醒与可选集成
+
+`ask_user_question` 通过 `ctx.userQuestions` 暂停当前根 Agent 等待结构化回答；提供 `agent` 时必须是当前注册表中的精确运行时根，委托子 Agent 不能等待人类回答。`plan-review` 意图只改变 UI 呈现，不改变答案编码。
+
+Schedule、时间上下文和 Web 提醒页面当前随发行版组合默认禁用；启用时使用 `schedule_create`、`schedule_list`、`schedule_update` 和 `schedule_delete`，并提供一次性、固定间隔、每日、每周和五字段 cron 目标。任务绑定原始 Session，投递为普通 follow-up，不中途 steer 当前轮次，也不代表模型已完成。
+
+MCP 资源、Office 转 PDF、语音输入、浏览器/计算机操作、账号登录和账号模型路由都是可选能力，必须读取对应 bundle/子系统文档确认当前 profile 是否挂载，不要因为包存在就假设默认可用。
 
 ## 源码开发检查
 

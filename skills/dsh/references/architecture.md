@@ -1,6 +1,6 @@
 # 架构与运行时
 
-本文整理 docs/architecture.zh.md、docs/cordis-primer.zh.md、docs/agent-lifecycle.zh.md、docs/tool-execution-pipeline.zh.md、docs/capability-seams.zh.md、docs/api-gateway.zh.md、docs/session-format-status.zh.md、docs/subsystems/persistence.zh.md、docs/subsystems/session-projection.zh.md、docs/subsystems/subagent.zh.md、docs/subsystems/attachment.zh.md、docs/subsystems/feedback.zh.md 和 docs/subsystems/workspace.zh.md 的稳定规则。改动 packages/ 前先阅读源项目当前版本的架构文档。
+本文整理 docs/architecture.zh.md、docs/cordis-primer.zh.md、docs/agent-lifecycle.zh.md、docs/tool-execution-pipeline.zh.md、docs/capability-seams.zh.md、docs/api-gateway.zh.md、docs/session-format-status.zh.md、docs/subsystems/persistence.zh.md、docs/subsystems/session-projection.zh.md、docs/subsystems/subagent.zh.md、docs/subsystems/ptc-runtime.zh.md、docs/subsystems/deliverables.zh.md、docs/subsystems/attachment.zh.md、docs/subsystems/feedback.zh.md、docs/subsystems/user-questions.zh.md、docs/subsystems/workspace.zh.md 和 docs/subsystems/schedule.zh.md 的稳定规则。改动 packages/ 前先阅读源项目当前版本的架构文档。
 
 ## Cordis 基础
 
@@ -31,7 +31,9 @@ waterfall 是环绕式中间件。只做观察或标注的监听器必须调用 
 
 基于 `dsh-base` 的 profile 默认使用 `read`、`write` 和 `edit` 文件工具；`str_replace_editor` 需要通过 patch 显式启用。`dsh-sdk-minimal` 不继承 base，只提供按平台选择的持久 shell，并使用未压缩 JSONL 保存会话。
 
-配置层按以下顺序生效：组合包列表 → profile 的 cordis.patch.yml → $DSH_HOME/cordis.patch.yml → 命令行 --patch。各层按顺序应用，同一行后应用的层覆盖前层；patch 替换整行 config，不是递归合并。因此修改时要保留依赖注入、!!js 表达式和其他未改动字段。
+其他常见可选能力包括 `@deepseek-ai/dsh-ptc-runtime`（代码工作工具的执行 seam）、`@deepseek-ai/dsh-tool-present` 与 `@deepseek-ai/dsh-workspace-changes`（交付物与轮次改动摘要）、`@deepseek-ai/dsh-user-questions`（人类问答）、`@deepseek-ai/dsh-schedule`（宿主提醒）、`@deepseek-ai/dsh-mcp-resources`（MCP 资源）、`@deepseek-ai/dsh-office-to-pdf`（Office 预览转换）和 `@deepseek-ai/dsh-deepseek-account`（账号状态与授权）。它们是否生效取决于当前 profile 的 patch；包安装存在不代表能力已经挂载。
+
+配置层按以下顺序生效：组合包列表 → profile 的 cordis.patch.yml → $DSH_HOME/cordis.patch.yml → 命令行 --patch。各层按顺序应用，同一行后应用的层覆盖前层；patch 替换整行 config，不是递归合并。因此修改时要保留依赖注入、!!js 表达式和其他未改动字段。`dsh-hmr` 负责启用配置层的串行重载；未挂载它的 profile 修改后需要重启。
 
 ## 服务、事件与能力 seam
 
@@ -117,9 +119,13 @@ turn/end
 
 工具调用会先分类并按屏障和有界滚动池调度，再按顺序执行前置策略、并发主体和后置处理。独占调用形成屏障，安全并行调用受 `maxParallelToolCalls` 限制。执行过程中应使用单调 guard 防止后续监听器撤销拒绝；规范结果、错误和展示内容必须分别处理。新增工具时不要让 UI 卡片格式污染模型结果。
 
+支持工具动态更新的路由可以在运行期间增删工具。更新必须进入持久会话事件并按已准备调用的路由能力重建后续 schema；客户端可将更新显示为准备、开始或结果阶段，但这些 UI 状态不能替代工具事件或模型可回放事实。更新工具时要同时验证新旧 schema、请求缓存边界、恢复和不支持动态更新的路由。
+
+PTC 代码工作工具通过 `ctx.ptcRuntime` 执行模型编写的程序，运行时只负责绑定、程序、日志和结构化结果，不直接拥有工具或会话语义。提供方能力由 `language`、`isolation` 和沙箱描述声明；代码执行失败应作为结构化结果返回，调用方误用才拒绝。当前 Node 后端在受管进程中执行，Python 后端为实验性能力。
+
 ## 会话日志与可回放性
 
-会话日志是模型所见上下文的唯一来源，`deriveMessages()` 从日志生成模型历史。V3 将系统提示词作为 `system/message` surface 节点记录，`assistant/message` 保存精确的紧凑 stream，未提交模型尝试保存为 `assistant/attempt`，因此失败、重试和取消仍可审计但不会伪造模型历史。模型请求中的每项输入都必须能从日志重建；如果新增模型可见上下文，应：
+会话日志是模型所见上下文的唯一来源，`deriveMessages()` 从日志生成模型历史。V4 将系统提示词作为 `system/message` surface 节点记录，`assistant/message` 保存精确的紧凑 stream，未提交模型尝试保存为 `assistant/attempt`，并增加 `tool` 角色消息、`developer/message`、生产者来源和工具延迟加载标记。模型请求中的每项输入都必须能从日志重建；如果新增模型可见上下文，应：
 
 1. 扩展 SessionEventMap。
 2. 让日志渲染逻辑派生该内容。
@@ -129,11 +135,11 @@ turn/end
 
 ## 会话格式与迁移
 
-当前写入格式由 `SESSION_FORMAT_VERSION` 标识为 V3；发布状态记录中的 `latestReleasedVersion: 3` 以 `dsh-v0.1.5-alpha.1` 作为发布证据。包版本、投影缓存版本和测试 fixture 文件名都不是格式权威。V3 的规范信封要求 `request/header` 不携带 `system`，空的 `tools` 与 `adapterDefaults` 省略，surface 事件使用受约束的 `surfaceOp` 与来源引用。
+当前写入格式由 `SESSION_FORMAT_VERSION` 标识为 V4；定稿状态为 `latestFinalizedVersion: 4`，发布记录仍以 `latestReleasedVersion: 3` 标识已公开发布基线。包版本、投影缓存版本和测试 fixture 文件名都不是格式权威。V4 的规范信封要求 `request/header` 不携带 `system`，空的 `tools` 与 `adapterDefaults` 省略，surface 事件使用受约束的 `surfaceOp` 与来源引用。
 
-已发布格式通过 v0→v1→v2→v3 的相邻迁移链恢复。JSONL 的 v0 产物是 `session.jsonl[.zstd]`，v1 及后续产物使用 `session.vN.jsonl[.zstd]`；`stat`、`list` 和 `open` 选择最高规范 generation，读取旧 generation 时只在内存中转换，写入时在源文件旁排他发布最终版本命名的后继。已发布文件不重命名、不替换、不删除，未来版本以格式不支持错误拒绝。
+已发布格式通过 v0→v1→v2→v3→v4 的相邻迁移链恢复；V3→V4 由 `@deepseek-ai/dsh-session-format-v3-to-v4` 提供。JSONL 的 v0 产物是 `session.jsonl[.zstd]`，v1 及后续产物使用 `session.vN.jsonl[.zstd]`；`stat`、`list` 和 `open` 选择最高规范 generation，读取旧 generation 时只在内存中转换，写入时在源文件旁排他发布最终版本命名的后继。已发布文件不重命名、不替换、不删除，未来版本以格式不支持错误拒绝。
 
-V2 到 V3 会插入受保护的系统头节点、重映射已审计的序号引用、迁移 PTC 事件标签，并校验内容、surface 关系、继承切点和工具错误；它不修改设置或文件。新增格式时应创建相邻迁移包、更新格式目录与发布状态，并覆盖迁移、准入、拒绝和原生重新打开测试。
+V3 到 V4 会把 canonical 工具结果提升为 `tool` 角色消息、引入 `developer/message` 和生产者来源、根据直属子会话证据补齐父级 `subagent/catalog`，并重映射受审计的序号引用；它不修改设置或文件。新增格式时应创建相邻迁移包、更新格式目录与发布状态，并覆盖迁移、准入、拒绝和原生重新打开测试。
 
 ## 会话持久化句柄
 
@@ -166,13 +172,23 @@ V2 到 V3 会插入受保护的系统头节点、重映射已审计的序号引�
 
 ## 文件交付与工作区文件
 
-`present` 是面向模型的显式交付工具：文件必须已经存在且能由当前 Session 文件系统访问，调用只把路径和可选说明写入 `deliverables/presented`，不会复制文件内容。用户要接收通过 shell 或代码运行时生成的文件时，创建或修改完成后应调用它，并在最终回复前完成调用；仅提及路径不构成交付。
+`@deepseek-ai/dsh-tool-present` 是面向模型的显式交付工具：文件必须已经存在且能由当前 Session 文件系统访问，调用只把路径和可选说明写入 `deliverables/presented`，不会复制文件内容；一次调用最多声明 4 个文件。用户要接收通过 shell 或代码运行时生成的文件时，创建或修改完成后应调用它，并在最终回复前完成调用；仅提及路径不构成交付。
 
 Web 的 `workspaceFiles` 服务按 Session 身份提供 `read`、`readBytes`、`readAll`、`readRelated`、`stat`、`list` 和 `changes`。文本读取是有界行窗口，字节读取是有界原始窗口；文件读取由组合文件系统决定是否可访问，`list` 与 `changes` 只允许 Session 工作区。客户端资源通过 `dsh-resource://file/session/<sessionId>/...` 地址订阅文件元数据和变更，不应自行拼接宿主路径或绕过 Remote。
+
+`@deepseek-ai/dsh-workspace-changes` 在顶层轮次开始/结束时通过 git 快照和文件工具整文件捕获记录 `workspace/changes`。事件只保存轮号；`ctx.workspaceChanges.summary(sessionId, seq)` 和 `diff(sessionId, seq, index, signal)` 在当前 Host/Session 存活期间提供文件列表、行数和逐文件 diff。它不记录子 Agent Session，也不把摘要送入模型请求。
 
 ## 用户反馈
 
 `/feedback`、`ctx.sessionFeedback` 和 `ctx.messageFeedback` 将用户反馈作为仅写日志事件保存，不进入 `deriveMessages()`，也不会启动或中断模型轮次。Session 级反馈使用固定 `FeedbackCategory` 分类；逐消息 `put`、`delete` 通过 `ifVersion` 做乐观并发校验，过期版本返回冲突，删除不是隐私擦除。
+
+## 用户问题与提醒
+
+`ctx.userQuestions.ask()` 通过作用域化 answerer waterfall 等待人类回答。带 `agent` 的请求只允许运行时根 Agent，委托子 Agent 没有 Web answerer，不能把持久谱系当作人类交互权限；`plan-review` 意图只改变呈现，不改变答案结构。
+
+Schedule 是宿主级存储和投递能力，与 Session 加载状态分离；任务绑定原始 Session，支持一次性、固定间隔、每日、每周和五字段 cron 目标，投递为普通 follow-up，不中途 steer 当前轮次。随发行版 Web 组合当前保留但默认禁用 `schedule`、`ui-schedule` 和 `time-context`，启用时要同时配置三者。
+
+PTC 运行时、MCP 资源、Office 转 PDF、SSH、语音输入、浏览器/计算机操作和 DeepSeek 账号模型路由都是可选 seam。它们通过独立 package 或 profile patch 加入运行时；扩展或排错时先确认当前 profile 是否真的挂载对应 service、client 和 provider。
 
 ## 文件引用与 `@file`
 
@@ -216,8 +232,14 @@ Web 的 `workspaceFiles` 服务按 Session 身份提供 `read`、`readBytes`、`
 - [能力 seam](https://deepseek-harness.github.io/deepseek-harness/reference/capability-seams)
 - [API Gateway](https://deepseek-harness.github.io/deepseek-harness/reference/api-gateway)
 - [模型配置](https://deepseek-harness.github.io/deepseek-harness/guide/providers)
+- [Session 格式状态](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/session-format-status.zh.md)
+- [V3 到 V4 迁移](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/session/session-format-v3-to-v4/README.zh.md)
 - [会话投影](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/session-projection)
 - [会话持久化](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/persistence)
+- [PTC 运行时](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/ptc-runtime)
+- [用户交互](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/user-questions)
+- [宿主级 Schedule](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/schedule)
+- [交付物子系统](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/deliverables.zh.md)
 - [子代理](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/subagent)
 - [文件系统](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/filesystem)
 - [工作区](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/workspace)
