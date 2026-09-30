@@ -1,11 +1,13 @@
 ---
 name: vitepress-mermaid-renderer
+displayName: vitepress-mermaid-renderer
+slug: vitepress-mermaid-renderer
 description: >
   为 VitePress 中的 vitepress-mermaid-renderer 提供中文安装、接入、配置、示例、故障排除、可访问性和安全指导。只要用户提到 vitepress-mermaid-renderer、在 VitePress 中渲染 Mermaid、Mermaid 图表缩放/拖拽/全屏/下载/复制、工具栏布局、主题切换、静态 SVG 或 Mermaid securityLevel，就使用此 skill；即使用户没有明确说“skill”或“文档”，也要优先查阅这里的中文参考资料，避免凭记忆编造 API。
 compatibility: Node.js 20+；VitePress；Vue；Mermaid；vitepress-mermaid-renderer
 metadata:
   author: Tnnevol
-  version: "2026.09.24"
+  version: "1.0.0"
 ---
 
 # VitePress Mermaid Renderer
