@@ -2,7 +2,7 @@
 
 本文整理 apps/cli/reference/README.zh.md、docs/development.zh.md 和用户指南中的可操作内容。命令、配置键和环境变量保持源项目原名；解释使用中文。
 
-当前源项目版本为 `0.1.7-rc.2`。项目仍处于开发者预览阶段，未来可能包含破坏性变更。源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
+当前源项目版本为 `0.2.0-rc.2`。项目仍处于开发者预览阶段，未来可能包含破坏性变更。源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
 
 ## 运行方式
 
@@ -145,7 +145,7 @@ dsh plugin 在 profile 不存在时初始化它：有随附模板的 profile 使
 
 成功执行后，dsh 会根据安装状态重建 dsh.profile.bundles：依赖的 manifest 声明了 `dsh.bundle.patch` 时，它的 patch 会加入组合层；依赖在 `update` 后新增该声明也会随即激活；没有组合声明的依赖仍会保留为普通依赖并提示一次；被移除的依赖会从组合层移除。该命令支持后续的所有 pnpm 子命令，不限于 add、remove、why 和 update。
 
-Git 插件如果依赖 prepare 构建脚本，pnpm 10+ 可能要求在 profile 的 pnpm-workspace.yaml 中允许该构建。首次安装失败时，按照 pnpm 输出的 allowBuilds 键添加后重试；已经构建好的压缩包或本地检出通常不需要该许可。
+Git 插件如果依赖 prepare 构建脚本，pnpm 10+ 可能要求在 profile 的 pnpm-workspace.yaml 中允许该构建。首次安装失败时，按照 pnpm 输出的 allowBuilds 键添加后重试；已经构建好的压缩包或本地检出通常不需要该许可。`dsh plugin --profile desktop ...` 面向 Desktop 安装载体管理其保留 profile：desktop profile 必须先由 Desktop 应用初始化，普通 CLI 调用会明确报错；该路径由安装载体以 `manageDesktopProfile` 选项启用。
 
 安装和 profile 启动会按插件声明的 DSH peer 范围，检查插件是否兼容 `dsh --version` 的运行时版本。不兼容插件会被明确拒绝；只有用户明确确认精确版本豁免才允许继续。`version-exemptions`、`allow-version` 与 `revoke-version` 会持久化在 profile 插件配置中，使用前应理解其会绕过版本兼容门禁。
 
@@ -182,7 +182,7 @@ dsh web --no-open
 
 Web 的文件预览通过 `workspaceFiles` 按 Session 身份读取：`read` 提供有界 UTF-8 行窗口，`readBytes` 提供有界原始字节窗口，`readAll` 与 `readRelated` 提供受限完整读取，`list` 与 `changes` 只作用于 Session 工作区。不要把宿主路径直接交给浏览器绕过 Session 授权。
 
-随发行版 Web 组合保留 `schedule`、`ui-schedule` 和 `time-context` 配置行但默认禁用；需要提醒功能时必须在 profile patch 中显式启用三者，并确认模型工具和页面组合同时加载。当前 Web 还提供用户反馈、插件管理、工作区改动摘要和文件交付卡片。
+随发行版 Web 组合不再包含 `schedule`、`ui-schedule` 和 `time-context` 配置行；它们由随包可选 bundle「自动化任务」（`@deepseek-ai/dsh-experimental-schedule-bundle`）插入，每次安装都携带该 bundle 且默认关闭。需要提醒功能时，在插件管理页「官方」分组启用「自动化任务」，它会向 profile 的 `dsh.profile.bundles` 追加条目；按 id 写 `disabled: false` 的旧 overlay 已无作用，可删除。随包可选 bundle 还有 `@deepseek-ai/dsh-experimental-agent-team-profile`、`@deepseek-ai/dsh-experimental-voice-input-bundle` 和 `@deepseek-ai/dsh-experimental-auto-review`。当前 Web 还提供用户反馈、插件管理、工作区改动摘要和文件交付卡片。
 
 ## 凭证与环境
 
@@ -202,11 +202,11 @@ export DEEPSEEK_SEARCH_BASE_URL=https://...
 
 `deepseek-official` 路由默认提供建议性目录：`deepseek-flash`、`deepseek-v4-flash-vision-exp`（支持图片）以及 `deepseek-v4-flash`、`deepseek-v4-pro`（仅文本），默认上下文窗口为 1,000,000 token。显式写入 `models` 会替换这份目录；已配置模型 ID 会原样发送到协议，因此网关必须实际支持所选 ID。DeepSeek 路由默认推理强度为 `high`，可选 `off`、`low`、`high` 和 `max`。
 
-基于 base 的 Web 组合还提供可选的 DeepSeek 账号登录和 `deepseek-account` 模型路由。账号路由只使用本地账号授权，不会回退到 API key；未登录时返回 `ACCOUNT_SIGN_IN_REQUIRED`，无效 token 返回 `ACCOUNT_TOKEN_INVALID`，账号路由配额错误使用 `ACCOUNT_QUOTA`。账号控制器 Remote 只返回状态和操作结果，不把 token 或 PKCE 私密数据交给浏览器。
+基于 base 的 Web 组合还提供可选的 DeepSeek 账号登录和 `deepseek-account` 模型路由。账号路由只使用本地账号授权，不会回退到 API key；未登录时返回 `ACCOUNT_SIGN_IN_REQUIRED`，无效 token 返回 `ACCOUNT_TOKEN_INVALID`，账号路由配额错误使用 `ACCOUNT_QUOTA`。账号控制器 Remote 只返回状态和操作结果，不把 token 或 PKCE 私密数据交给浏览器。普通 Web 客户端不采集产品埋点；桌面产品埋点（`ctx.productAnalytics`）和 `ctx.productTelemetry` 上报仅在 Desktop profile 启用。
 
-基础组合包默认挂载原生 DeepSeek 适配器、设置与凭据提供方、稳定的 `web_search` 和 `web_fetch`、仅限公网的 HTTP 抓取提供方、`present` 文件交付工具，以及 OTel 会话上传。Web 应用会禁用基础工具配置项，再通过 `cordis`、`ptc` 与 `standard` 智能体预设暴露相同工具。已启用的抓取调用会在所有沙箱与审批模式下执行，无需逐次确认；提供方会在连接前拒绝非公开目的地址。
+基础组合包默认挂载原生 DeepSeek 适配器、设置与凭据提供方、稳定的 `web_search` 和 `web_fetch`、仅限公网的 HTTP 抓取提供方、`present` 文件交付工具、共享 OTel 服务 `@deepseek-ai/dsh-otel` 以及 OTel 会话上传。Web 应用会禁用基础工具配置项，再通过 `cordis`、`ptc` 与 `standard` 智能体预设暴露相同工具。已启用的抓取调用会在所有沙箱与审批模式下执行，无需逐次确认；提供方会在连接前拒绝非公开目的地址。
 
-反馈记录在会话日志中，不会启动模型工作。默认开启的 DeepSeek 会话日志贡献器会随之后的 DeepSeek 请求发送尚未确认接收的完整日志后缀；将其 `enabled` 设为 `false` 可关闭。OTel 会话上传默认对所有用户和提供方使用 `FEEDBACK_ONLY`：新的文本反馈、消息评分、编辑或撤回会释放截至该事件的完整规范日志前缀，包含存储的上下文；后续记录等待下一次显式反馈。两条路径分别配置，通过环境变量覆盖 OTel 时：
+反馈记录在会话日志中，不会启动模型工作。默认开启的 DeepSeek 会话日志贡献器会随之后的 DeepSeek 请求发送尚未确认接收的完整日志后缀；可在 Web「设置 → 通用 → 在使用官方模型 API 时上传 Session Log」开关关闭，或将 `enabled` 配置设为 `false`，修改从下一次请求生效。OTel 会话上传默认对所有用户和提供方使用 `FEEDBACK_ONLY`：新的文本反馈、消息评分、编辑或撤回会释放截至该事件的完整规范日志前缀，包含存储的上下文；后续记录等待下一次显式反馈。两条路径分别配置，通过环境变量覆盖 OTel 时：
 
 - `DSH_TELEMETRY_MODE=DISABLED`：禁止 OTel 捕获，全部数据留在本地。
 - `DSH_TELEMETRY_MODE=FULL`：当前构建拒绝该值，不要用它开启全量上传。
@@ -259,11 +259,11 @@ PTC 模式通过 `ctx.ptcRuntime` 执行模型编写的 TypeScript 程序。运�
 
 ## 用户问题、提醒与可选集成
 
-`ask_user_question` 通过 `ctx.userQuestions` 暂停当前根 Agent 等待结构化回答；提供 `agent` 时必须是当前注册表中的精确运行时根，委托子 Agent 不能等待人类回答。`plan-review` 意图只改变 UI 呈现，不改变答案编码。
+`ask_user_question` 通过 `ctx.userQuestions` 暂停当前根 Agent 等待结构化回答；提供 `agent` 时必须是当前注册表中的精确运行时根，委托子 Agent 不能等待人类回答。`plan-review` 意图只改变 UI 呈现，不改变答案编码。工具插件配置 `mode: 'legacy' | 'timed'`，默认保持阻塞行为；`timed` 模式启用前台超时（默认 120 秒，`timeout: -1` 表示本次调用无限期等待），超时返回 `{ pending: true, callId }`——pending 表示问题仍可回答，不是空答案或拒绝；用户之后的迟到回复作为 `user-question-reply` 来源的用户消息进入会话，并把投影中的问题移入已结算。`userQuestions` Session 投影把计时问题折叠为可回答（open/continued）与已结算两个集合。
 
-Schedule、时间上下文和 Web 提醒页面当前随发行版组合默认禁用；启用时使用 `schedule_create`、`schedule_list`、`schedule_update` 和 `schedule_delete`，并提供一次性、固定间隔、每日、每周和五字段 cron 目标。任务绑定原始 Session，投递为普通 follow-up，不中途 steer 当前轮次，也不代表模型已完成。
+Schedule、时间上下文和 Web 提醒页面随包可选 bundle `@deepseek-ai/dsh-experimental-schedule-bundle` 提供，默认关闭；在插件管理页启用后使用 `schedule_create`、`schedule_list`、`schedule_update` 和 `schedule_delete`，并提供一次性、固定间隔、每日、每周和五字段 cron 目标。任务绑定原始 Session，投递为普通 follow-up，不中途 steer 当前轮次，也不代表模型已完成。
 
-MCP 资源、Office 转 PDF、语音输入、浏览器/计算机操作、账号登录和账号模型路由都是可选能力，必须读取对应 bundle/子系统文档确认当前 profile 是否挂载，不要因为包存在就假设默认可用。
+MCP 资源、Office 转 PDF、语音输入、浏览器/计算机操作、账号登录和账号模型路由都是可选能力，必须读取对应 bundle/子系统文档确认当前 profile 是否挂载，不要因为包存在就假设默认可用。Windows 上挂载本地沙箱提供方后，`@deepseek-ai/dsh-sandbox-windows-acl` 自动作为 `ctx.sandbox` 的 runner，把受限 bash 与 PowerShell 子进程的写入和删除限制在工作区与私有临时目录内，无需额外配置。
 
 ## 源码开发检查
 

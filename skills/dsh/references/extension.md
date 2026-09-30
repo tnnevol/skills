@@ -217,7 +217,11 @@ export function apply(ctx: Context) {
 
 ## 用户问题与 Schedule
 
-需要暂停等待人类决定时使用 `ctx.userQuestions.ask()`；带 `agent` 的请求必须来自精确的运行时根 Agent，委托子 Agent 不能等待 Web answerer。`plan-review` 只改变呈现，不改变答案结构。Schedule 是宿主级能力，模型通过 `schedule_create`、`schedule_list`、`schedule_update` 和 `schedule_delete` 管理绑定原始 Session 的提醒；默认 Web 组合保留但禁用 `schedule`、`ui-schedule` 和 `time-context`，启用时必须显式配置三者。
+需要暂停等待人类决定时使用 `ctx.userQuestions.ask()`；带 `agent` 的请求必须来自精确的运行时根 Agent，委托子 Agent 不能等待 Web answerer。`plan-review` 只改变呈现，不改变答案结构。需要前台限时等待时使用 `askTimed()`（或把 `ask_user_question` 插件配置为 `mode: 'timed'`，默认 120 秒，调用级 `timeout: -1` 表示无限期）：超时返回 `{ pending: true, callId }` 而不是空答案，Client 可通过 `attachWait` 流接手剩余时长；迟到回复经 `answer` Remote 排队为 `user-question-reply` 来源的用户消息，重复排队返回 `REPLY_QUEUED`，批次不匹配返回 `BAD_ANSWER`。Schedule 是宿主级能力，模型通过 `schedule_create`、`schedule_list`、`schedule_update` 和 `schedule_delete` 管理绑定原始 Session 的提醒；随发行版 Web 组合不再包含这三行，由可选 bundle `@deepseek-ai/dsh-experimental-schedule-bundle` 插入，默认关闭。
+
+## OTel 上报通道
+
+需要发送产品埋点或 Session 事件时，从 `ctx.otel` 创建独立通道：`createEventReporter(options)` 用 SDK 按条数聚合普通事件，`createSessionLogReporter(options)` 把每条完整事件作为一个记录，未压缩请求不超过 4,000,000 字节。选项显式提供 endpoint、scope、resource attributes、队列设置和诊断回调；header 显式提供，服务不附加 channel header，也不继承环境授权。把通道的 `shutdown(signal)` 注册到调用方 Cordis fiber，并用配置期限约束清空过程；调用方卸载后不得继续保留通道。调用方拥有授权、脱敏和字段选择责任，仅挂载服务不会采集数据。
 
 ## 实验性智能体团队
 
@@ -247,7 +251,7 @@ export function apply(ctx: Context) {
 4. 运行 pnpm dsh plugin --profile <name> add <package> 安装并验证组合层。
 5. 使用 dsh --profile <name> --dump-config 确认 patch 顺序、依赖和命令行表达式。
 
-新增 vendored 包时，先阅读 vendor/README.md 和对应 cookbook；除源码、路径映射、Host 引用外，还要维护 vendor manifest。
+随包可选 bundle（`packages/boot/app-boot` 的 `OPTIONAL_BUNDLES`）是安装的运行时依赖：声明 `dsh.bundle.patch`、`icon` 和 `./locale/*.json` 显示元数据，不被随附模板选中，由插件管理页在「官方」分组以默认关闭提供；纯配置 bundle 的 patch 即运行时内容，可发布空模块入口。新增 vendored 包时，先阅读 vendor/README.md 和对应 cookbook；除源码、路径映射、Host 引用外，还要维护 vendor manifest。
 
 ## 测试与文档
 
@@ -281,6 +285,8 @@ export function apply(ctx: Context) {
 - [PTC 运行时](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/ptc-runtime)
 - [用户交互](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/user-questions)
 - [宿主级 Schedule](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/schedule)
+- [OTel 通道](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/telemetry/otel/README.zh.md)
+- [可选 bundle 示例](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/experimental/schedule-bundle/README.zh.md)
 - [交付物子系统](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/deliverables.zh.md)
 - [文件系统](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/filesystem)
 - [工作区](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/workspace)

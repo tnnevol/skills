@@ -7,7 +7,7 @@ description: >-
   用户需要安装、运行、配置、排错或扩展 DeepSeek Harness（dsh）时使用，包括 profile 组合、Web 界面、工作区、工作区文件、智能体模式预设、无头任务、SDK、ACP、插件、Cordis、工具、模型适配器、会话、会话格式迁移、会话持久化、网络代理、设置卡片、图片和文件附件、文件交付、反馈、文件引用、Remote API、会话投影、子代理、智能体团队、会话导出和能力接缝。
 metadata:
   author: Tnnevol
-  version: "1.0.4"
+  version: "1.0.5"
 ---
 
 # dsh 技能
@@ -33,7 +33,7 @@ npx @deepseek-ai/dsh web
 
 ### 使用源码
 
-源码开发要求 Node.js 22.19+ 或 24+，并使用仓库固定的 pnpm 版本。当前源项目版本为 `0.1.7-rc.2`，仍处于开发者预览阶段，未来可能包含破坏性变更：
+源码开发要求 Node.js 22.19+ 或 24+，并使用仓库固定的 pnpm 版本。当前源项目版本为 `0.2.0-rc.2`，仍处于开发者预览阶段，未来可能包含破坏性变更：
 
 ~~~sh
 git clone https://github.com/deepseek-ai/deepseek-harness.git
@@ -97,8 +97,9 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 15. **工作区文件读取遵守 Session 授权。** `workspaceFiles` 负责有界文本或字节读取、目录列举和变更流；文件读取可按文件系统权限访问工作区外路径，但 `list` 与 `changes` 只允许 Session 工作区，不能自行拼接宿主路径绕过检查。
 16. **反馈不启动模型轮次。** `/feedback`、`sessionFeedback` 和消息反馈都写入会话日志，不进入模型历史；消息反馈使用版本令牌做比较并交换，过期更新应报告冲突而不是覆盖。
 17. **CLI 的 profile 与诊断行为以当前参考为准。** `dsh <name>` 是 profile 简写，`--dump-config-schema` 输出 JSON Schema，必需插件启动失败会写入 `$DSH_HOME/logs/startup-<timestamp>-<uuid>.log`；不要把 schema dump 当作实际配置值，也不要在分享诊断前忽略其中可能包含的凭据或配置。
-18. **默认 Web 组合不自动启用所有实验能力。** 当前随发行版的 Web 组合禁用 `schedule`、`ui-schedule` 和 `time-context`；需要提醒时必须显式启用对应插件。PTC 代码执行、语音输入、浏览器/计算机操作和 Office 转 PDF 也都应按对应 bundle 或 profile 明确启用。
+18. **Web 组合不自动包含 Schedule 等可选能力。** 随发行版的 Web 组合不再包含 `schedule`、`ui-schedule` 和 `time-context` 三行；它们由随包可选 bundle「自动化任务」（`@deepseek-ai/dsh-experimental-schedule-bundle`）插入，默认关闭，需在插件管理页「官方」分组启用或手动加入 profile 的 `dsh.profile.bundles`。按 id 写 `disabled: false` 覆盖旧组合的 patch 在新版本会报 `patch: entry schedule not found`。随包可选 bundle 还包括智能体团队、语音输入和自动评审；PTC 代码执行、浏览器/计算机操作和 Office 转 PDF 仍按对应 bundle 或 profile 显式启用。
 19. **工作区改动摘要与文件交付属于不同事实。** `@deepseek-ai/dsh-workspace-changes` 通过 `workspace/changes` 记录一轮改动摘要，`@deepseek-ai/dsh-tool-present` 通过 `deliverables/presented` 声明用户要接收的文件；前者默认只供客户端读取，后者只记录路径，不复制内容。
+20. **OTel 上报通过共享 `ctx.otel` 服务创建通道。** base 组合挂载 `@deepseek-ai/dsh-otel`；产品埋点（`ctx.productTelemetry`）和 Session 上传（`ctx.sessionTelemetry`）适配器都从它获取独立通道，Session 上传按 `maxRequestBytes`（上限 4,000,000 字节）分包串行发送。桌面产品埋点与 `ctx.productAnalytics` 采集仅在 Desktop profile 启用，普通 Web 客户端不采集产品事件。
 
 ## 扩展开发工作流
 
@@ -125,7 +126,8 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 - **智能体团队**：通过实验性的 `ctx.agentTeams` 管理成员、消息和共享任务板，使用 `Steer` 唤醒或继续成员。
 - **用户反馈**：通过 `/feedback`、`sessionFeedback` 和 `messageFeedback` 记录 Session 或单条 assistant 消息的反馈，不触发模型工作。
 - **PTC 与动态工具**：通过 `ctx.ptcRuntime` 运行绑定安全的 TypeScript/Python 程序；支持运行期间的工具更新时，按路由能力将工具增删以持久 `tool` 事件记录并回放。
-- **可选集成**：提供定时提醒、用户问题、MCP 资源、Office 转 PDF、语音输入和账号模型路由等可选能力，是否启用以当前 profile 组合为准。
+- **可选集成**：提供定时提醒、用户问题、MCP 资源、Office 转 PDF、语音输入和账号模型路由等可选能力，是否启用以当前 profile 组合为准；Schedule 相关能力随包可选 bundle 默认关闭。
+- **Windows ACL 沙箱**：Windows 上 `@deepseek-ai/dsh-sandbox-windows-acl` 用受限令牌把子进程写入与删除限制在工作区和私有临时目录。
 - **隐私与遥测**：默认按反馈门控；`DSH_TELEMETRY_MODE=DISABLED` 可强制全部留在本地，详细规则见命令行参考。
 - **能力替换**：文件系统、shell、终端、沙箱、审批、子 agent、Web、存储和持久化均通过可替换 seam 接入。
 - **开发方式**：既可以用本地 cordis.yml 或 --patch 快速验证，也可以发布带 dsh.bundle 声明的插件包供 profile 安装。
@@ -141,7 +143,7 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 - 文件没有出现在交付卡片：确认文件已经创建且可由当前 Session 文件系统访问，并在最终回复前调用 `present`；仅输出文件路径不会生成交付声明。
 - 工作区文件预览失败：确认请求携带正确的 Session 身份和工作区作用域；文本读取使用行窗口，字节读取使用 `readBytes`，目录与变更观察不能越过工作区。
 - 反馈操作失败：消息反馈使用当前 `version` 做 `ifVersion` 比较并交换；Session 级反馈只接受 live Session，反馈事件不会进入模型上下文。
-- 提醒工具不可用：检查 Web 组合是否按预期启用了 `schedule`、`ui-schedule` 和 `time-context`；当前随发行版组合默认禁用它们。
+- 提醒工具不可用：打开插件管理页「官方」分组启用「自动化任务」（`@deepseek-ai/dsh-experimental-schedule-bundle`），它负责插入 `schedule`、`ui-schedule` 和 `time-context` 三行；启动日志出现 `patch: entry schedule not found` 说明 profile patch 仍在按 id 覆盖已移除的旧组合行，迁移步骤见源项目 `docs/upgrade-guide/v0.1.7-rc.2/`。
 - PTC 或代码工具不可用：检查当前 preset 是否启用了 `ptc`/代码工作工具，以及是否挂载了匹配的 `dsh-ptc-runtime` 后端。
 - 启动失败但终端信息不足：读取 `$DSH_HOME/logs/startup-<timestamp>-<uuid>.log`，分享前先检查日志中的配置、路径和凭据内容。
 - 网络代理不生效：确认 `HTTP_PROXY`、`HTTPS_PROXY` 在启动前已设置，或写入 `$DSH_HOME/.env`；用 `NO_PROXY` 排除目标，用 `NODE_EXTRA_CA_CERTS` 处理 TLS 拦截代理，并注意 SOCKS 地址不受支持。
@@ -150,7 +152,7 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 - Remote 调用失败：按 `RemoteResult<T>` 的 `ok` 字段分支，并按 `error.code` 处理；取消一元调用时应检查 `gateway/cancelled`，不要依赖异常捕获或 `instanceof`。
 - 会话投影缺失：确认消费方注入了 `sessionProjections`，并检查所需投影键是否已由领域插件注册；不要用默认状态掩盖能力缺失。
 - 插件不加载：检查模块路径、inject 服务是否存在、配置 schema 是否通过，以及是否误把 profile 参数交给了启动器。
-- 运行时行为异常：先查看 session/event 持久日志，再区分实时 agent/* 事件、工具 tools/* 事件和模型 llm/stream 事件；需要搜索或遥测时核对 `DEEPSEEK_SEARCH_BASE_URL`、`DSH_TELEMETRY_MODE`、`DSH_TELEMETRY_OTLP_URL` 和 `DSH_TELEMETRY_DISABLED`。
+- 运行时行为异常：先查看 session/event 持久日志，再区分实时 agent/* 事件、工具 tools/* 事件和模型 llm/stream 事件；需要搜索或遥测时核对 `DEEPSEEK_SEARCH_BASE_URL`、`DSH_TELEMETRY_MODE`、`DSH_TELEMETRY_OTLP_URL` 和 `DSH_TELEMETRY_DISABLED`；Session Log 随官方 API 请求的上传可在 Web「设置 → 通用」开关或 `session-log-deepseek` 的 `enabled` 配置关闭。
 - 源码运行旧版本：重新执行 `pnpm run build`；`pnpm dsh` 不会判断构建产物是否新鲜，旧的前端产物可能继续被使用。
 - 图片显示或恢复异常：确认附件已经通过 `ctx.attachments` 校验并持久化，且会话事件保存的是不透明引用；模型工具使用 `imageHostPath` 时还要检查当前执行文件系统的可读性。
 - 文件补全异常：确认文件引用提供方与 `read` 工具使用同一命名空间；`@file` 只插入路径，不会把文件内容直接放进提示词。
@@ -177,3 +179,4 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 - [GitHub 评审会话](https://deepseek-harness.github.io/deepseek-harness/guide/github-review)
 - [会话内提醒](https://deepseek-harness.github.io/deepseek-harness/guide/schedule)
 - [记忆 MCP](https://deepseek-harness.github.io/deepseek-harness/guide/mcp-memory)
+- [升级指南（0.1.7-rc.2）](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/upgrade-guide/v0.1.7-rc.2/schedule-optional-bundle/guide.zh.md)

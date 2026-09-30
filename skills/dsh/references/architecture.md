@@ -31,7 +31,7 @@ waterfall 是环绕式中间件。只做观察或标注的监听器必须调用 
 
 基于 `dsh-base` 的 profile 默认使用 `read`、`write` 和 `edit` 文件工具；`str_replace_editor` 需要通过 patch 显式启用。`dsh-sdk-minimal` 不继承 base，只提供按平台选择的持久 shell，并使用未压缩 JSONL 保存会话。
 
-其他常见可选能力包括 `@deepseek-ai/dsh-ptc-runtime`（代码工作工具的执行 seam）、`@deepseek-ai/dsh-tool-present` 与 `@deepseek-ai/dsh-workspace-changes`（交付物与轮次改动摘要）、`@deepseek-ai/dsh-user-questions`（人类问答）、`@deepseek-ai/dsh-schedule`（宿主提醒）、`@deepseek-ai/dsh-mcp-resources`（MCP 资源）、`@deepseek-ai/dsh-office-to-pdf`（Office 预览转换）和 `@deepseek-ai/dsh-deepseek-account`（账号状态与授权）。它们是否生效取决于当前 profile 的 patch；包安装存在不代表能力已经挂载。
+其他常见可选能力包括 `@deepseek-ai/dsh-ptc-runtime`（代码工作工具的执行 seam）、`@deepseek-ai/dsh-tool-present` 与 `@deepseek-ai/dsh-workspace-changes`（交付物与轮次改动摘要）、`@deepseek-ai/dsh-user-questions`（人类问答）、`@deepseek-ai/dsh-mcp-resources`（MCP 资源）、`@deepseek-ai/dsh-office-to-pdf`（Office 预览转换）和 `@deepseek-ai/dsh-deepseek-account`（账号状态与授权）。Schedule 相关的 `@deepseek-ai/dsh-schedule`、`@deepseek-ai/dsh-client-ui-schedule` 和 `@deepseek-ai/dsh-time-context` 已从 Web 组合移除，由随包可选 bundle `@deepseek-ai/dsh-experimental-schedule-bundle` 插入。它们是否生效取决于当前 profile 的 bundle 列表和 patch；包安装存在不代表能力已经挂载。
 
 配置层按以下顺序生效：组合包列表 → profile 的 cordis.patch.yml → $DSH_HOME/cordis.patch.yml → 命令行 --patch。各层按顺序应用，同一行后应用的层覆盖前层；patch 替换整行 config，不是递归合并。因此修改时要保留依赖注入、!!js 表达式和其他未改动字段。`dsh-hmr` 负责启用配置层的串行重载；未挂载它的 profile 修改后需要重启。
 
@@ -70,6 +70,8 @@ waterfall 是环绕式中间件。只做观察或标注的监听器必须调用 
 | 添加用户反馈 | 使用 `sessionFeedback` 或 `messageFeedback` 写入日志，不启动模型轮次 |
 | 添加会话派生状态 | 使用 ctx.sessionProjections 注册投影单元，并由 stateOf() 或 snapshot() 读取 |
 | 添加宿主端与客户端 API | 宿主端控制器使用 @Remote，客户端通过 ctx.remote 调用生成契约 |
+| 添加 OTel 上报通道 | 使用 ctx.otel 创建独立的事件或 Session 日志通道，调用方拥有授权、脱敏和关闭 |
+| 限制 Windows 子进程写入 | 挂载本地沙箱后由 @deepseek-ai/dsh-sandbox-windows-acl 作为 runner，或直接使用其 AclSandbox API |
 
 ## 宿主端、客户端与 Remote
 
@@ -182,11 +184,17 @@ Web 的 `workspaceFiles` 服务按 Session 身份提供 `read`、`readBytes`、`
 
 `/feedback`、`ctx.sessionFeedback` 和 `ctx.messageFeedback` 将用户反馈作为仅写日志事件保存，不进入 `deriveMessages()`，也不会启动或中断模型轮次。Session 级反馈使用固定 `FeedbackCategory` 分类；逐消息 `put`、`delete` 通过 `ifVersion` 做乐观并发校验，过期版本返回冲突，删除不是隐私擦除。
 
+## 遥测与 OTel 通道
+
+base 组合挂载 `@deepseek-ai/dsh-otel`，提供 `ctx.otel` 共享服务：普通埋点用 `ctx.otel.createEventReporter(options)`，完整 Session 事件用 `ctx.otel.createSessionLogReporter(options)`；每个通道拥有独立的 exporter、resource、instrumentation scope 和队列，选项显式提供 endpoint、scope、resource attributes、队列设置和诊断回调，服务本身没有部署默认值，也不继承环境中的授权 header。Session 通道把每条完整事件保留为一个记录，未压缩请求不超过 4,000,000 字节（`maxRequestBytes`），请求串行发送。调用方负责授权、脱敏、字段选择和把关闭注册到自己的 fiber；仅挂载服务不会创建传输或采集数据。
+
+产品遥测适配器 `ctx.productTelemetry` 发送显式提交的分析事件；桌面交互采集 `ctx.productAnalytics` 只在 Desktop profile 启用，普通 Web 客户端不采集产品事件。Session 上传适配器默认 `FEEDBACK_ONLY`，由 `ctx.sessionTelemetry` seam 捕获、脱敏并交给后端。
+
 ## 用户问题与提醒
 
-`ctx.userQuestions.ask()` 通过作用域化 answerer waterfall 等待人类回答。带 `agent` 的请求只允许运行时根 Agent，委托子 Agent 没有 Web answerer，不能把持久谱系当作人类交互权限；`plan-review` 意图只改变呈现，不改变答案结构。
+`ctx.userQuestions.ask()` 通过作用域化 answerer waterfall 等待人类回答。带 `agent` 的请求只允许运行时根 Agent，委托子 Agent 没有 Web answerer，不能把持久谱系当作人类交互权限；`plan-review` 意图只改变呈现，不改变答案结构。计时问题通过 `askTimed()` 在有界前台窗口内等待：超时返回 `{ pending: true, callId }`，问题仍可回答；Client 通过 `attachWait` 流接手剩余时长，无人接手时超时只中止前台 waterfall 专属的 signal，不取消轮次。`userQuestions` Session 投影把计时 `ask_user_question` 调用折叠为 open/continued 与 settled 两个集合；只有请求头声明了带 `timeout` 参数的 timed schema 才被跟踪，阻塞式 legacy 调用不进入投影。迟到的回答在消息获准成为 `user/message` 时把已继续的问题移入 settled。
 
-Schedule 是宿主级存储和投递能力，与 Session 加载状态分离；任务绑定原始 Session，支持一次性、固定间隔、每日、每周和五字段 cron 目标，投递为普通 follow-up，不中途 steer 当前轮次。随发行版 Web 组合当前保留但默认禁用 `schedule`、`ui-schedule` 和 `time-context`，启用时要同时配置三者。
+Schedule 是宿主级存储和投递能力，与 Session 加载状态分离；任务绑定原始 Session，支持一次性、固定间隔、每日、每周和五字段 cron 目标，投递为普通 follow-up，不中途 steer 当前轮次。随发行版 Web 组合不再包含 `schedule`、`ui-schedule` 和 `time-context` 三行，由随包可选 bundle `@deepseek-ai/dsh-experimental-schedule-bundle` 插入，默认关闭。
 
 PTC 运行时、MCP 资源、Office 转 PDF、SSH、语音输入、浏览器/计算机操作和 DeepSeek 账号模型路由都是可选 seam。它们通过独立 package 或 profile patch 加入运行时；扩展或排错时先确认当前 profile 是否真的挂载对应 service、client 和 provider。
 
@@ -240,6 +248,8 @@ PTC 运行时、MCP 资源、Office 转 PDF、SSH、语音输入、浏览器/计
 - [用户交互](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/user-questions)
 - [宿主级 Schedule](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/schedule)
 - [交付物子系统](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/deliverables.zh.md)
+- [OTel 通道](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/telemetry/otel/README.zh.md)
+- [升级指南（Schedule 可选 bundle）](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/upgrade-guide/v0.1.7-rc.2/schedule-optional-bundle/guide.zh.md)
 - [子代理](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/subagent)
 - [文件系统](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/filesystem)
 - [工作区](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/workspace)
