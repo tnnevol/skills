@@ -90,6 +90,7 @@ Brief description of what this skill covers.
 
 ### 同步流程（dsh 示例）
 
+首次 clone 后 `pnpm install` 经 `prepare`（scripts/prepare.js）自动浅初始化子模块并启用 docs/ sparse；CI 可用 `DSH_SKIP_PREPARE=1 pnpm install` 跳过。
 1. `node scripts/sync-dsh.js` 查看当前锁定与上游新 tag
 2. `node scripts/sync-dsh.js --pin <tag|latest>` 移动子模块指针
 3. `cd sources/dsh && git log --oneline <旧sha>..<新sha> -- docs/` 圈定文档差异

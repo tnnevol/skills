@@ -12,6 +12,9 @@ sparse 检出 `docs/`）的快照手工提炼维护，不复制原文。
 
 ## 同步流程
 
+首次 clone 后 `pnpm install` 会通过 `prepare` 脚本自动初始化子模块
+（浅克隆 + 仅检出 `docs/`）；也可手动执行 `git submodule update --init sources/dsh`。
+
 1. `node scripts/sync-dsh.js` 查看当前锁定与上游新 tag。
 2. `node scripts/sync-dsh.js --pin <tag>` 移动子模块指针（脚本会自动 `git add`）。
 3. `cd sources/dsh && git log --oneline <旧sha>..<新sha> -- docs/` 圈定文档差异。

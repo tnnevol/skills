@@ -10,6 +10,7 @@
     "clean": "node scripts/app-runner.js clean",
     "bump": "node scripts/app-runner.js bump",
     "publish": "node scripts/app-runner.js publish",
+    "prepare": "node scripts/prepare.js",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress serve docs"
