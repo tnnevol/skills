@@ -39,6 +39,14 @@ CLI 工具可直接被 AI Agent 调用，实现自动化管理。
 | [openlist](skills/openlist)     | OpenList 网盘聚合 - 通过 openlist-cli 管理文件、分享、后台 - Tnnevol |
 | [dsh](skills/dsh)               | DeepSeek Harness - 运行、配置和插件扩展 - Tnnevol                         |
 
+## 文档源子模块
+
+部分技能从上游开源项目的文档提炼而成，上游仓库以 git submodule 挂在 `sources/`（只读原材料，不随技能发布）。贡献者 clone 后 `pnpm install` 会自动浅初始化子模块；同步流程见 [AGENTS.md](AGENTS.md) 的「文档源子模块」章节。
+
+| 子模块       | 上游                                                              | 锁定版本              |
+| ------------ | ----------------------------------------------------------------- | --------------------- |
+| `sources/dsh` | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) | `dsh-v0.2.0-rc.2` |
+
 ## License
 
 本仓库的技能及脚本均采用 [非商业使用许可证](LICENSE.md)。
