@@ -15,8 +15,9 @@ sparse 检出 `docs/`）的快照手工提炼维护，不复制原文。
 首次 clone 后 `pnpm install` 会通过 `prepare` 脚本自动初始化子模块
 （浅克隆 + 仅检出 `docs/`）；也可手动执行 `git submodule update --init sources/dsh`。
 
-1. `node scripts/sync-dsh.js` 查看当前锁定与上游新 tag。
-2. `node scripts/sync-dsh.js --pin <tag>` 移动子模块指针（脚本会自动 `git add`）。
+1. `pnpm start check dsh` 查看当前锁定与上游新 tag。
+2. `pnpm start sync dsh <tag|latest>` 移动子模块指针（脚本会自动 `git add`；
+   注意 latest 会立即移动指针，非幂等预览）。
 3. `cd sources/dsh && git log --oneline <旧sha>..<新sha> -- docs/` 圈定文档差异。
 4. 按差异改写 `skills/dsh/SKILL.md` 与 `references/`，更新本文件的
    Pinned tag / Git SHA / Synced / Skill version。

@@ -23,8 +23,9 @@ skills/vitepress-mermaid-renderer 的参考文件依据 `sources/vitepress-merma
 （浅克隆 + 仅检出 `docs/content/zh`）；也可手动执行
 `git submodule update --init sources/vitepress-mermaid-renderer`。
 
-1. `node scripts/sync-docs.js` 查看当前锁定与上游新 tag。
-2. `node scripts/sync-docs.js --pin <tag>` 移动子模块指针（脚本会自动 `git add`）。
+1. `pnpm start check vitepress-mermaid-renderer` 查看当前锁定与上游新 tag。
+2. `pnpm start sync vitepress-mermaid-renderer <tag|latest>` 移动子模块指针
+   （脚本会自动 `git add`；注意 latest 会立即移动指针，非幂等预览）。
 3. `cd sources/vitepress-mermaid-renderer && git log --oneline <旧sha>..<新sha> -- docs/` 圈定文档差异。
 4. 按差异轻改写 `skills/vitepress-mermaid-renderer/references/`，更新本文件的
    Pinned tag / Git SHA / Synced / Skill version。

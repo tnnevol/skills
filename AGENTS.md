@@ -93,10 +93,10 @@ Brief description of what this skill covers.
 
 ### 同步流程（通用）
 
-首次 clone 后 `pnpm install` 经 `prepare`（scripts/prepare.js）自动浅初始化子模块并启用 sparse；CI 可用 `DSH_SKIP_PREPARE=1 pnpm install` 跳过。同步脚本 `scripts/sync-docs.js` 对所有子模块通用（省略项目名报告全部；`sync-dsh.js` 是 dsh 的兼容别名）：
+首次 clone 后 `pnpm install` 经 `prepare`（scripts/prepare.ts）自动浅初始化子模块并启用 sparse；CI 可用 `DSH_SKIP_PREPARE=1 pnpm install` 跳过。同步 CLI `scripts/cli.ts` 对所有子模块通用（check 省略项目名报告全部）：
 
-1. `node scripts/sync-docs.js` 查看全部子模块当前锁定与上游新 tag
-2. `node scripts/sync-docs.js <project> --pin <tag|latest>` 移动指定子模块指针
+1. `pnpm start check` 查看全部子模块当前锁定与上游新 tag（`pnpm start check <project>` 查单个）
+2. `pnpm start sync <project> <tag|latest>` 移动指定子模块指针（脚本会自动 `git add`；**注意 latest 会立即移动指针**，非幂等预览）
 3. `cd sources/<project> && git log --oneline <旧sha>..<新sha> -- <sparseDir>` 圈定文档差异
 4. 按差异改写 `skills/<project>/`，更新 `GENERATION.md` 与 SKILL.md 版本号
 5. 子模块指针与技能改动**一并提交**

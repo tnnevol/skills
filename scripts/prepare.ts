@@ -18,17 +18,17 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
 
-// 各子模块只检出的文档目录（与 scripts/sync-docs.js SUBMODULES 保持一致）
-const SPARSE_DIRS = {
+// 各子模块只检出的文档目录（与 scripts/cli.ts SUBMODULES 保持一致）
+const SPARSE_DIRS: Record<string, string> = {
   'sources/dsh': 'docs',
   'sources/vitepress-mermaid-renderer': 'docs/content/zh',
 }
 
-function exec(cmd, cwd = root) {
+function exec(cmd: string, cwd: string = root): string {
   return execSync(cmd, { cwd, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'inherit'] }).trim()
 }
 
-function execSafe(cmd, cwd = root) {
+function execSafe(cmd: string, cwd: string = root): string | null {
   try {
     return exec(cmd, cwd)
   }
@@ -83,7 +83,7 @@ for (const line of uninitialized) {
     console.log(`[prepare] ${path} 初始化失败（非致命；稍后可运行 git submodule update --init ${path}）`)
     continue
   }
-  // 只保留文档目录，丢掉上游源码（sparseDir 见 scripts/sync-docs.js SUBMODULES）
+  // 只保留文档目录，丢掉上游源码（sparseDir 见 scripts/cli.ts SUBMODULES）
   const sparseDir = SPARSE_DIRS[path]
   if (sparseDir && execSafe('git sparse-checkout init --cone', join(root, path)) !== null) {
     exec(`git sparse-checkout set ${sparseDir}`, join(root, path))

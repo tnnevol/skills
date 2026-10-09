@@ -187,4 +187,4 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 
 - **仅维护简体中文**：改写只依据上游 `*.zh.md` 中文页；英文页与 `.i18n.yaml` 配对文件不纳入本技能。
 - **快照即依据**：回答基于锁定快照；用户本地 dsh 版本更高时，以 `--dump-config`、`--help` 和实际源码为准，并注明版本差异。
-- **同步流程**：`node scripts/sync-dsh.js` 查看状态，`node scripts/sync-dsh.js --pin <tag>` 移动锁定，按 `GENERATION.md` 的步骤改写参考文件并更新版本记录。
+- **同步流程**：`pnpm start check dsh` 查看状态，`pnpm start sync dsh <tag|latest>` 移动锁定，按 `GENERATION.md` 的步骤改写参考文件并更新版本记录。

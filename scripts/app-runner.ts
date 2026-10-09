@@ -1,0 +1,102 @@
+#!/usr/bin/env node
+import { execSync } from 'node:child_process'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import process from 'node:process'
+import { fileURLToPath } from 'node:url'
+/**
+ * apps/ 独立应用运行器
+ *
+ * 用法: node scripts/app-runner.ts <dev|build|test|clean|bump|publish>
+ *
+ * apps/ 下仅一个应用时直接运行；多个应用时交互选择。
+ */
+import { cancel, isCancel, select } from '@clack/prompts'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const rootDir = join(__dirname, '..')
+const appsDir = join(rootDir, 'apps')
+
+const command = process.argv[2]
+
+if (!command) {
+  console.error('用法: node app-runner.ts <dev|build|test|clean|bump|publish>')
+  process.exit(1)
+}
+
+// 扫描 apps/ 下的应用
+const apps = readdirSync(appsDir).filter((dir) => {
+  return existsSync(join(appsDir, dir, 'package.json'))
+})
+
+if (apps.length === 0) {
+  console.error('apps/ 目录下没有找到任何应用')
+  process.exit(1)
+}
+
+interface AppPackage {
+  name: string
+}
+
+// 选择应用（apps 下仅一个应用时直接运行，无需选择）
+let app: string
+if (apps.length === 1) {
+  app = apps[0]
+}
+else {
+  const selected = await select({
+    message: '选择应用',
+    options: apps.map(a => ({ value: a, label: a })),
+  })
+
+  if (isCancel(selected)) {
+    cancel('已取消')
+    process.exit(0)
+  }
+  app = selected
+}
+
+const appPath = join(appsDir, app)
+const pkgPath = join(appPath, 'package.json')
+const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8')) as AppPackage
+const packageName = pkg.name
+
+console.log(`\n选择的应用: ${app} (${packageName})\n`)
+
+// 执行命令
+switch (command) {
+  case 'dev':
+  case 'build':
+  case 'test':
+  case 'clean':
+    execSync(`pnpm --filter ${packageName} ${command}`, {
+      cwd: rootDir,
+      stdio: 'inherit',
+    })
+    break
+
+  case 'bump':
+    execSync('pnpm exec bumpp --no-push --no-tag', {
+      cwd: appPath,
+      stdio: 'inherit',
+    })
+    break
+
+  case 'publish': {
+    console.log(`\n正在构建 ${app}...`)
+    execSync(`pnpm --filter ${packageName} build`, {
+      cwd: rootDir,
+      stdio: 'inherit',
+    })
+    console.log(`\n正在发布 ${app}...`)
+    execSync(`pnpm --filter ${packageName} publish --access public`, {
+      cwd: rootDir,
+      stdio: 'inherit',
+    })
+    break
+  }
+
+  default:
+    console.error(`未知命令: ${command}`)
+    process.exit(1)
+}

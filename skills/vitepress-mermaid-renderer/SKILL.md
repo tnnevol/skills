@@ -24,7 +24,7 @@ metadata:
 
 - **仅维护简体中文**：改写只依据上游 `docs/content/zh` 中文页；英文/土耳其语页面不纳入本技能。
 - **快照即依据**：回答基于锁定快照 `v1.2.2`；用户本地安装的 renderer 版本更高时，以其源码与类型定义为准，并注明版本差异。
-- **同步流程**：`node scripts/sync-docs.js` 查看状态，`node scripts/sync-docs.js --pin <tag>` 移动锁定，按 `GENERATION.md` 的步骤轻改写参考文件并更新版本记录。
+- **同步流程**：`pnpm start check vitepress-mermaid-renderer` 查看状态，`pnpm start sync vitepress-mermaid-renderer <tag|latest>` 移动锁定，按 `GENERATION.md` 的步骤轻改写参考文件并更新版本记录。
 
 ## 工作流
 
