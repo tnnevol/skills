@@ -43,9 +43,10 @@ CLI 工具可直接被 AI Agent 调用，实现自动化管理。
 
 部分技能从上游开源项目的文档提炼而成，上游仓库以 git submodule 挂在 `sources/`（只读原材料，不随技能发布）。贡献者 clone 后 `pnpm install` 会自动浅初始化子模块；同步流程见 [AGENTS.md](AGENTS.md) 的「文档源子模块」章节。
 
-| 子模块       | 上游                                                              | 锁定版本              |
-| ------------ | ----------------------------------------------------------------- | --------------------- |
-| `sources/dsh` | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) | `dsh-v0.2.0-rc.2` |
+| 子模块                             | 上游                                                                                     | 锁定版本              |
+| ---------------------------------- | ---------------------------------------------------------------------------------------- | --------------------- |
+| `sources/dsh`                      | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)          | `dsh-v0.2.0-rc.2`     |
+| `sources/vitepress-mermaid-renderer` | [sametcn99/vitepress-mermaid-renderer](https://github.com/sametcn99/vitepress-mermaid-renderer) | `v1.2.2`       |
 
 ## License
 

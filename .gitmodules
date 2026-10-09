@@ -1,3 +1,6 @@
 [submodule "sources/dsh"]
 	path = sources/dsh
 	url = https://github.com/deepseek-ai/deepseek-harness.git
+[submodule "sources/vitepress-mermaid-renderer"]
+	path = sources/vitepress-mermaid-renderer
+	url = https://github.com/sametcn99/vitepress-mermaid-renderer.git

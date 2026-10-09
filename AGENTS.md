@@ -84,15 +84,19 @@ Brief description of what this skill covers.
 
 ### 当前子模块
 
-| 子模块 | 上游 | 锁定 | 同步脚本 |
-| ------ | ---- | ---- | -------- |
-| `sources/dsh` | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)（sparse 检出 `docs/`） | `dsh-v0.2.0-rc.2` | `node scripts/sync-dsh.js` |
+| 子模块 | 上游 | 锁定 | sparse 范围 | 技能 |
+| ------ | ---- | ---- | ----------- | ---- |
+| `sources/dsh` | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) | `dsh-v0.2.0-rc.2` | `docs/` | [skills/dsh](skills/dsh) |
+| `sources/vitepress-mermaid-renderer` | [sametcn99/vitepress-mermaid-renderer](https://github.com/sametcn99/vitepress-mermaid-renderer) | `v1.2.2` | `docs/content/zh/` | [skills/vitepress-mermaid-renderer](skills/vitepress-mermaid-renderer) |
 
-### 同步流程（dsh 示例）
+**Manual 类技能**（无外部文档源，同 antfu 的 `antfu`/`antfu-create-pr`）：`chandao`、`halo`、`memos` —— 内容是对本仓库自有 CLI/API 封装的命令文档，不建子模块。`openlist` 和 `fnnas-docs` 的来源性质特殊（前者仅单点引用上游文档，后者来源是网站 llms.txt 非 git 仓库），不建子模块但各自有 `GENERATION.md` 记录来源与同步方式。
 
-首次 clone 后 `pnpm install` 经 `prepare`（scripts/prepare.js）自动浅初始化子模块并启用 docs/ sparse；CI 可用 `DSH_SKIP_PREPARE=1 pnpm install` 跳过。
-1. `node scripts/sync-dsh.js` 查看当前锁定与上游新 tag
-2. `node scripts/sync-dsh.js --pin <tag|latest>` 移动子模块指针
-3. `cd sources/dsh && git log --oneline <旧sha>..<新sha> -- docs/` 圈定文档差异
-4. 按差异改写 `skills/dsh/`，更新 `GENERATION.md` 与 SKILL.md 版本号
+### 同步流程（通用）
+
+首次 clone 后 `pnpm install` 经 `prepare`（scripts/prepare.js）自动浅初始化子模块并启用 sparse；CI 可用 `DSH_SKIP_PREPARE=1 pnpm install` 跳过。同步脚本 `scripts/sync-docs.js` 对所有子模块通用（省略项目名报告全部；`sync-dsh.js` 是 dsh 的兼容别名）：
+
+1. `node scripts/sync-docs.js` 查看全部子模块当前锁定与上游新 tag
+2. `node scripts/sync-docs.js <project> --pin <tag|latest>` 移动指定子模块指针
+3. `cd sources/<project> && git log --oneline <旧sha>..<新sha> -- <sparseDir>` 圈定文档差异
+4. 按差异改写 `skills/<project>/`，更新 `GENERATION.md` 与 SKILL.md 版本号
 5. 子模块指针与技能改动**一并提交**
