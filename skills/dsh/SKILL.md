@@ -12,7 +12,7 @@ metadata:
 
 # dsh 技能
 
-使用本技能处理 DeepSeek Harness（简称 dsh）的安装、使用、配置和开发问题。它依据本地 deepseek-harness 项目中的中文文档整理；需要精确的类型、配置字段或当前实现时，优先读取用户工作区中的源项目文档和源码。
+使用本技能处理 DeepSeek Harness（简称 dsh）的安装、使用、配置和开发问题。它依据 `sources/dsh`（deepseek-harness 文档子模块，锁定 `dsh-v0.2.0-rc.2`）的中文文档快照整理；需要精确的类型、配置字段或当前实现时，优先读取该快照或用户工作区中的源项目文档和源码。
 
 ## 何时使用
 
@@ -180,3 +180,11 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 - [会话内提醒](https://deepseek-harness.github.io/deepseek-harness/guide/schedule)
 - [记忆 MCP](https://deepseek-harness.github.io/deepseek-harness/guide/mcp-memory)
 - [升级指南（0.1.7-rc.2）](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/upgrade-guide/v0.1.7-rc.2/schedule-optional-bundle/guide.zh.md)
+
+## 文档源与同步
+
+本技能的参考文件提炼自仓库内子模块 `sources/dsh`（deepseek-ai/deepseek-harness，sparse 检出 `docs/`，固定在 `dsh-v0.2.0-rc.2`，详见 [GENERATION.md](GENERATION.md)）。约定：
+
+- **仅维护简体中文**：改写只依据上游 `*.zh.md` 中文页；英文页与 `.i18n.yaml` 配对文件不纳入本技能。
+- **快照即依据**：回答基于锁定快照；用户本地 dsh 版本更高时，以 `--dump-config`、`--help` 和实际源码为准，并注明版本差异。
+- **同步流程**：`node scripts/sync-dsh.js` 查看状态，`node scripts/sync-dsh.js --pin <tag>` 移动锁定，按 `GENERATION.md` 的步骤改写参考文件并更新版本记录。
