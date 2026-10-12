@@ -38,6 +38,7 @@ CLI 工具可直接被 AI Agent 调用，实现自动化管理。
 | [fnnas-docs](skills/fnnas-docs) | 飞牛 fnOS 应用开发文档 - 快速开始、开发指南、开放 API、CLI 工具 - Tnnevol |
 | [openlist](skills/openlist)     | OpenList 网盘聚合 - 通过 openlist-cli 管理文件、分享、后台 - Tnnevol |
 | [dsh](skills/dsh)               | DeepSeek Harness - 运行、配置和插件扩展 - Tnnevol                         |
+| [midscenejs](skills/midscenejs) | Midscene.js - GUI Agent 与 AI 驱动 E2E 测试：功能、模型配置、五平台接入 - Tnnevol |
 
 ## 文档源子模块
 
