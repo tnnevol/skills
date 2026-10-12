@@ -22,6 +22,7 @@ const root = join(__dirname, '..')
 const SPARSE_DIRS: Record<string, string> = {
   'sources/dsh': 'docs',
   'sources/vitepress-mermaid-renderer': 'docs/content/zh',
+  'sources/midscenejs': 'apps/site/docs/zh',
 }
 
 function exec(cmd: string, cwd: string = root): string {

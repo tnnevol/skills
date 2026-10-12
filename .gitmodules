@@ -4,3 +4,6 @@
 [submodule "sources/vitepress-mermaid-renderer"]
 	path = sources/vitepress-mermaid-renderer
 	url = https://github.com/sametcn99/vitepress-mermaid-renderer.git
+[submodule "sources/midscenejs"]
+	path = sources/midscenejs
+	url = https://github.com/web-infra-dev/midscene.git

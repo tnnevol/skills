@@ -54,6 +54,13 @@ const SUBMODULES: Record<string, SubmoduleConfig> = {
     tagRe: /^v(\d+)\.(\d+)\.(\d+)$/,
     skill: 'skills/vitepress-mermaid-renderer',
   },
+  'midscenejs': {
+    path: 'sources/midscenejs',
+    sparseDir: 'apps/site/docs/zh',
+    tagPattern: 'v*',
+    tagRe: /^v(\d+)\.(\d+)\.(\d+)$/,
+    skill: 'skills/midscenejs',
+  },
 }
 
 const SHA_RE = /^[0-9a-f]{40}$/
