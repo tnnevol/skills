@@ -2,6 +2,7 @@
 name: midscenejs
 displayName: midscenejs
 slug: midscenejs
+iconUrl: "https://skillhub-1388575217.cos.accelerate.myqcloud.com/skill-comments/uploads/612977/ddeb01cb30f64ec09f5520512cb37fa1.webp"
 description: >
   Midscene.js 开源 GUI Agent 与 AI 驱动 E2E 测试套件的完整中文指南：它是什么、能做什么（视觉定位、断言、数据提取、可观测性报告、Skills、Testing Kit）、以及怎么配置使用（模型环境变量、Playwright/Puppeteer/SDK 集成、Web/Android/iOS/HarmonyOS/桌面五平台接入、Agent API 编排、YAML 运行器、Midscene Test 测试框架）。只要用户提到 Midscene、Midscene.js、@midscene/web、@midscene/android、@midscene/ios、@midscene/harmony、@midscene/computer、@midscene/test、midscene.config.ts、aiAct/aiTap/aiAssert/aiQuery、MIDSCENE_MODEL_*、GUI Agent、视觉驱动 UI 自动化，就要使用此 skill；即使用户没有明确说"skill"或"文档"，也要优先查阅这里的中文参考资料，避免凭记忆编造 API 或环境变量。官方 Midscene Skills 只覆盖各平台 CLI 自动化，不覆盖本技能的整体介绍与配置。
 compatibility: Node.js ^20.19.0 || ^22.12.0 || >=24.0.0；Playwright / Puppeteer；Android adb / iOS WebDriverAgent / HarmonyOS HDC
