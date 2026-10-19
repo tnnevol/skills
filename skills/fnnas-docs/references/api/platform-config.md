@@ -145,3 +145,5 @@ curl --unix-socket /var/run/trim_open_gateway_apiscope.socket \
 - 前端页面初始化时，优先用 `getPlatformConfig` 读取语言、主题、系统版本和格式配置。
 - 后端 `trim.system.getPlatformConfig` 只返回系统语言和系统版本。
 - 后端 API 只能由应用服务端通过 Unix Socket 调用，不要暴露 token 给前端。
+
+---

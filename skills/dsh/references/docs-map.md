@@ -1,6 +1,6 @@
 # 文档索引
 
-本技能不把生成型 API 目录和全部教程机械复制进 SKILL.md，而是把稳定规则提炼到参考文件，并保留官方文档索引。本索引按源项目 `0.2.0-rc.2` 整理。需要当前实现、完整类型声明或精确配置字段时，读取本地 deepseek-harness/docs 的中文文件；没有本地检出时使用下列线上文档页面。
+本技能不把生成型 API 目录和全部教程机械复制进 SKILL.md，而是把稳定规则提炼到参考文件，并保留官方文档索引。本索引按源项目 `0.2.1-rc.2` 整理。需要当前实现、完整类型声明或精确配置字段时，读取本地 deepseek-harness/docs 的中文文件；没有本地检出时使用下列线上文档页面。
 
 ## 按任务查找
 
@@ -15,6 +15,8 @@
 | 了解 API Gateway | [API Gateway](https://deepseek-harness.github.io/deepseek-harness/reference/api-gateway) | Remote 声明、对象查找、Gateway、Connection 与生成流程 |
 | 新增 Remote API | [GitHub 源文档](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cookbook/adding-a-remote-api.zh.md) | 五步实现、RemoteError、RemoteResult、测试和 `build:lib`；当前在线文档目录尚未单独发布此页 |
 | 了解服务、提供方和使用方 | [能力服务](https://deepseek-harness.github.io/deepseek-harness/reference/capability-seams) | 能力 seam 和依赖图 |
+| 从第三方插件市场安装组合包 | 本技能 [用户指南](user-guide.md)；[线上插件市场](https://deepseek-harness.github.io/deepseek-harness/guide/plugin-market) | 实验性「自定义插件市场」bundle、JSON 索引源、确认安装与索引发布 |
+| 把 Web UI 发布到反向代理后 | 本技能 [用户指南](user-guide.md)；[线上对外部署](https://deepseek-harness.github.io/deepseek-harness/guide/public-deployments) | `--public-url`、`--trusted-host`、`--tls-cert`/`--tls-key`、挂载前缀剥离与 cookie 作用域 |
 | 配置出站网络代理 | [网络代理指南](https://deepseek-harness.github.io/deepseek-harness/guide/network-proxy) | `HTTP_PROXY`、`HTTPS_PROXY`、`NO_PROXY`、企业 CA、直连范围和验证方法 |
 | 配置模型与自定义提供方 | [模型配置](https://deepseek-harness.github.io/deepseek-harness/guide/providers) | 内置和自定义提供方、三种协议、模型目录探测、推理等级、图片能力与 `settings.yaml` |
 | 使用 Python SDK | [Python SDK](https://deepseek-harness.github.io/deepseek-harness/guide/python-sdk) | SDK 安装、`sdk`/`sdk-minimal`、工作区、home、会话和显式启用编辑器 |

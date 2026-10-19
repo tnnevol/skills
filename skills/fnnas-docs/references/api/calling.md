@@ -93,7 +93,7 @@ const config = await sdk.getPlatformConfig();
 
 :::tip
 
-跳转授权建议结合统一网关使用。统一网关可以保证应用页面、授权页面和 `redirectUri` 回调页处在同一域名下，便于回调页解析结果、通知原应用页面，并完成 `postMessage` 的同源校验。
+路由授权建议结合统一网关使用。统一网关可以保证应用页面、授权页面和 `redirectUri` 回调页处在同一域名下，便于回调页解析结果、通知原应用页面，并完成 `postMessage` 的同源校验。
 
 :::
 
@@ -325,8 +325,8 @@ const result = await request({
 
 - 应用包只声明实际需要的 `api-scope`，不要无脑写满。
 - 调用 JS SDK 前，`manifest` 需要声明 `micro_app=true`。
-- `isStandaloneWeb` 为 `true` 时，文件选择和授权类能力走 `openAppAuth` 跳转授权。
-- 跳转授权建议结合统一网关使用，保证应用页面和回调页同域。
+- `isStandaloneWeb` 为 `true` 时，文件选择和授权类能力走 `openAppAuth` 路由授权。
+- 路由授权建议结合统一网关使用，保证应用页面和回调页同域。
 - 后端 API 的具体 `req` 和 `data` 见对应功能页；读取平台配置见 [平台配置](./platform-config.md)。
 - 后端 API 使用系统调用应用脚本时注入的 `TRIM_API_TOKEN`，每次调用时从环境变量读取，不要持久化或暴露给前端。
 

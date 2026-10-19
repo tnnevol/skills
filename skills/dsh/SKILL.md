@@ -12,7 +12,7 @@ metadata:
 
 # dsh 技能
 
-使用本技能处理 DeepSeek Harness（简称 dsh）的安装、使用、配置和开发问题。它依据 `sources/dsh`（deepseek-harness 文档子模块，锁定 `dsh-v0.2.0-rc.2`）的中文文档快照整理；需要精确的类型、配置字段或当前实现时，优先读取该快照或用户工作区中的源项目文档和源码。
+使用本技能处理 DeepSeek Harness（简称 dsh）的安装、使用、配置和开发问题。它依据 `sources/dsh`（deepseek-harness 文档子模块，锁定 `dsh-v0.2.1-rc.2`）的中文文档快照整理；需要精确的类型、配置字段或当前实现时，优先读取该快照或用户工作区中的源项目文档和源码。
 
 ## 何时使用
 
@@ -58,6 +58,7 @@ pnpm dsh web
 | 运行 profile、Web、无头任务、插件管理或查看配置 | [命令行与 profile](references/cli.md) |
 | 理解 Cordis、事件、会话、工具流水线或能力归属 | [架构与运行时](references/architecture.md) |
 | 编写插件、工具、服务、事件、模型适配器或 Web 节点 | [扩展开发](references/extension.md) |
+| 安装第三方插件市场索引，或把 Web UI 发布到反向代理后 | [用户指南](references/user-guide.md) |
 | 查找项目文档、子系统和生成目录 | [文档索引](references/docs-map.md) |
 
 常用命令：

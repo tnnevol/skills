@@ -86,9 +86,9 @@ Brief description of what this skill covers.
 
 | 子模块 | 上游 | 锁定 | sparse 范围 | 技能 |
 | ------ | ---- | ---- | ----------- | ---- |
-| `sources/dsh` | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) | `dsh-v0.2.0-rc.2` | `docs/` | [skills/dsh](skills/dsh) |
+| `sources/dsh` | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) | `dsh-v0.2.1-rc.2` | `docs/` | [skills/dsh](skills/dsh) |
 | `sources/vitepress-mermaid-renderer` | [sametcn99/vitepress-mermaid-renderer](https://github.com/sametcn99/vitepress-mermaid-renderer) | `v1.2.2` | `docs/content/zh/` | [skills/vitepress-mermaid-renderer](skills/vitepress-mermaid-renderer) |
-| `sources/midscenejs` | [web-infra-dev/midscene](https://github.com/web-infra-dev/midscene) | `v1.15.1` | `apps/site/docs/zh/` | [skills/midscenejs](skills/midscenejs) |
+| `sources/midscenejs` | [web-infra-dev/midscene](https://github.com/web-infra-dev/midscene) | `v1.16.0` | `apps/site/docs/zh/` | [skills/midscenejs](skills/midscenejs) |
 
 **Manual 类技能**（无外部文档源，同 antfu 的 `antfu`/`antfu-create-pr`）：`chandao`、`halo`、`memos` —— 内容是对本仓库自有 CLI/API 封装的命令文档，不建子模块。`openlist` 和 `fnnas-docs` 的来源性质特殊（前者仅单点引用上游文档，后者来源是网站 llms.txt 非 git 仓库），不建子模块但各自有 `GENERATION.md` 记录来源与同步方式。
 

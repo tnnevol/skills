@@ -11,7 +11,7 @@ source: https://developer.fnnas.com/api/authorization/shared-access
 
 :::warning
 
-应用共享授权由管理员操作。普通用户调用 `pickSharedFile` 或 `authorizeSharedFile` 会失败：宿主内直调通常返回 `code: 1` 和 `msg: "仅管理员可进行此操作"`；授权跳转回调通常返回 `status: "error"` 和 `error: "access_denied"`。
+应用共享授权由管理员操作。普通用户调用 `pickSharedFile` 或 `authorizeSharedFile` 会失败：宿主内直调通常返回 `code: 1` 和 `msg: "仅管理员可进行此操作"`；授权路由回调通常返回 `status: "error"` 和 `error: "access_denied"`。
 
 :::
 
@@ -104,7 +104,7 @@ if (sdk.isStandaloneWeb) {
 }
 ```
 
-授权跳转回调会返回：
+授权路由回调会返回：
 
 ```json
 {
@@ -182,7 +182,7 @@ if (sdk.isStandaloneWeb) {
 }
 ```
 
-授权跳转回调会返回：
+授权路由回调会返回：
 
 ```json
 {
@@ -330,7 +330,7 @@ type AppBridgeResponse<T> = {
 - 应用共享授权由管理员操作，普通用户调用会失败。
 - 该能力只支持目录授权，不支持文件授权。
 - 宿主内直调失败时可能返回 `code: 1` 和 `msg: "仅管理员可进行此操作"`。
-- 授权跳转失败时可能返回 `status: "error"` 和 `error: "access_denied"`。
+- 授权路由失败时可能返回 `status: "error"` 和 `error: "access_denied"`。
 - 后端用 `trim.file.getSharedAccessibleFolders` 查询管理员授权给应用的目录。
 
 ---

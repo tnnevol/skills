@@ -5,8 +5,8 @@ skills/fnnas-docs 的参考文件来自飞牛应用开放平台在线文档（�
 通过 llms.txt 协议抓取，已由技能自带脚本自动同步。
 
 - **Source:** <https://developer.fnnas.com/llms.txt>（索引）/ `llms-full.txt`（正文）
-- **Skill version:** `1.1.2`
-- **Synced:** 2026-10-09（抓取时间以 references/update-log.md 为准）
+- **Skill version:** `1.1.3`
+- **Synced:** 2026-10-19（抓取时间以 references/update-log.md 为准）
 
 ## 同步方式
 

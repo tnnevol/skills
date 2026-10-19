@@ -32,7 +32,7 @@ JSSDK 方法通常返回 `code`、`msg` 和 `data`。如果 `code` 不是 `0`，
 
 :::warning
 
-普通用户调用应用共享授权入口时，宿主内直调可能返回 `code: 1` 和 `msg: "仅管理员可进行此操作"`；授权跳转回调可能返回 `status: "error"` 和 `error: "access_denied"`。这两种情况都表示当前用户没有权限执行该授权操作。
+普通用户调用应用共享授权入口时，宿主内直调可能返回 `code: 1` 和 `msg: "仅管理员可进行此操作"`；授权路由回调可能返回 `status: "error"` 和 `error: "access_denied"`。这两种情况都表示当前用户没有权限执行该授权操作。
 
 :::
 
@@ -54,5 +54,3 @@ JSSDK 方法通常返回 `code`、`msg` 和 `data`。如果 `code` 不是 `0`，
 - 前端 JS SDK 失败先看 JSSDK 错误码；后端 API 失败先看 HTTP 状态码、`code` 和 `msg`。
 - 普通用户调用应用共享授权入口时，可能返回 `code: 1` 或 `access_denied`。
 - `Forbidden` 优先检查 API Scope 和 token；`Not Found` 优先检查 `req` 和系统版本。
-
----
