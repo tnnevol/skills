@@ -48,7 +48,7 @@ CLI 工具可直接被 AI Agent 调用，实现自动化管理。
 | ------------------------------------ | ----------------------------------------------------------------------------------------------- | ----------------- |
 | `sources/dsh`                        | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)                 | `dsh-v0.2.0-rc.2` |
 | `sources/vitepress-mermaid-renderer` | [sametcn99/vitepress-mermaid-renderer](https://github.com/sametcn99/vitepress-mermaid-renderer) | `v1.2.2`          |
-| `sources/midscenejs`                 | [web-infra-dev/midscene](https://github.com/web-infra-dev/midscene)                             | `v1.15.1`         |
+| `sources/midscenejs` | [web-infra-dev/midscene](https://github.com/web-infra-dev/midscene) | `v1.16.0` |
 
 ## License
 
