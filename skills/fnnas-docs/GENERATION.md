@@ -5,7 +5,7 @@ skills/fnnas-docs 的参考文件来自飞牛应用开放平台在线文档（�
 通过 llms.txt 协议抓取，已由技能自带脚本自动同步。
 
 - **Source:** <https://developer.fnnas.com/llms.txt>（索引）/ `llms-full.txt`（正文）
-- **Skill version:** `1.1.3`
+- **Skill version:** `1.1.4`
 - **Synced:** 2026-10-19（抓取时间以 references/update-log.md 为准）
 
 ## 同步方式
@@ -20,6 +20,9 @@ cd skills/fnnas-docs && python3 scripts/fetch-docs.py
 - 每篇参考文件开头保留 `Source: https://developer.fnnas.com/...`，即逐文件溯源。
 - 同步后如版本相关表述（API 字段、模板结构）有变，人工核对
   `SKILL.md` 的「创建与生命周期约束」是否需要跟随调整。
+- `scripts/fetch-docs.py` 会覆盖 `references/` 下所有文件，因此人工补充的约束
+  只写在 `SKILL.md` 的「创建与生命周期约束」章节，不写进 `references/`。
+  当前 `1.1.4` 人工补充了「目录删除边界 / 禁止删除框架环境变量目录」约束。
 
 ## 语言范围
 
