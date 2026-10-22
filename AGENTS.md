@@ -11,7 +11,7 @@
 │       ├── SKILL.md           # 技能索引和元数据
 │       ├── docs/              # 技能文档（可选）
 │       ├── references/        # 技能参考文件（可选）
-│       ├── GENERATION.md      # 文档源溯源记录（可选，见「文档源子模块」）
+│       ├── GENERATION.md      # 文档源溯源记录（可选，见「文档源」）
 │       └── scripts/           # 技能配套脚本（可选）
 ├── sources/                    # 上游文档子模块（只读原材料，不对外发布）
 │   └── {project}/
@@ -34,7 +34,7 @@ name: {skill-name}
 description: {简短描述}
 metadata:
   author: Tnnevol
-  version: "YYYY.MM.DD"
+  version: "x.y.z"   # 必须合法 SemVer：技术栈按 x.y.z 递增（日期格式会被 SkillHub 拒收）
 ---
 
 # {Skill Name}
@@ -71,7 +71,12 @@ Brief description of what this skill covers.
 3. **结构清晰** - 使用 SKILL.md 作为索引，按主题组织参考文件
 4. **代码优先** - 提供可运行的代码示例
 
-## 文档源子模块
+## 文档源
+
+技能内容按来源分三类：上游提供 git 仓库的（submodule 锁 tag）、上游只有网站/接口的（抓取脚本 + 状态文件）、
+自有 CLI/API 封装的（manual）。
+
+### 子模块方式
 
 借鉴 [antfu/skills](https://github.com/antfu/skills) 的模式：部分技能从上游开源项目的文档生成/提炼，上游仓库以 git submodule 形式挂在 `sources/{project}`，并固定在明确的 release tag 上。`sources/` 是只读原材料，不进入对外发布的技能内容。
 
@@ -90,9 +95,20 @@ Brief description of what this skill covers.
 | `sources/vitepress-mermaid-renderer` | [sametcn99/vitepress-mermaid-renderer](https://github.com/sametcn99/vitepress-mermaid-renderer) | `v1.2.2` | `docs/content/zh/` | [skills/vitepress-mermaid-renderer](skills/vitepress-mermaid-renderer) |
 | `sources/midscenejs` | [web-infra-dev/midscene](https://github.com/web-infra-dev/midscene) | `v1.16.0` | `apps/site/docs/zh/` | [skills/midscenejs](skills/midscenejs) |
 
+### 当前远程抓取来源（上游不是 git 仓库）
+
+站点没有公开仓库、也没有 `llms.txt`/`sitemap`，无法挂 submodule，改为技能自带抓取脚本 + 状态文件：
+脚本重新抓取并覆盖生成的 `references/`，`--check` 用正文 sha256 与条目数比对，落后时 exit 1。
+
+| 技能 | 上游 | 同步命令 | 状态文件 |
+| ---- | ---- | -------- | -------- |
+| [skills/yonyou-doc](skills/yonyou-doc) | <https://developer.yonyou.com/docs>（Raneto 静态文档，无 git 仓库） | `python3 skills/yonyou-doc/scripts/sync_docs.py` | `references/.sync-state.json` |
+
+`pnpm start check` 会一并跑这些来源的 `--check`，任一处落后整体 exit 1。
+
 **Manual 类技能**（无外部文档源，同 antfu 的 `antfu`/`antfu-create-pr`）：`chandao`、`halo`、`memos` —— 内容是对本仓库自有 CLI/API 封装的命令文档，不建子模块。`openlist` 和 `fnnas-docs` 的来源性质特殊（前者仅单点引用上游文档，后者来源是网站 llms.txt 非 git 仓库），不建子模块但各自有 `GENERATION.md` 记录来源与同步方式。
 
-### 同步流程（通用）
+### 同步流程（子模块）
 
 首次 clone 后 `pnpm install` 经 `prepare`（scripts/prepare.ts）自动浅初始化子模块并启用 sparse；CI 可用 `DSH_SKIP_PREPARE=1 pnpm install` 跳过。同步 CLI `scripts/cli.ts` 对所有子模块通用（check 省略项目名报告全部）：
 
@@ -101,3 +117,10 @@ Brief description of what this skill covers.
 3. `cd sources/<project> && git log --oneline <旧sha>..<新sha> -- <sparseDir>` 圈定文档差异
 4. 按差异改写 `skills/<project>/`，更新 `GENERATION.md` 与 SKILL.md 版本号
 5. 子模块指针与技能改动**一并提交**
+
+### 同步流程（远程抓取）
+
+1. `pnpm start check <project>` 看是否落后（内部跑脚本 `--check`）
+2. 运行该技能 `GENERATION.md` 里的同步命令刷新 `references/`
+3. 章节数/菜单结构变化时，人工核对 `SKILL.md` 的索引描述
+4. 更新 `GENERATION.md` 的 Synced 与 `SKILL.md` 的版本号，一并提交

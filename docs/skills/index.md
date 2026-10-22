@@ -1,6 +1,6 @@
 # 技能总览
 
-本项目提供 7 个技能和 1 个命令行应用，覆盖项目管理、应用开发、博客、笔记、网盘管理、智能体运行时开发和 VitePress Mermaid 文档。
+本项目提供 9 个技能和 1 个命令行应用，覆盖项目管理、应用开发、博客、笔记、网盘管理、智能体运行时开发、浏览器与移动端自动化、VitePress Mermaid 渲染和 YonBuilder（APICloud）客户端 API 文档。
 
 ## 技能列表
 
@@ -13,6 +13,8 @@
 | [openlist](/skills/openlist/) | OpenList 文件、目录、分享、存储和后台管理 | 工具 |
 | [dsh](/skills/dsh/) | DeepSeek Harness 运行、配置和插件扩展 | 开发 |
 | [vitepress-mermaid-renderer](/skills/vitepress-mermaid-renderer/) | VitePress Mermaid Renderer 安装、配置、工具栏、示例和排错 | 文档 |
+| [midscenejs](/skills/midscenejs/) | Midscene.js GUI Agent、模型配置、五平台接入和测试框架 | 文档 |
+| [yonyou-doc](/skills/yonyou-doc/) | YonBuilder（APICloud）客户端 API、平台可用性和 MTL 原生插件文档 | 文档 |
 
 ## 命令行应用
 

@@ -1,21 +1,23 @@
 /**
- * 文档源子模块同步 CLI（sources/ 下所有子模块通用）
+ * 文档源同步 CLI（submodule 与远程抓取两类来源通用）
  *
- * sources/{project} 是上游文档仓库的子模块（sparse 只检出文档目录），
- * 固定在明确的 release tag 上。技能内容（skills/{project}）依据该快照
- * 手工维护，溯源记录见 skills/{project}/GENERATION.md。
+ * 一类是 sources/{project} 子模块：上游文档仓库以 submodule 形式挂在 sources/，
+ * sparse 只检出文档目录，固定在明确的 release tag 上。
+ * 另一类是远程抓取来源（站点不是 git 仓库），由技能自带脚本 + 状态文件同步，
+ * 例如 skills/yonyou-doc。
  *
- * 子模块清单与配置见脚本内 SUBMODULES（新增子模块时在此登记）。
+ * 技能内容（skills/{project}）依据快照手工维护，溯源记录见 skills/{project}/GENERATION.md。
+ * 两类来源的清单分别见 SUBMODULES / REMOTE_SOURCES（新增时在此登记）。
  *
  * 用法：
- *   pnpm start check [project]            # 报告当前锁定状态与上游新 tag
+ *   pnpm start check [project]            # 报告锁定状态与上游新 tag / 远程来源是否落后
  *   pnpm start sync <project> <tag|sha>   # 移动子模块指针到指定 release tag（sha 需完整 40 位）
  *   pnpm start sync <project> latest      # 移动到最新 release tag
  *
- * project 省略时 check 报告全部子模块；sync 必须指定 project。
+ * project 省略时 check 报告全部来源；sync 必须指定 project，远程来源会给出对应抓取命令。
  *
- * 本 CLI 只负责移动和报告子模块指针；技能参考文件的改写由 agent 按
- * AGENTS.md 的「文档源子模块」指引完成。
+ * 本 CLI 只负责报告与移动子模块指针；技能参考文件的改写由 agent 按
+ * AGENTS.md 的「文档源」指引完成。
  */
 import { execSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
@@ -66,6 +68,32 @@ const SUBMODULES: Record<string, SubmoduleConfig> = {
 const SHA_RE = /^[0-9a-f]{40}$/
 const WS_RE = /\s+/
 const STAGE_ORDER: Record<string, number> = { alpha: 0, beta: 1, rc: 2 }
+
+/** 远程抓取来源（站点非 git 仓库，靠技能自带脚本同步） */
+interface RemoteSource {
+  /** 对应的技能目录 */
+  skill: string
+  /** 上游站点 */
+  source: string
+  /** 检查脚本（相对仓库根，支持 --check 时落后 exit 1） */
+  script: string
+  /** 检查参数 */
+  checkArgs: string[]
+  /** 同步命令提示 */
+  syncHint: string
+}
+
+const REMOTE_SOURCES: Record<string, RemoteSource> = {
+  'yonyou-doc': {
+    skill: 'skills/yonyou-doc',
+    source: 'https://developer.yonyou.com/docs',
+    script: 'skills/yonyou-doc/scripts/sync_docs.py',
+    checkArgs: ['--check'],
+    syncHint: 'python3 skills/yonyou-doc/scripts/sync_docs.py',
+  },
+}
+
+const ALL_SOURCES = [...Object.keys(SUBMODULES), ...Object.keys(REMOTE_SOURCES)]
 
 function exec(cmd: string, cwd: string = root): string {
   return execSync(cmd, { cwd, encoding: 'utf-8' }).trim()
@@ -158,6 +186,37 @@ function report(name: string, cfg: SubmoduleConfig): void {
   console.log(`  技能改写:   按仓库根 AGENTS.md 指引更新 ${cfg.skill}/ 与其 GENERATION.md\n`)
 }
 
+// ---- 远程抓取来源 ----
+
+function runCapture(cmd: string): { code: number, out: string } {
+  try {
+    const out = execSync(cmd, { cwd: root, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] })
+    return { code: 0, out }
+  }
+  catch (e) {
+    const err = e as { status?: number, stdout?: string, stderr?: string }
+    return { code: err.status ?? 1, out: `${err.stdout ?? ''}${err.stderr ?? ''}` }
+  }
+}
+
+function reportRemote(name: string, cfg: RemoteSource): number {
+  console.log(`== ${name} (${cfg.skill}) ==`)
+  console.log(`  来源:       ${cfg.source}`)
+  console.log(`  同步方式:   ${cfg.syncHint}`)
+  const py = process.env.PYTHON ?? 'python3'
+  const { code, out } = runCapture(`${py} ${cfg.script} ${cfg.checkArgs.join(' ')}`)
+  for (const line of out.trim().split('\n').filter(Boolean))
+    console.log(`  ${line}`)
+  if (code === 0)
+    console.log('  结论:       本地快照与线上一致')
+  else if (code === 1)
+    console.log('  结论:       线上有更新，需要重新同步并改写技能')
+  else
+    console.log(`  结论:       检查失败（exit ${code}），确认 python3 可用且网络正常`)
+  console.log('')
+  return code
+}
+
 // ---- 指针移动 ----
 
 function sync(name: string, cfg: SubmoduleConfig, target: string): void {
@@ -195,25 +254,44 @@ function main(): void {
   const [command, ...args] = process.argv.slice(2)
 
   if (command === 'check') {
-    const names = args[0]
-      ? (SUBMODULES[args[0]] ? [args[0]] : fail(`未知子模块 '${args[0]}'。可用: ${Object.keys(SUBMODULES).join(', ')}`))
-      : Object.keys(SUBMODULES)
-    for (const name of names)
+    const target = args[0]
+    if (target && SUBMODULES[target]) {
+      report(target, SUBMODULES[target])
+      return
+    }
+    if (target && REMOTE_SOURCES[target]) {
+      const code = reportRemote(target, REMOTE_SOURCES[target])
+      if (code === 1)
+        process.exitCode = 1
+      return
+    }
+    if (target)
+      fail(`未知来源 '${target}'。可用: ${ALL_SOURCES.join(', ')}`)
+
+    for (const name of Object.keys(SUBMODULES))
       report(name, SUBMODULES[name])
+    for (const name of Object.keys(REMOTE_SOURCES)) {
+      if (reportRemote(name, REMOTE_SOURCES[name]) === 1)
+        process.exitCode = 1
+    }
     return
   }
 
   if (command === 'sync') {
     const [name, target] = args
-    if (!name || !SUBMODULES[name])
-      fail(`用法: pnpm start sync <project> <tag|sha|latest>。可用: ${Object.keys(SUBMODULES).join(', ')}`)
+    if (!name || (!SUBMODULES[name] && !REMOTE_SOURCES[name]))
+      fail(`用法: pnpm start sync <project> <tag|sha|latest>。可用: ${ALL_SOURCES.join(', ')}`)
+    if (REMOTE_SOURCES[name]) {
+      console.log(`${name} 不是 git 子模块，请直接运行抓取脚本：\n  ${REMOTE_SOURCES[name].syncHint}`)
+      return
+    }
     if (!target)
       fail('缺少目标: pnpm start sync <project> <tag|sha|latest>')
     sync(name, SUBMODULES[name], target)
     return
   }
 
-  fail(`用法: pnpm start check [project] | pnpm start sync <project> <tag|sha|latest>`)
+  fail('用法: pnpm start check [project] | pnpm start sync <project> <tag|sha|latest>')
 }
 
 main()

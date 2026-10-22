@@ -81,7 +81,10 @@ done
 | fnnas-docs | `fnnas-docs` | 1.1.2 |
 | halo | `tnnevol-halo` | 1.0.2 |
 | memos | `tnnevol-memos` | 1.0.2 |
-| openlist | `openlist` | 1.2.1 |
+| openlist | `openlist` | 1.2.2 |
+| midscenejs | `midscenejs` | 1.0.0 |
+| vitepress-mermaid-renderer | `vitepress-mermaid-renderer` | 1.0.0 |
+| yonyou-doc | `yonyou-doc` | 1.0.0 |
 
 halo 和 memos 的线上 slug 带 `tnnevol-` 前缀，这是当时发上去定的，改 slug 等于换一份，别动。
 
@@ -117,6 +120,19 @@ curl -X POST "https://api.skillhub.cn/api/v1/skills/<slug>/comments/images?names
 3. 如果回执里出现 `iconAuditStatus: pending`，说明图标已提交并进入平台审核，等过审就行。
 
 dsh 的图标就是这样更新的，版本从 `1.0.1` 升到了 `1.0.2`。
+
+### 图标从哪来
+
+不要凭空造图。文档类技能直接用上游站点的图标资源：
+
+- 先看页面 `<link rel="shortcut icon">`，通常是 `favicon.ico`
+- 站点一般只提供 16×16 的 ico，直接放大很糊；可以在同一站点找页头高清 logo
+  （例如 Raneto 模板的 `.main-header-logo` 背景图），裁出同一个字标重绘成 256×256，
+  视觉上仍是平台原图
+- 上传后确认回执 `iconAuditStatus`，再在 `/api/v1/skills/<slug>` 的 `skill.iconUrl` 里核对
+
+`yonyou-doc` 用的是 `developer.yonyou.com/docs/favicon.ico` 的「用」字标：站点只有 16×16，
+所以按页头 logo 的同款字标重绘成红底白字 256×256，没有改设计。
 
 ## 关于 `skillhub verify`
 

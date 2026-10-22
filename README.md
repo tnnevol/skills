@@ -2,7 +2,7 @@
 
 [Agent Skills](https://agentskills.io/home) 实用合集，用于 AI 辅助开发，涵盖常用工具、API 集成和最佳实践。
 
-当前包含：禅道项目管理、飞牛应用开发、Halo CMS 博客管理、Memos 笔记、OpenList 网盘管理和 DeepSeek Harness 开发等技能。
+当前包含：禅道项目管理、飞牛应用开发、Halo CMS 博客管理、Memos 笔记、OpenList 网盘管理、DeepSeek Harness 开发、Midscene 自动化、VitePress Mermaid 渲染和 YonBuilder（APICloud）客户端 API 文档等技能。
 
 ## 安装
 
@@ -39,16 +39,24 @@ CLI 工具可直接被 AI Agent 调用，实现自动化管理。
 | [openlist](skills/openlist)     | OpenList 网盘聚合 - 通过 openlist-cli 管理文件、分享、后台 - Tnnevol |
 | [dsh](skills/dsh)               | DeepSeek Harness - 运行、配置和插件扩展 - Tnnevol                         |
 | [midscenejs](skills/midscenejs) | Midscene.js - GUI Agent 与 AI 驱动 E2E 测试：功能、模型配置、五平台接入 - Tnnevol |
+| [vitepress-mermaid-renderer](skills/vitepress-mermaid-renderer) | VitePress Mermaid 渲染 - 安装、配置、工具栏、示例和排错 - Tnnevol |
+| [yonyou-doc](skills/yonyou-doc) | YonBuilder 移动开发（APICloud）客户端 API - 方法参数、平台可用性、MTL 原生插件 - Tnnevol |
 
-## 文档源子模块
+## 文档源
 
-部分技能从上游开源项目的文档提炼而成，上游仓库以 git submodule 挂在 `sources/`（只读原材料，不随技能发布）。贡献者 clone 后 `pnpm install` 会自动浅初始化子模块；同步流程见 [AGENTS.md](AGENTS.md) 的「文档源子模块」章节。
+部分技能从上游开源项目的文档提炼而成，上游仓库以 git submodule 挂在 `sources/`（只读原材料，不随技能发布）。贡献者 clone 后 `pnpm install` 会自动浅初始化子模块；同步流程见 [AGENTS.md](AGENTS.md) 的「文档源」章节。
 
 | 子模块                               | 上游                                                                                            | 锁定版本          |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------- | ----------------- |
 | `sources/dsh`                        | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)                 | `dsh-v0.2.1-rc.2` |
 | `sources/vitepress-mermaid-renderer` | [sametcn99/vitepress-mermaid-renderer](https://github.com/sametcn99/vitepress-mermaid-renderer) | `v1.2.2`          |
 | `sources/midscenejs` | [web-infra-dev/midscene](https://github.com/web-infra-dev/midscene) | `v1.16.0` |
+
+上游没有 git 仓库的技能改用抓取脚本 + 状态文件同步，`pnpm start check` 也会一并报告：
+
+| 技能 | 上游 | 同步命令 |
+| ---- | ---- | -------- |
+| [yonyou-doc](skills/yonyou-doc) | <https://developer.yonyou.com/docs> | `python3 skills/yonyou-doc/scripts/sync_docs.py` |
 
 ## License
 

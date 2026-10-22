@@ -28,3 +28,10 @@ temp
 # openlist-cli 测试运行时的临时产物（中断时可能残留）
 .tmp-home-*
 .tmp-upload-*
+
+# yonyou-doc 全站镜像（--all 生成的本地缓存，不进仓库）
+skills/yonyou-doc/references/pages/
+
+# Python 缓存
+__pycache__/
+*.pyc
