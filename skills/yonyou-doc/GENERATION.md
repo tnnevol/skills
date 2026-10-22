@@ -9,7 +9,7 @@
 - **Source:** <https://developer.yonyou.com/docs>
 - **入口页:** `/docs/Client-API/API`（API 对象，415 章节内联在一页）
 - **全站规模:** 1697 个页面条目 / 8 个分册（2026-10-22 抓取）
-- **Skill version:** `1.0.0`
+- **Skill version:** `1.0.1`
 - **Synced:** 2026-10-22
 
 ## 同步方式
@@ -44,6 +44,7 @@ python3 scripts/sync_docs.py --check   # 只检查线上是否变化（exit 1 = 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
 | 1.0.0 | 2026-10-22 | 首次入库：API 全量离线正文 + MTL 28 个模块 + 全站菜单索引 + 同步脚本 |
+| 1.0.1 | 2026-10-22 | 示例凭据打码（微信示例 AppID），处理 GitHub 密钥扫描误报 |
 
 ## 语言范围
 

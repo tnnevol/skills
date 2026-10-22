@@ -6,7 +6,7 @@ iconUrl: "https://skillhub-1388575217.cos.accelerate.myqcloud.com/skill-comments
 description: YonBuilder 移动开发（原 APICloud）客户端 API 文档的离线速查。查 api.* 方法的参数、默认值、平台可用性（Android/iOS/H5/小程序/友空间），窗口与页面跳转、事件、存储、权限、媒体、扫码、推送、UI 布局等原生能力，以及 MTL.js 原生插件模块。做 APICloud 内核的混合应用（含用友 YonBuilder 移动开发）时使用。
 metadata:
   author: Tnnevol
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # YonBuilder 移动开发文档（原 APICloud）
