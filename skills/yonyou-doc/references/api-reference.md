@@ -14708,7 +14708,7 @@ function
 示例代码
 api.wxpayPayment({
 parameters: {
-appId:'wxd930ea5d5a258f4f',
+appId:'wx****************',
 partnerId:'1900000109',
 prepayId:'1101000000140415649af9fc314aa427',
 packageValue:'Sign=WXPay',

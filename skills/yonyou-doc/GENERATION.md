@@ -31,6 +31,9 @@ python3 scripts/sync_docs.py --check   # 只检查线上是否变化（exit 1 = 
 | `references/.sync-state.json` | 正文 sha256、条目数、同步日期（`--check` 靠它比对） |
 
 - 生成文件**不要手工编辑**，下次同步会覆盖；人工补充的说明写在 `SKILL.md`。
+- 官方文档示例里的凭据（如微信支付示例 AppID `wx` + 16 位十六进制）在抓取时统一打码为
+  `wx****************`：这些是公开演示值，但 GitHub 密钥扫描会按模式告警。打码规则在
+  `scripts/sync_docs.py` 的 `MASK_RULES`，`--check` 的正文哈希也基于打码后的文本，保持一致。
 - 全站正文按需抓取：`--all` 会把 1697 页落到 `references/pages/`（约 5.6MB），
   该目录已 gitignore，只做本地缓存，不进技能发布内容。
 - 章节数或菜单结构变化时，人工核对 `SKILL.md` 的「索引」「常用能力速查」是否需要跟随调整。

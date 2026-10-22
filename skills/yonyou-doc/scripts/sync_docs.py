@@ -53,6 +53,12 @@ PAGE_LINK_RE = re.compile(r'<li class="page"><a href="(/docs/[^"#]*)"[^>]*>([\s\
 TAG_RE = re.compile(r"<[^>]+>")
 CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 
+# 官方文档里的示例凭据一律打码：GitHub 密钥扫描会把示例微信 AppID 当成真实密钥告警
+MASK_RULES = [
+    (re.compile(r"\bwx[0-9a-f]{16}\b"), "wx" + "*" * 16),
+]
+
+
 # 分册顺序与展示名（沿用旧版 menu.md 的措辞，站点新增分册自动追加）
 CHAPTERS = {
     "YMDP": "总览/新手/模板",
@@ -97,7 +103,10 @@ def clean(fragment: str) -> str:
     text = html.unescape(fragment)
     text = text.replace("\xa0", " ")
     lines = [re.sub(r"[ \t]+", " ", l).strip() for l in text.split("\n")]
-    return "\n".join(l for l in lines if l)
+    out = "\n".join(l for l in lines if l)
+    for rx, mask in MASK_RULES:
+        out = rx.sub(mask, out)
+    return out
 
 
 def sha(text: str) -> str:

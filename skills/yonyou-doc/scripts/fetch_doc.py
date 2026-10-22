@@ -29,6 +29,10 @@ UA = {
 }
 API_PATH = "/docs/Client-API/API"
 BODY_START = re.compile(r'<section[^>]*class="[^"]*page-section-box[^"]*"[^>]*>', re.I)
+# 示例凭据打码（与 sync_docs.py 一致，避免把官方示例 AppID 当真实密钥）
+MASK_RULES = [
+    (re.compile(r"\bwx[0-9a-f]{16}\b"), "wx" + "*" * 16),
+]
 
 ROOT = Path(__file__).resolve().parent.parent
 REF = ROOT / "references"
@@ -58,7 +62,10 @@ def clean(fragment: str) -> str:
     fragment = re.sub(r"<[^>]+>", " ", fragment)
     text = html.unescape(fragment).replace("\xa0", " ")
     lines = [re.sub(r"[ \t]+", " ", l).strip() for l in text.split("\n")]
-    return "\n".join(l for l in lines if l)
+    out = "\n".join(l for l in lines if l)
+    for rx, mask in MASK_RULES:
+        out = rx.sub(mask, out)
+    return out
 
 
 def load_blocks(name: str) -> list[tuple[str, str, str, str]]:
