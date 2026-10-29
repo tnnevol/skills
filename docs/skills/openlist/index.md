@@ -26,7 +26,7 @@ npx skills add tnnevol/skills --skill=openlist -g -y
 将以下提示词发送给 AI Agent：
 
 ```text
-阅读说明并帮我安装 openlist-cli：https://github.com/tnnevol/skills/blob/main/apps/openlist-cli/openlist-cli-installation-guide.md
+阅读说明并帮我安装 openlist-cli：https://github.com/tnnevol/skills/blob/main/skills/openlist/installation-guide.md
 ```
 
 #### 通过 SkillHub 安装

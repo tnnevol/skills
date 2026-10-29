@@ -121,7 +121,7 @@ hermes skills install tnnevol/skills/memos
 ```
 
 如果当前环境无法访问安装源，请按所用 AI Agent 的规则手动安装：将本仓库 `skills/memos/`
-（含 `SKILL.md` 与 `references/`）复制到 AI Agent 的技能目录。
+（含 `SKILL.md`、`installation-guide.md` 与 `references/`）复制到 AI Agent 的技能目录。
 
 ## 常见问题
 

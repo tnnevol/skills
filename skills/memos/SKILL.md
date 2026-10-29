@@ -19,7 +19,7 @@ Memos（[usememos](https://usememos.com/)）是**时间线式**笔记工具，�
 
 ## 安装前置要求
 
-代理处理 memos 任务前，必须先阅读并遵循 [memos-cli 首次安装引导](https://github.com/tnnevol/skills/blob/main/apps/memos-cli/memos-cli-installation-guide.md)，根据用户环境完成 `memos-cli` 的安装或升级。安装完成前，不得直接执行认证或业务命令。
+代理处理 memos 任务前，必须先阅读并遵循 [memos-cli 首次安装引导](installation-guide.md)，根据用户环境完成 `memos-cli` 的安装或升级。安装完成前，不得直接执行认证或业务命令。
 
 若当前环境已经可用（`memos-cli me get` 或 `memos-cli auth status` 能正常返回当前用户），则无需再次引导，直接执行业务命令即可。
 

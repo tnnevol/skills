@@ -7,6 +7,11 @@ skills/openlist 的参考文件以本仓库 `apps/openlist-cli` 的真实命令�
 - **Skill version:** `1.2.2`
 - **Synced:** 2026-10-09
 
+## 技能自带文件
+
+- `installation-guide.md`：首次安装引导，随技能一起分发（`pnpx skills add` 只拉 `skills/` 目录，
+  因此不能依赖 `apps/` 下的外链）。变更 CLI 安装方式时同步此处。
+
 ## 上游引用范围
 
 - 唯一外部文档引用：[OpenList-Docs「添加存储」通用项](https://github.com/OpenListTeam/OpenList-Docs/blob/main/pages/guide/drivers/common.md)，

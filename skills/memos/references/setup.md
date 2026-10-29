@@ -7,7 +7,7 @@ npm install -g @tnnevol/memos-cli
 ```
 
 安装前要求 Node.js ≥ 20。首次安装的完整引导见
-[apps/memos-cli/memos-cli-installation-guide.md](https://github.com/tnnevol/skills/blob/main/apps/memos-cli/memos-cli-installation-guide.md)。
+[installation-guide.md](../installation-guide.md)。
 
 验证安装：
 

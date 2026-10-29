@@ -7,6 +7,11 @@ skills/memos 的参考文件以本仓库 `apps/memos-cli` 的真实命令行为�
 - **Skill version:** `2.0.0`
 - **Synced:** 2026-10-29
 
+## 技能自带文件
+
+- `installation-guide.md`：首次安装引导，随技能一起分发（`pnpx skills add` 只拉 `skills/` 目录，
+  因此不能依赖 `apps/` 下的外链）。变更 CLI 安装方式时同步此处。
+
 ## 上游引用范围
 
 - 接口事实来源：`github.com/usememos/memos` 各 tag 的 `proto/gen/openapi.yaml`
