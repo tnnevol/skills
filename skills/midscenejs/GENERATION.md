@@ -4,38 +4,29 @@ skills/midscenejs 的参考文件提炼自 **Midscene 主仓库的中文文档�
 （`apps/site/docs/zh/`，rspress 驱动 midscenejs.com 的同一份源码）。
 
 - **Source:** `sources/midscenejs`
-- **Pinned tag:** `v1.16.0`（npm release，与文档同 commit 发布）
-- **Git SHA:** `06af256f7cca1243de200e27e7f16db5048a02cd`
-- **Skill version:** `1.1.0`
-- **Synced:** 2026-10-19
+- **Pinned tag:** `v1.17.2`（npm release，与文档同 commit 发布）
+- **Git SHA:** `6401e53418e5b37c2b047e3d8ef1b1af72520013`
+- **Skill version:** `1.2.0`
+- **Synced:** 2026-10-29
 - **语言范围:** 仅简体中文（`apps/site/docs/zh`）。上游英文页（`docs/en`）不纳入本技能。
 
 ## 快照范围
 
-仓库 `apps/site/docs/zh/` 共 50 个页面（45 `.mdx` + 5 `.md`），与文档站
-sitemap 的 50 个中文页面一一对应。其中 38 个内容页映射到本技能参考文件：
+仓库 `apps/site/docs/zh/` 共 63 个页面（58 `.mdx` + 5 `.md`）。其中 41 个内容页映射到本技能参考文件：
 
 | 参考文件 | 主要来源页面 |
 | --- | --- |
-| `references/overview.md` | `introduction`、`basics`、`model-strategy`（概念部分） |
-| `references/model-config.md` | `model-common-config`、`model-config`、`model-strategy`、`common/setup-env` |
-| `references/integration.md` | `basics`、`integrate-with-playwright`、`integrate-with-puppeteer`、`integrate-with-any-interface` |
-| `references/platforms.md` | `platforms/android`、`platforms/ios`、`platforms/harmonyos`、`platforms/desktop`、`quick-start` |
+| `references/overview.md` | `index`、`basics`、`model-selection`（概念部分） |
+| `references/model-config.md` | `model-api-setup`、`model-config`、`model-selection`、`chatgpt-subscription`、`common/setup-env` |
+| `references/integration.md` | `basics`、`reference/index`、`integrate-with-playwright`、`integrate-with-puppeteer`、`integrate-with-any-interface`、`sdk/{standalone,playwright,chrome-bridge,vitest}` |
+| `references/platforms.md` | `platforms/{index,android,ios,harmonyos,desktop,web}`、`sdk/{android,ios,harmonyos,desktop}`、`quick-start` |
 | `references/skills.md` | `skills`、`mcp` |
 | `references/yaml-runner.md` | `yaml-script-runner`、`automate-with-scripts-in-yaml`、`migrate-to-midscene-test` |
-| `references/midscene-test/*` | `midscene-test/overview`、`use`、`configuration`、`extend`、`github-actions` |
+| `references/midscene-test/*` | `midscene-test/{overview,use,configuration,extend,github-actions}`、`common/{test-philosophy,test-workflow,test-collaboration,sdk-common-methods}` |
 | `references/faq.md` | `faq`、`caching`、`consume-report-file`、`data-privacy` |
 
-**升级到 v1.17+ 时需重建上表**（v1.16.0 范围内上表准确）。上游 v1.17 对中文文档做了结构重组：
-
-| v1.16.0 页面 | v1.17.2 状态 |
-| --- | --- |
-| `introduction` | 已删除，内容并入 `basics` |
-| `model-strategy` | 已删除，概念部分并入 `model-selection` |
-| `model-common-config` | 改名为 `model-api-setup` |
-| `model-debugging-observability` | 已删除 |
-
-同时新增 `sdk/{standalone,playwright,android,ios,harmonyos,desktop,chrome-bridge,vitest}` 与 `common/{sdk-common-methods,test-collaboration,test-philosophy,test-workflow}` 等页面，`reference/index` 大幅重写。届时需按新页面结构调整参考文件划分，不要直接沿用上表。
+`common/*` 四页是跨页复用的嵌入片段（SDK 前置条件、平台选择器、测试理念与工作流），不是独立主题页；
+`reference/index` 是完整 API 参考，本技能按「分类 + 高频 API」提炼，不逐条复制。
 
 **未纳入**的页面及其原因：
 
@@ -46,6 +37,37 @@ sitemap 的 50 个中文页面一一对应。其中 38 个内容页映射到本�
 | `showcases*`、`awesome-midscene` | 视频与社区项目清单，维护频率高、时效性强 |
 | `advanced/bdd-style-scripts-with-gherkin` | Beta 特性，面向特定场景，用户问到时再查源码 |
 | `bridge-mode`、`llm-txt`、`common/*`、`blog-*` | 要点已并入其他参考页 |
+
+## v1.17.2 同步记录（2026-10-29）
+
+从 `v1.16.0` 同步到 `v1.17.2`。中文文档差异 48 个文件（+4920 / −4642），新增 13 页、删除 3 页、改名 1 页。
+
+### 上游结构调整
+
+| v1.16.0 页面 | v1.17.2 状态 |
+| --- | --- |
+| `introduction` | 删除，内容并入 `basics` |
+| `model-strategy` | 删除，概念部分并入 `model-selection` |
+| `model-common-config` | 改名 `model-api-setup`（只讲 API Key 接入） |
+| `model-debugging-observability` | 删除，并入 `model-config` |
+
+新增 `model-selection`（模型选择指南）、`platforms/web`、8 个 `sdk/*`（standalone / playwright / chrome-bridge / android / ios / harmonyos / desktop / vitest）与 4 个 `common/*` 片段；`reference/index.mdx` 重写为完整 API 参考。
+
+### 已纳入技能
+
+- `references/integration.md` 补齐此前缺失的三个 API：
+  - `aiLocate()` —— 只定位不操作，优先用返回的 `center` 点击；`rect` 在按点定位模型（AutoGLM）下会退化成 8x8 方块。
+  - `startObserving()` —— 录帧后对帧序列断言，解决 Toast/横幅/转场这类短命 UI；观测对象不支持 `domIncluded`，帧源按平台走 scrcpy / WDA MJPEG / CDP Screencast。
+  - `runYaml()` —— SDK 内执行旧版 `tasks` 脚本并取回 `aiQuery` 结果。
+- 新增「Chrome Bridge」节：`AgentOverChromeBridge` 启动本地 Bridge Server、单实例单标签页、模型配置由 Node 进程读取而非插件。
+- 新增「用 Vitest 组织测试」节：移动端官方推荐做法，含 `fileParallelism: false` + `sequence.concurrent: false` 与每用例建/销 Agent 的模式。
+- Playwright 三个 Agent 类（`PlaywrightPageAgent` / `PlaywrightAgent` 兼容别名 / `PlaywrightBrowserAgent`）补成表格。
+- `SKILL.md`：版本 1.2.0、锁定 tag 改 v1.17.2、上游链接由已删除的 `introduction.html` 改为站点根、工作流与路由表补新入口、检查清单补 `startObserving`/`aiLocate` 两条。
+
+### 未纳入 / 无需改动
+
+- 模型清单（含 GPT-6 家族、`gpt-6-astra/sol/luna`、Fast mode `service_tier`、DeepSeek-V4-Pro 不可用）在 v1.16.0 时已跟进，本轮 `model-api-setup` 拆分后内容一致，未改动。
+- `changelog`、`*benchmark-report*`、`showcases*`、`blog-*`、`llm-txt` 等页面按既定原因不纳入。
 
 ## v1.16.0 同步记录（2026-10-19）
 

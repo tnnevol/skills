@@ -2,7 +2,7 @@
 
 覆盖：API 分类与语义、编排策略、Playwright/Puppeteer 集成、接入任意自定义界面。模型配置见 [model-config.md](model-config.md)。
 
-## API 三大类
+## API 分类
 
 ### 1. 规划并交互
 
@@ -84,6 +84,59 @@ const loginDialogVisible = await agent.aiBoolean('登录对话框是否可见');
 
 **操作完成不代表测试通过** —— 要用 `aiAssert` 明确检查预期结果。
 
+### 4. 元素定位（`aiLocate`）
+
+只做定位、不执行动作，返回坐标信息。需要自己控制点击时机、做坐标校验或与其他框架配合时使用。
+
+```typescript
+const { center, rect, dpr } = await agent.aiLocate('页面顶部的登录按钮');
+await page.mouse.click(center[0], center[1]);
+```
+
+- `center` 是模型定位出的目标点，坐标对应**截图真实像素**；要更稳的点击位置**优先用 `center`**。
+- `rect` 在按点定位的模型（如 AutoGLM）下会退化成元素中心 `8x8` 的小方块，**不是真实边界**，不要对它建立强依赖。
+- `dpr` 仅 Web 提供，是截图物理像素与 CSS 逻辑像素的比值。
+- 旧版 `deepThink` 在同参数位上曾是定位增强的别名，现统一为 `deepLocate`；`aiAct` 里的 `deepThink` 才是规划模式。
+
+## 持续观察：`startObserving`
+
+用于校验**短暂出现**的 UI（Toast、顶部横幅、页面转场动画）——这类元素在 `aiAssert` 执行时往往已经消失。先开始录制，做操作，停止后对**录制期间的帧序列**做查询或断言。
+
+```typescript
+const observer = await agent.startObserving();
+await agent.aiAct('提交表单');
+const observation = await observer.stop();
+
+await observation.aiAssert('提交过程中弹出了成功提示 Toast');
+const toastCount = await observation.aiNumber('共出现了多少次成功 Toast？');
+await observation.dispose();
+```
+
+- 参数：`intervalMs`（默认 1000ms，最小 200）、`maxFrames`（默认 30）、`watchdogMs`（默认 300000ms，`0` 表示不限制）。
+- `UIObservation` 上可用 `aiQuery`/`aiBoolean`/`aiNumber`/`aiString`/`aiAsk`/`aiAssert`，但**不支持 `domIncluded`**（TypeScript 编译期报错，运行期也会抛）。
+- 帧源按平台优先：Android 走 scrcpy（需 `scrcpyConfig.enabled`）、iOS 走 WDA MJPEG（需 `wdaMjpegFrameSource.enabled`）、Web 走 CDP Screencast；连续帧源不可用时回退为定时截图，移动端频率更低。
+- 单次查询/断言最多发送 `maxFrames` 张观察帧加最后一张完整截图；报告时间线里这些帧带 `Observed` 标记。
+- 用完调 `observation.dispose()` 清理落盘临时图片（`agent.destroy()` 也会清理）。
+
+## 执行 YAML：`runYaml`
+
+在 SDK 里直接跑一段 YAML 脚本（**只执行 `tasks` 部分**），返回脚本内所有 `aiQuery` 的结果。适合把已有的 YAML 流程嵌入到代码测试中。
+
+```typescript
+const { result } = await agent.runYaml(`
+tasks:
+  - name: search weather
+    flow:
+      - ai: input 'weather today' in input box, click search button
+      - sleep: 3000
+  - name: query weather
+    flow:
+      - aiQuery: "the result shows the weather info, {description: string}"
+`);
+```
+
+注意 `tasks/flow` 是**旧版 YAML**，与 Midscene Test 的 `cases/steps` 是两条链路，不可混用；后者用 `midscene-test` 命令。
+
 ## AI Context：三层优先级
 
 context 是提供给 AI 的**补充信息**（业务事实、判断规则、约束、输出要求），**用于补充主提示词，不是替代主提示词**。
@@ -147,6 +200,14 @@ for (const recordName of recordNames) {
 3. 如果 JS 编排代码越来越难维护、或成功率持续下降，**改用 `aiAct`**。
 
 ## 集成到 Playwright
+
+`@midscene/web/playwright` 提供三个 Agent，按操作范围选：
+
+| 类 | 范围 | 用途 |
+| --- | --- | --- |
+| `PlaywrightPageAgent` | 单个 `Page` | 始终操作同一页面 |
+| `PlaywrightAgent` | 单个 `Page` | `PlaywrightPageAgent` 的**兼容别名**，行为相同 |
+| `PlaywrightBrowserAgent` | 一个 `BrowserContext` | 在多个页面间切换，AI 操作作用于当前 active page |
 
 ### 直接集成（快速原型 / 脚本）
 
@@ -240,6 +301,72 @@ await browser.close();
 ```
 
 `@midscene/web` 基于 Puppeteer，默认无头模式；可用 `--bridge` 桥接用户自己的 Chrome，或 `--cdp <ws-endpoint>` 直连已有浏览器（见 [skills.md](skills.md)）。
+
+## Chrome Bridge（控制用户自己的 Chrome）
+
+`AgentOverChromeBridge` 通过 Midscene Chrome 插件控制桌面 Chrome，继承基础 `Agent` 的 AI 方法。适合「复用用户已登录的浏览器」场景——不用重新登录，也不受自动化浏览器隔离影响。
+
+```typescript
+import { AgentOverChromeBridge } from '@midscene/web/bridge-mode';
+
+const agent = new AgentOverChromeBridge({ closeNewTabsAfterDisconnect: false });
+await agent.connectCurrentTab({ timeout: 60000 });   // 绑定当前激活标签页
+await agent.aiAssert('账号页面可见');
+```
+
+- 实例化时会在 Node 进程里**启动本地 Bridge Server**（默认 `127.0.0.1:3766`）并等待插件连接；`serverListeningTimeout` 默认 30 秒，设 `false` 则不限等待。
+- **一个 Agent 实例只能绑定一个标签页**，调 AI 方法前必须先 `connectCurrentTab()` 或 `connectNewTabWithUrl()`。
+- 默认只允许本机连接；要跨机器需 `allowRemoteAccess: true` 或显式 `host`，并配套插件端远程配置（见 `bridge-mode` 文档）。
+- ⚠️ **模型配置由运行脚本的 Node 进程读取**，插件 Playground 里配的模型**不会**同步到脚本。
+- 其他选项：`port`、`closeConflictServer`、`enableWaterFlowAnimation`、`inputStrategy`（`legacy`/`sequential`/`bulk`）、`keyboardTypeDelay`（仅 `sequential` 生效）。
+
+## 用 Vitest 组织测试（移动端推荐）
+
+Android / iOS / HarmonyOS / 桌面端的 JS/TS 测试推荐用 Vitest：它负责用例组织、生命周期与结果汇总，Midscene Agent 负责连设备、操作界面和断言。
+
+```bash
+pnpm add -D vitest dotenv @midscene/android   # 换成对应平台包
+```
+
+关键配置（模型调用和设备连接都慢，超时要放大）：
+
+```typescript
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    include: ['e2e/**/*.test.ts'],
+    environment: 'node',
+    testTimeout: 90_000,
+    hookTimeout: 90_000,
+    fileParallelism: false,          // 共用一台设备，必须串行
+    sequence: { concurrent: false },
+  },
+});
+```
+
+**每个用例单独建/销毁 Agent**，避免状态串味：
+
+```typescript
+import 'dotenv/config';
+import { afterEach, beforeEach, test } from 'vitest';
+import { agentFromAdbDevice } from '@midscene/android';
+
+let agent: Awaited<ReturnType<typeof agentFromAdbDevice>> | undefined;
+
+beforeEach(async () => { agent = await agentFromAdbDevice(); });
+afterEach(async () => { await agent?.destroy(); agent = undefined; });
+
+test('scroll through settings', async () => {
+  await agent!.launch('com.android.settings');
+  await agent.aiWaitFor('The Settings app is visible');
+  await agent.aiAct('Scroll down one screen');
+  await agent.aiAssert('The Settings app is still visible');
+});
+```
+
+- 多设备时用 `agentFromAdbDevice(deviceId)` 指定设备。
+- 已有 Vitest 单元测试的项目，把设备测试单独放 `vitest.device.config.ts`，运行时 `--config` 指定，避免拖慢原本的测试。
+- **不要用** `test.concurrent` / `describe.concurrent`，会破坏设备串行假设。
 
 ## 接入任意自定义界面
 
