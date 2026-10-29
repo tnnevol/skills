@@ -15,7 +15,7 @@
 │       └── scripts/           # 技能配套脚本（可选）
 ├── sources/                    # 上游文档子模块（只读原材料，不对外发布）
 │   └── {project}/
-├── apps/                      # 独立应用目录（如 chandao-cli）
+├── apps/                      # 独立应用目录（如 openlist-cli、memos-cli）
 ├── package.json
 └── eslint.config.js
 ```
@@ -106,7 +106,7 @@ Brief description of what this skill covers.
 
 `pnpm start check` 会一并跑这些来源的 `--check`，任一处落后整体 exit 1。
 
-**Manual 类技能**（无外部文档源，同 antfu 的 `antfu`/`antfu-create-pr`）：`chandao`、`halo`、`memos` —— 内容是对本仓库自有 CLI/API 封装的命令文档，不建子模块。`openlist` 和 `fnnas-docs` 的来源性质特殊（前者仅单点引用上游文档，后者来源是网站 llms.txt 非 git 仓库），不建子模块但各自有 `GENERATION.md` 记录来源与同步方式。
+**Manual 类技能**（无外部文档源，同 antfu 的 `antfu`/`antfu-create-pr`）：`chandao`、`halo` —— 内容是对本仓库自有 CLI/API 封装的命令文档，不建子模块。`openlist`、`memos` 和 `fnnas-docs` 的来源性质特殊（前两者仅单点引用上游文档/OpenAPI、内容以本仓库 `apps/*-cli` 为准，后者来源是网站 llms.txt 非 git 仓库），不建子模块但各自有 `GENERATION.md` 记录来源与同步方式。
 
 ### 同步流程（子模块）
 

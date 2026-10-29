@@ -34,7 +34,7 @@ CLI 工具可直接被 AI Agent 调用，实现自动化管理。
 | ------------------------------- | -------------------------------------------------------------------- |
 | [chandao](skills/chandao)       | 禅道项目管理 - 任务、需求、Bug、产品 API 操作 - Tnnevol              |
 | [halo](skills/halo)             | Halo CMS 博客管理 - 创建、查询、更新、删除、发布文章 - Tnnevol       |
-| [memos](skills/memos)           | Memos 自建笔记工具 - CRUD + 标签 API - Tnnevol                       |
+| [memos](skills/memos)           | Memos 自建笔记工具 - 通过 memos-cli 管理笔记、评论、附件、分享 - Tnnevol |
 | [fnnas-docs](skills/fnnas-docs) | 飞牛 fnOS 应用开发文档 - 快速开始、开发指南、开放 API、CLI 工具 - Tnnevol |
 | [openlist](skills/openlist)     | OpenList 网盘聚合 - 通过 openlist-cli 管理文件、分享、后台 - Tnnevol |
 | [dsh](skills/dsh)               | DeepSeek Harness - 运行、配置和插件扩展 - Tnnevol                         |
