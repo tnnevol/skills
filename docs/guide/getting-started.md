@@ -43,6 +43,14 @@ npm install -g @tnnevol/openlist-cli
 
 安装后即可在终端中使用 `openlist-cli` 命令管理网盘文件。
 
+### 笔记命令行工具
+
+```bash
+npm install -g @tnnevol/memos-cli
+```
+
+安装后即可在终端中使用 `memos-cli` 命令管理笔记、评论、附件与分享。
+
 ## 环境变量配置
 
 各技能需要配置相应的环境变量才能正常使用：

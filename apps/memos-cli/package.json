@@ -1,0 +1,49 @@
+{
+  "name": "@tnnevol/memos-cli",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "CLI for Memos - A self-hosted timeline-based note service",
+  "author": "tnnevol",
+  "license": "AGPL-3.0",
+  "homepage": "https://github.com/tnnevol/skills",
+  "bugs": {
+    "url": "https://github.com/tnnevol/skills/issues"
+  },
+  "keywords": [
+    "memos",
+    "usememos",
+    "cli",
+    "notes"
+  ],
+  "bin": {
+    "memos-cli": "./dist/cli.js"
+  },
+  "files": [
+    "README.md",
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "test": "pnpm build && vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "undici": "^7.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2",
+    "vitest": "^4.1.10"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

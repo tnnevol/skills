@@ -23,7 +23,13 @@ export default defineConfig({
           { text: 'dsh', link: '/skills/dsh/' },
         ],
       },
-      { text: 'openlist-cli', link: '/cli/openlist-cli' },
+      {
+        text: 'CLI',
+        items: [
+          { text: 'openlist-cli', link: '/cli/openlist-cli' },
+          { text: 'memos-cli', link: '/cli/memos-cli' },
+        ],
+      },
     ],
 
     sidebar: {
@@ -56,6 +62,7 @@ export default defineConfig({
           text: '命令行工具',
           items: [
             { text: 'openlist-cli', link: '/cli/openlist-cli' },
+            { text: 'memos-cli', link: '/cli/memos-cli' },
           ],
         },
       ],
