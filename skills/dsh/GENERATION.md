@@ -4,11 +4,32 @@ skills/dsh 的参考文件依据 `sources/dsh`（deepseek-ai/deepseek-harness �
 sparse 检出 `docs/`）的快照手工提炼维护，不复制原文。
 
 - **Source:** `sources/dsh`
-- **Pinned tag:** `dsh-v0.2.1-rc.2`
-- **Git SHA:** `687f282e8625c6b8d11ff58211a90524be2e4317`
-- **Synced:** 2026-10-19
-- **Skill version:** `1.1.0`
+- **Pinned tag:** `dsh-v0.2.1-rc.4`
+- **Git SHA:** `504a01a9578abc2c6f1fb896b1dc322c9fe24f66`
+- **Synced:** 2026-10-29
+- **Skill version:** `1.2.0`
 - **语言范围:** 仅简体中文（`*.zh.md`）。上游英文页与 `.i18n.yaml` 配对文件不纳入本技能。
+
+## v0.2.1-rc.4 同步记录（2026-10-29）
+
+从 `dsh-v0.2.1-rc.2` 同步到 `dsh-v0.2.1-rc.4`。`docs/` 下 15 个文件、+96 / −42，全部变更集中在 rc.3，rc.4 的 `docs/` 无改动。
+
+### 已纳入技能
+
+- `references/cli.md`：DeepSeek 模型列表改为「跟随官方发布列表」与「自定义模型目录」两种来源，补内置兜底目录与每十分钟后台刷新的说明。
+- `references/user-guide.md`：新增「DeepSeek 模型列表跟随官方发布（rc.3 起）」一节，覆盖卡片与选择器不一致、恢复默认模型和排查方向。
+- `references/extension.md`：新增「客户端 Slots 与『更多』菜单」一节，记录 `sidebar.panellist.actions`、`conversation.session.header.views.actions`、`sidebar.right.tab.guide.actions` 三个 root list 槽位、`active` 与 Pin 状态相互独立、以及内存内收起状态；模型目录发现段落补 `ModelListingConfig` 与账号路由不再依赖 `timeout` 包。
+- `references/docs-map.md`：补 `docs/upgrade-guide/v0.2.1-rc.2/new-session-blank-reuse/` 索引行（新会话复用空白 Session）。
+
+### 一并修正
+
+- 版本引用统一为 `0.2.1-rc.4`：`SKILL.md` 正文与末尾来源 tag 原写作 `0.2.0-rc.2` / `dsh-v0.2.0-rc.2`（后者是错误 tag），`references/cli.md`、`references/docs-map.md` 原停留在 `0.2.0-rc.2` / `0.2.1-rc.2`。
+- `SKILL.md` frontmatter 版本由 `1.0.5` 对齐到 `1.2.0`（此前与本文档记录的 `1.1.0` 不一致）。
+
+### 未纳入
+
+- 新增包 `client-ui-entry-customization` 与 `module-graph` 的包清单变化属生成型目录，未复制进技能，需要时读子模块 `docs/module-graph.zh.md`。
+- `docs/upgrade-guide/v0.2.1-rc.2/new-session-blank-reuse/` 全文未摘录，只在 `docs-map.md` 保留索引。
 
 ## v0.2.1-rc.2 同步记录（2026-10-19）
 

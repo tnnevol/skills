@@ -2,7 +2,7 @@
 
 本文整理 apps/cli/reference/README.zh.md、docs/development.zh.md 和用户指南中的可操作内容。命令、配置键和环境变量保持源项目原名；解释使用中文。
 
-当前源项目版本为 `0.2.0-rc.2`。项目仍处于开发者预览阶段，未来可能包含破坏性变更。源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
+当前源项目版本为 `0.2.1-rc.4`。项目仍处于开发者预览阶段，未来可能包含破坏性变更。源码开发要求 Node.js 22.19+ 或 24+，仓库当前固定使用 `pnpm@11.7.0`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
 
 ## 运行方式
 
@@ -200,7 +200,12 @@ export DEEPSEEK_SEARCH_BASE_URL=https://...
 
 “获取可用模型”只对目录未描述的自定义路由发起网络请求：OpenAI 协议请求带 bearer 鉴权的 `GET {baseURL}/models`，Anthropic 协议请求 `/v1/models?limit=1000`，使用 `x-api-key` 和 `anthropic-version: 2023-06-01`；列表地址会规范化末尾的 `/v1`，模型请求仍使用配置中的原始 `baseURL`。响应可以是标准 `data` 数组或 `models` 对象映射；Anthropic 只读取前 1000 条，不跟随 `has_more`。配置 profile 的 headers 会参与发现，新填写的密钥优先于已存凭据。探测失败时手动填写模型 ID，结果等价。
 
-`deepseek-official` 路由默认提供建议性目录：`deepseek-flash`、`deepseek-v4-flash-vision-exp`（支持图片）以及 `deepseek-v4-flash`、`deepseek-v4-pro`（仅文本），默认上下文窗口为 1,000,000 token。显式写入 `models` 会替换这份目录；已配置模型 ID 会原样发送到协议，因此网关必须实际支持所选 ID。DeepSeek 路由默认推理强度为 `high`，可选 `off`、`low`、`high` 和 `max`。
+`deepseek-official` 路由的模型列表有两种来源：
+
+- **跟随官方发布列表（默认）**：保存密钥且使用默认端点时，DeepSeek 模型跟随 DeepSeek API 发布的列表；首次需要模型时加载，使用期间约每十分钟后台刷新一次，加载失败退回内置模型。此时设置卡片显示的是内置模型，因此**新发布的模型只会出现在模型选择器里**。
+- **自定义模型目录**：在「自定义设置」编辑「模型目录」后改用你自己的列表，不再跟随发布列表；点「恢复默认模型」重新跟随并重新加载。
+
+内置兜底目录为 `deepseek-flash`、`deepseek-v4-flash-vision-exp`（支持图片）以及 `deepseek-v4-flash`、`deepseek-v4-pro`（仅文本），默认上下文窗口 1,000,000 token。显式写入 `models` 会整体替换该路由目录；已配置模型 ID 会原样发送到协议，因此网关必须实际支持所选 ID。DeepSeek 路由默认推理强度为 `high`，可选 `off`、`low`、`high` 和 `max`。
 
 基于 base 的 Web 组合还提供可选的 DeepSeek 账号登录和 `deepseek-account` 模型路由。账号路由只使用本地账号授权，不会回退到 API key；未登录时返回 `ACCOUNT_SIGN_IN_REQUIRED`，无效 token 返回 `ACCOUNT_TOKEN_INVALID`，账号路由配额错误使用 `ACCOUNT_QUOTA`。账号控制器 Remote 只返回状态和操作结果，不把 token 或 PKCE 私密数据交给浏览器。普通 Web 客户端不采集产品埋点；桌面产品埋点（`ctx.productAnalytics`）和 `ctx.productTelemetry` 上报仅在 Desktop profile 启用。
 

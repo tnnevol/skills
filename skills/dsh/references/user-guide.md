@@ -1,6 +1,6 @@
 # 用户指南：插件市场与对外部署
 
-本页覆盖 `dsh-v0.2.1-rc.2` 新增的两项**用户可感知功能**。其余上游变更（`persistence-changes/`、`upgrade-guide/`、`defensive-patterns/` 等）属内部工程文档，需要时直接读子模块 `sources/dsh/docs/`。
+本页覆盖 `dsh-v0.2.1-rc.2` 起的**用户可感知功能**：插件市场、反向代理部署，以及 rc.3 的 DeepSeek 模型列表行为。其余上游变更（`persistence-changes/`、`upgrade-guide/`、`defensive-patterns/` 等）属内部工程文档，需要时直接读子模块 `sources/dsh/docs/`。
 
 ## 插件市场（Plugin Market）
 
@@ -169,6 +169,17 @@ TLS 监听器会给会话 cookie 加上 `Secure`；**公开部署的浏览器侧
 | `--public-url` | Web profile 的 `web-runtime` 行 `publicUrl` |
 | `--trusted-host` | `Connection` 行 `trustedHosts` |
 | `--tls-cert` / `--tls-key` | `webserver` 行 `tls` |
+
+## DeepSeek 模型列表跟随官方发布（rc.3 起）
+
+保存密钥且使用默认端点时，DeepSeek 的模型不再固定为内置清单，而是**跟随 DeepSeek API 发布的列表**：
+
+- 第一次需要模型时加载列表，使用期间约每十分钟在后台刷新一次；无法加载时退回内置模型。
+- 使用发布的列表时，**设置卡片上显示的是内置模型**，因此新发布的模型只会出现在模型选择器中——卡片和选择器不一致是预期行为，不是 bug。
+- 在**自定义设置**里编辑**模型目录**后改用你自己的列表，不再跟随发布列表；点**恢复默认模型**重新跟随并重新加载。
+- 账号路由与 API key 路由共用同一套列表配置（`ModelListingConfig`：加载超时、刷新年龄、`modelOverrides`），两种路由行为一致。
+
+排查「模型列表为空」时，先确认当前是跟随发布列表还是自定义目录：自定义目录下要检查适配器协议、`baseURL`、凭据和发现接口；跟随发布列表时则要检查实例能否访问 DeepSeek API。
 
 ## 相关页面
 

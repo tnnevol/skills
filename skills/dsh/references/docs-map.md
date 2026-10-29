@@ -1,6 +1,6 @@
 # 文档索引
 
-本技能不把生成型 API 目录和全部教程机械复制进 SKILL.md，而是把稳定规则提炼到参考文件，并保留官方文档索引。本索引按源项目 `0.2.1-rc.2` 整理。需要当前实现、完整类型声明或精确配置字段时，读取本地 deepseek-harness/docs 的中文文件；没有本地检出时使用下列线上文档页面。
+本技能不把生成型 API 目录和全部教程机械复制进 SKILL.md，而是把稳定规则提炼到参考文件，并保留官方文档索引。本索引按源项目 `0.2.1-rc.4` 整理。需要当前实现、完整类型声明或精确配置字段时，读取本地 deepseek-harness/docs 的中文文件；没有本地检出时使用下列线上文档页面。
 
 ## 按任务查找
 
@@ -46,6 +46,7 @@
 | 创建 OTel 上报通道 | 本地源项目 `packages/telemetry/otel/README.zh.md`、`docs/subsystems/otel.zh.md` | `ctx.otel` 共享服务、独立事件/Session 通道、4 MB 请求上限和调用方关闭责任；当前线上未发布 OTel 子系统页 |
 | 隔离 Windows 子进程写入 | 本地源项目 `packages/sandbox/sandbox-windows-acl/README.zh.md` | 受限令牌、能力 SID ACE、Low 完整性标签和 `AclSandbox` 直接 API |
 | 迁移到 Schedule 可选 bundle | 本地源项目 `docs/upgrade-guide/v0.1.7-rc.2/` | `patch: entry schedule not found` 的原因和插件管理页迁移步骤 |
+| 新会话复用空白 Session | 本地源项目 `docs/upgrade-guide/v0.2.1-rc.2/new-session-blank-reuse/guide.zh.md` | rc.2 起新会话复用工作区首个未开始、未归档的空白 Session；被复用会话保留创建时的 preset 装配 |
 | 添加 Web 设置卡片 | [新增设置卡片](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-a-settings-card) | 宿主端配置命名空间、客户端卡片、凭据和版本号 |
 | 支持图片和文件附件 | 本地源项目 `docs/subsystems/attachment.zh.md`、`packages/attachment/attachment/README.zh.md` | 图片校验与规范化、通用文件原样保存、文件上传凭证、读取和可回放引用 |
 | 声明文件交付和轮次改动 | 本地源项目 `docs/subsystems/deliverables.zh.md`、`packages/deliverables/tool-present/README.zh.md`、`packages/deliverables/workspace-changes/README.zh.md` | `present`、`deliverables/presented`、`workspace/changes`、文件卡片和当前 Host 生命周期 |
@@ -106,4 +107,4 @@ docs/config-catalog.zh.md、docs/tool-catalog.zh.md、docs/persistence-catalog.z
 - 中文页面与英文页面成对维护；源项目的生成器和配对检查拥有最终规则。
 - 普通文档写当前状态和操作方法，历史背景放在 postmortem 或 Agent Note，不要混入技能的使用规则。
 - 一个事实只保留一个权威位置；本技能只复制稳定且高频的操作规则，其余通过索引指向源文档。
-- 需要更新本技能时，先更新或拉取 deepseek-harness，再比较本文档中的 CLI 命令、profile 初始化、HMR、配置 schema、插件兼容性、默认工具、Remote 契约、会话格式、会话持久化、文件交付、轮次改动、可选集成和事件顺序。当前技能对应源项目 `0.2.0-rc.2`；版本间破坏性行为优先读 `docs/upgrade-guide/` 下的迁移指南。
+- 需要更新本技能时，先更新或拉取 deepseek-harness，再比较本文档中的 CLI 命令、profile 初始化、HMR、配置 schema、插件兼容性、默认工具、Remote 契约、会话格式、会话持久化、文件交付、轮次改动、可选集成和事件顺序。当前技能对应源项目 `0.2.1-rc.4`；版本间破坏性行为优先读 `docs/upgrade-guide/` 下的迁移指南。

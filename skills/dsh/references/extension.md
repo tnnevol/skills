@@ -141,7 +141,7 @@ export function apply(ctx: Context) {
 
 密钥使用 Cordis 配置和环境变量回退，不要自行读取约定的密钥文件。
 
-模型目录发现由适配器按协议实现：`openai-completions` 和 `openai-responses` 请求带 bearer 鉴权的 `{baseURL}/models`，`anthropic-messages` 请求 `/v1/models?limit=1000`，使用 `x-api-key` 与 `anthropic-version: 2023-06-01`。已安装目录提供方不发网络请求；只有目录未描述的自定义路由才探测端点。Anthropic 的列表地址应规范化末尾的 `/v1`，但模型请求仍保留配置中的 `baseURL`。解析器应同时兼容标准 `data` 数组和 `models` 对象映射，并规范化模型 ID、名称、上下文长度和最大输出；配置 headers 要参与发现，新填写的密钥优先，Anthropic 不跟随 `has_more`。探测结果只供用户采纳，`settings.yaml` 中的模型列表才是持久事实。
+模型目录发现由适配器按协议实现：`openai-completions` 和 `openai-responses` 请求带 bearer 鉴权的 `{baseURL}/models`，`anthropic-messages` 请求 `/v1/models?limit=1000`，使用 `x-api-key` 与 `anthropic-version: 2023-06-01`。已安装目录提供方不发网络请求；只有目录未描述的自定义路由才探测端点。Anthropic 的列表地址应规范化末尾的 `/v1`，但模型请求仍保留配置中的 `baseURL`。解析器应同时兼容标准 `data` 数组和 `models` 对象映射，并规范化模型 ID、名称、上下文长度和最大输出；配置 headers 要参与发现，新填写的密钥优先，Anthropic 不跟随 `has_more`。探测结果只供用户采纳，`settings.yaml` 中的模型列表才是持久事实。账号路由与 API key 路由共用 `ModelListingConfig`（列表加载超时、刷新年龄、`modelOverrides`），因此「跟随官方发布列表」的行为对两种路由一致；`llm-deepseek-account` 不再依赖 `timeout` 包自行控制截止时间。
 
 自定义提供方应在 `settings.yaml` 声明 `api`、`baseURL` 和非空 `models`；用 `input` 声明图片能力，用 `reasoningEfforts` 声明推理等级，用 `compat` 调整系统消息角色、输出上限字段和思考参数。设置变更会在下一个请求生效；配置错误的提供方应保留可编辑诊断，并在实际模型请求前以稳定错误码失败。
 
@@ -252,6 +252,22 @@ export function apply(ctx: Context) {
 5. 使用 dsh --profile <name> --dump-config 确认 patch 顺序、依赖和命令行表达式。
 
 随包可选 bundle（`packages/boot/app-boot` 的 `OPTIONAL_BUNDLES`）是安装的运行时依赖：声明 `dsh.bundle.patch`、`icon` 和 `./locale/*.json` 显示元数据，不被随附模板选中，由插件管理页在「官方」分组以默认关闭提供；纯配置 bundle 的 patch 即运行时内容，可发布空模块入口。新增 vendored 包时，先阅读 vendor/README.md 和对应 cookbook；除源码、路径映射、Host 引用外，还要维护 vendor manifest。
+
+## 客户端 Slots 与「更多」菜单
+
+Slot 是 Web Client 的类型化 React 组合点：`SlotMap` 在编译期声明 key、cardinality（基数）、scope、owner props、keyed props 与可选的 slot 级 inject face；运行时由拥有该渲染位置的组件在 `children` 中给出对应条目。要求某个 slot 只在特定上下文出现时，用 scope 而不是在组件里判断。
+
+`plugins.add.actions` 是 root 作用域的 list，在添加插件菜单的安装项之后提供 `MenuItemButton` 行；owner 提供 `onDismiss()`，用于开始动作前关闭菜单。
+
+rc.3 起另有三个 root 作用域的 list 槽位，用于在已有内容之后追加「更多」菜单行：
+
+| slot | 位置 |
+| --- | --- |
+| `sidebar.panellist.actions` | 左侧栏面板行之后 |
+| `conversation.session.header.views.actions` | 会话头部 View 标签之后 |
+| `sidebar.right.tab.guide.actions` | 右侧栏引导卡片之后 |
+
+区域只在对应 list 有注册项时才绘制「更多」按钮与菜单，并传入可自定义的入口、其 Pin 状态、`onOpen`、`onPinnedChange` 与 `onDismiss`。面板和 View 入口另有可选的 `active` 状态标识当前选中项，**该状态与 Pin 状态相互独立**。各区域在内存中维护已收起的入口 id，因此收起状态不跨重启持久化。产品内置的菜单行由 `client-ui-entry-customization` 注册，可作为写法参考。
 
 ## 测试与文档
 

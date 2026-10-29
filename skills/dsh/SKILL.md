@@ -7,12 +7,12 @@ description: >-
   用户需要安装、运行、配置、排错或扩展 DeepSeek Harness（dsh）时使用，包括 profile 组合、Web 界面、工作区、工作区文件、智能体模式预设、无头任务、SDK、ACP、插件、Cordis、工具、模型适配器、会话、会话格式迁移、会话持久化、网络代理、设置卡片、图片和文件附件、文件交付、反馈、文件引用、Remote API、会话投影、子代理、智能体团队、会话导出和能力接缝。
 metadata:
   author: Tnnevol
-  version: "1.0.5"
+  version: "1.2.0"
 ---
 
 # dsh 技能
 
-使用本技能处理 DeepSeek Harness（简称 dsh）的安装、使用、配置和开发问题。它依据 `sources/dsh`（deepseek-harness 文档子模块，锁定 `dsh-v0.2.1-rc.2`）的中文文档快照整理；需要精确的类型、配置字段或当前实现时，优先读取该快照或用户工作区中的源项目文档和源码。
+使用本技能处理 DeepSeek Harness（简称 dsh）的安装、使用、配置和开发问题。它依据 `sources/dsh`（deepseek-harness 文档子模块，锁定 `dsh-v0.2.1-rc.4`）的中文文档快照整理；需要精确的类型、配置字段或当前实现时，优先读取该快照或用户工作区中的源项目文档和源码。
 
 ## 何时使用
 
@@ -33,7 +33,7 @@ npx @deepseek-ai/dsh web
 
 ### 使用源码
 
-源码开发要求 Node.js 22.19+ 或 24+，并使用仓库固定的 pnpm 版本。当前源项目版本为 `0.2.0-rc.2`，仍处于开发者预览阶段，未来可能包含破坏性变更：
+源码开发要求 Node.js 22.19+ 或 24+，并使用仓库固定的 pnpm 版本。当前源项目版本为 `0.2.1-rc.4`，仍处于开发者预览阶段，未来可能包含破坏性变更：
 
 ~~~sh
 git clone https://github.com/deepseek-ai/deepseek-harness.git
@@ -184,7 +184,7 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 
 ## 文档源与同步
 
-本技能的参考文件提炼自仓库内子模块 `sources/dsh`（deepseek-ai/deepseek-harness，sparse 检出 `docs/`，固定在 `dsh-v0.2.0-rc.2`，详见 [GENERATION.md](GENERATION.md)）。约定：
+本技能的参考文件提炼自仓库内子模块 `sources/dsh`（deepseek-ai/deepseek-harness，sparse 检出 `docs/`，固定在 `dsh-v0.2.1-rc.4`，详见 [GENERATION.md](GENERATION.md)）。约定：
 
 - **仅维护简体中文**：改写只依据上游 `*.zh.md` 中文页；英文页与 `.i18n.yaml` 配对文件不纳入本技能。
 - **快照即依据**：回答基于锁定快照；用户本地 dsh 版本更高时，以 `--dump-config`、`--help` 和实际源码为准，并注明版本差异。

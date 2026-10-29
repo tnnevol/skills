@@ -26,6 +26,17 @@ sitemap 的 50 个中文页面一一对应。其中 38 个内容页映射到本�
 | `references/midscene-test/*` | `midscene-test/overview`、`use`、`configuration`、`extend`、`github-actions` |
 | `references/faq.md` | `faq`、`caching`、`consume-report-file`、`data-privacy` |
 
+**升级到 v1.17+ 时需重建上表**（v1.16.0 范围内上表准确）。上游 v1.17 对中文文档做了结构重组：
+
+| v1.16.0 页面 | v1.17.2 状态 |
+| --- | --- |
+| `introduction` | 已删除，内容并入 `basics` |
+| `model-strategy` | 已删除，概念部分并入 `model-selection` |
+| `model-common-config` | 改名为 `model-api-setup` |
+| `model-debugging-observability` | 已删除 |
+
+同时新增 `sdk/{standalone,playwright,android,ios,harmonyos,desktop,chrome-bridge,vitest}` 与 `common/{sdk-common-methods,test-collaboration,test-philosophy,test-workflow}` 等页面，`reference/index` 大幅重写。届时需按新页面结构调整参考文件划分，不要直接沿用上表。
+
 **未纳入**的页面及其原因：
 
 | 页面 | 原因 |
