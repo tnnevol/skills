@@ -1,6 +1,8 @@
 # 配置测试项目
 
-`midscene.config.ts` 是 Midscene Test 的项目配置文件：配置浏览器/设备初始化、注册用例可调用的 Node、设置并发与超时等运行参数。
+`midscene.config.ts` 是 Midscene Test 的项目配置文件：配置浏览器/设备初始化、注册用例可调用的 Node、声明执行项目与运行参数。
+
+> 生命周期、并发、超时的完整规则见 [execution.md](execution.md)；运行命令、退出码与报告见 [running.md](running.md)。
 
 ## 配置文件结构
 
@@ -18,7 +20,7 @@
 | `setup` | 为隐式的默认执行项目创建共享资源 |
 | `nodes` | 注册所有执行项目共享的 Node |
 | `projects` | 声明具名执行项目，分别配置 setup 与用例选择规则；使用时把 setup 放进各项目，不再配顶层 setup |
-| `test` | 并发数、失败阈值、默认步骤超时 |
+| `test` | 并发上限（`maxConcurrentFiles` / `maxConcurrentProjects`）、失败阈值、超时 |
 | `output` | 报告输出目录 |
 
 ## 完整示例：Playwright
@@ -98,17 +100,44 @@ export default defineTestProject<ProjectContext>({
 执行项目开始
 ├─ setup → 返回项目共享的 context
 ├─ 文件 A
+│  ├─ fileSetup → 返回本文件独占的 context（配置了才有）
 │  ├─ beforeAll
 │  ├─ 用例 1：beforeEach → steps → afterEach → 本次执行的 Node 清理
 │  ├─ 用例 2：beforeEach → steps → afterEach → 本次执行的 Node 清理
 │  ├─ afterAll
 │  └─ 文件级 Node 清理
 ├─ 文件 B
-│  └─ 同样执行该文件的钩子、用例和清理
+│  └─ 同样执行该文件的 fileSetup、钩子、用例和清理
 └─ 项目清理：执行 setup 中注册的 onTeardown()
 ```
 
-`setup` 属于执行项目，在该项目 YAML 开始前跑一次；`beforeAll`/`afterAll` 属于**单个 YAML 文件**；`beforeEach`/`afterEach` 包围每个用例的每次执行。
+`setup` 属于执行项目，在该项目 YAML 开始前跑一次；`fileSetup`（可选）为**每份文件**创建独占资源，需文件并发时**必须**配置；`beforeAll`/`afterAll` 属于**单个 YAML 文件**；`beforeEach`/`afterEach` 包围每个用例的每次执行。
+
+### 用 `defineFileSetup` 隔离文件资源
+
+`fileSetup` 用 `defineFileSetup()` 定义，返回的 `context` 只属于当前 YAML 文件：
+
+```ts filename=setup.ts
+import { defineFileSetup } from '@midscene/test/config';
+import { chromium, type Page } from 'playwright';
+
+export interface Context {
+  page: Page;
+  orderId?: string;   // 供 Node 间共享
+}
+
+export const fileSetup = defineFileSetup<Context, undefined>({
+  name: 'refund',
+  async setup({ onTeardown }) {
+    const browser = await chromium.launch();
+    onTeardown(() => browser.close());
+    const page = await browser.newPage();
+    return { page } satisfies Context;
+  },
+});
+```
+
+每份 YAML 文件各得一个独立实例。`onTeardown()` 注册的清理按**后进先出**执行，且自动绑定到当前阶段（单次用例尝试或整个文件）。
 
 重试只重跑失败 Case 的 `beforeEach → steps → afterEach`，**不重跑项目 `setup` 或文件 `beforeAll`**。`setup` 失败时该项目的 YAML 不执行，但仍会尝试执行 setup 中已注册的清理。
 
@@ -117,6 +146,7 @@ export default defineTestProject<ProjectContext>({
 | 注册位置 | 清理时机 |
 | --- | --- |
 | 项目 `setup` | 项目结束时，所有已执行文件的清理之后 |
+| `fileSetup` | 该文件级清理时（文件粒度） |
 | `beforeAll`、`afterAll` 中的 Node | 当前文件的 `afterAll` 之后 |
 | `beforeEach`、`steps`、`afterEach` 中的 Node | 本次用例执行的 `afterEach` 之后，每次重试独立清理 |
 
@@ -124,7 +154,7 @@ export default defineTestProject<ProjectContext>({
 
 ### context 的共享范围
 
-`setup` 返回的 `context` 在当前执行项目内复用：所有 YAML 文件、钩子、用例和重试中的 Node 接收**同一个对象**，框架不会在文件切换、用例切换或重试时复制、清空或重建。
+`setup` 返回的 `context` 在当前执行项目内复用：所有 YAML 文件、钩子、用例和重试中的 Node 接收**同一个对象**，框架不会在文件切换、用例切换或重试时复制、清空或重建。配置 `fileSetup` 后则**每份文件拿到自己的 `context`**，这是文件级并发的资源隔离前提。
 
 某 Node 写入 `context.orderId` 后，后续 Node（含下一条用例）都能读到。**用例独有数据需在准备步骤重置或清理时移除；重试不会自动恢复 `context` 初始状态。** 页面、登录状态是否重置取决于项目实现。
 
@@ -334,7 +364,8 @@ export default defineTestProject<ProjectContext>({
     },
   ],
   test: {
-    maxConcurrency: 1,
+    maxConcurrentFiles: 1,
+    maxConcurrentProjects: 1,
     bail: 0,
     testTimeout: 120_000,
   },
@@ -348,34 +379,13 @@ export default defineTestProject<ProjectContext>({
 
 ### 并发与资源隔离
 
-**并发调度的单位是执行项目**，`test.maxConcurrency` 限制同时运行的项目数，默认 `1`。单个项目内的 YAML 文件、用例和步骤**顺序执行**——只有一个执行项目时，增大此值也不会让项目内用例并发。
+并发由 `test.maxConcurrentFiles`（全局活动文件上限）与 `test.maxConcurrentProjects`（全局活动项目上限）**两个独立维度**控制，默认为 `1`。
 
-需要不同用例并发时，按目录或标签分配到多个项目并各自创建独立资源：
+> ⚠️ 旧字段 **`test.maxConcurrency` 已移除**，配置里留着它会直接报错。它原本控制项目级并发，**不能**简单改名成 `maxConcurrentFiles`。
 
-```ts
-export default defineTestProject<ProjectContext>({
-  nodes: midsceneNodes,
-  projects: [
-    {
-      name: 'checkout',
-      setup: playwrightSetup,
-      files: { include: ['cases/checkout/**/*.{yaml,yml}'] },
-    },
-    {
-      name: 'account',
-      setup: playwrightSetup,
-      files: { include: ['cases/account/**/*.{yaml,yml}'] },
-    },
-  ],
-  test: { maxConcurrency: 2 },
-});
-```
+项目内需要文件级并发时，必须同时配置 `projects[].maxConcurrentFiles > 1` 与 `projects[].fileSetup`（否则每份文件会共用同一份资源）。完整调度规则、名额占用与迁移写法见 [execution.md](execution.md#并发两个维度各自独立)。
 
-两个项目分别调用 `playwrightSetup`，各自创建浏览器、页面和 `context`。设备测试同理：并发项目应连接**不同设备**，避免同时操作同一设备。
-
-框架**不会自动把用例均分到不同项目**。两个项目匹配同一 YAML 文件时，该文件会在两个项目中各运行一次（适合跨平台/环境重复验证）。要分批并发，应使用互不重叠的 `files` 或 `tags`。
-
-每个项目从初始化到完成清理始终占用一个并发名额。当前调度在**同一个 Node.js 进程内异步执行**，不会为项目创建独立进程；模块全局变量、外部账号和测试数据仍需项目自行隔离。
+框架**不会自动把用例均分到不同项目**。两个项目匹配同一 YAML 文件时，该文件会在每个项目各跑一次（适合跨平台重复验证）；要分批并发就用互不重叠的 `files` 或 `tags`。
 
 ### 为各项目生成 Node 说明书
 
@@ -385,24 +395,17 @@ pnpm exec midscene-test nodes --project android-smoke
 
 `--project` 会列出该项目合并全局和局部注册后实际生效的 Node。未指定项目时，若所有项目生效的 Node 定义相同则生成一份共享说明书；**定义不同则报错**并提示用 `--project` 选择，避免混合不同项目的同名定义。
 
-## 超时与取消机制
+## 超时与取消
 
-步骤超时时框架通过该步骤的 `signal` 发出取消通知。CLI 运行收到 `SIGINT`（Ctrl+C）或 `SIGTERM` 会取消运行并传递取消信号。
+三个超时配置与取消/清理语义见 [execution.md](execution.md#超时)：
 
-Node 通过 `AbortSignal` 接收取消通知，**内部异步操作不会因此自动终止**。自定义 Node 需把 `signal` 传给支持取消的 API，或主动检查取消状态。
+| 配置项 | 控制范围 | 默认 |
+| --- | --- | --- |
+| `test.testTimeout` | 单步骤（可被步骤内 `$.timeout` 覆盖） | 120000 ms |
+| `test.setupTimeout` | 单次 `setup` / `fileSetup` | 120000 ms |
+| `test.teardownTimeout` | 单个清理范围 | 30000 ms |
 
-运行被中断后，框架仍会尝试执行 `afterEach`、`afterAll` 和通过 `onTeardown()` 注册的清理函数。执行 `afterEach`/`afterAll` 中的 Node 时，若运行的 `signal` 已被取消，框架会**换用新的、尚未取消的 signal**，使清理继续执行；这些清理步骤仍受步骤超时配置约束。
-
-> **`onTeardown()` 注册的清理函数不会收到新的 `signal`**。不要在其中复用原步骤的 `signal`：它可能已因超时或中断被取消，导致清理请求立即失败。
-
-### 资源隔离与清理等待（v1.16 强化）
-
-- **超时不代表底层操作已退出。** 继续同阶段的后续 Step 前，框架会等待已取消的操作结束，**默认最多 30 秒**；仍未结束就停止后续步骤。等待单独计时，不占下一步的超时预算。
-- **新的 `signal` 不绕过资源占用检查**：同一 Agent 的旧操作尚未退出时，清理 Node 不能与它重叠执行，对应操作会被标记为未执行。例：点击操作超时后仍在运行，`afterEach` 中使用同一 Agent 的点击不能同时开始。
-- **生命周期钩子结束后的清理默认分两段等待**：先等运行中的操作退出（默认最多 **1 秒**），操作退出后再等注册的清理回调执行（回调阶段默认最多 **10 秒**）。
-- 超过期限时，框架记录 **`cleanup pending`** 并返回快照，**这不表示底层资源已释放**——资源继续保持隔离，底层操作退出后才执行释放。这些期限**不会强制终止**底层操作或清理函数，也不替代 Step 自身的超时。
-- **Node 超时后仍未退出时，注册的资源清理会延后**，避免释放正在使用的资源。清理回调抛错后仍会尝试剩余回调。
-- 并发名额同理：项目从初始化到**返回清理结果**始终占用名额，清理超时返回 `pending` 时资源仍保持隔离。
+要点：`signal` 需自定义 Node 自行透传；`onTeardown()` 回调**不接收** `signal`；超时后底层未退出会记 `cleanup pending` 并继续跟踪资源。
 
 ## 编程式 API
 

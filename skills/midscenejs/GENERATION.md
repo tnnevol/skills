@@ -4,15 +4,15 @@ skills/midscenejs 的参考文件提炼自 **Midscene 主仓库的中文文档�
 （`apps/site/docs/zh/`，rspress 驱动 midscenejs.com 的同一份源码）。
 
 - **Source:** `sources/midscenejs`
-- **Pinned tag:** `v1.17.2`（npm release，与文档同 commit 发布）
-- **Git SHA:** `6401e53418e5b37c2b047e3d8ef1b1af72520013`
-- **Skill version:** `1.2.0`
-- **Synced:** 2026-10-29
+- **Pinned tag:** `v1.17.3`（npm release，与文档同 commit 发布）
+- **Git SHA:** `05028dafd764b2d4a1eca187149f1dde1a15102d`
+- **Skill version:** `1.3.0`
+- **Synced:** 2026-10-30
 - **语言范围:** 仅简体中文（`apps/site/docs/zh`）。上游英文页（`docs/en`）不纳入本技能。
 
 ## 快照范围
 
-仓库 `apps/site/docs/zh/` 共 63 个页面（58 `.mdx` + 5 `.md`）。其中 41 个内容页映射到本技能参考文件：
+仓库 `apps/site/docs/zh/` 共 66 个页面。其中 44 个内容页映射到本技能参考文件：
 
 | 参考文件 | 主要来源页面 |
 | --- | --- |
@@ -22,9 +22,17 @@ skills/midscenejs 的参考文件提炼自 **Midscene 主仓库的中文文档�
 | `references/platforms.md` | `platforms/{index,android,ios,harmonyos,desktop,web}`、`sdk/{android,ios,harmonyos,desktop}`、`quick-start` |
 | `references/skills.md` | `skills`、`mcp` |
 | `references/yaml-runner.md` | `yaml-script-runner`、`automate-with-scripts-in-yaml`、`migrate-to-midscene-test` |
-| `references/midscene-test/*` | `midscene-test/{overview,use,configuration,extend,github-actions}`、`common/{test-philosophy,test-workflow,test-collaboration,sdk-common-methods}` |
+| `references/midscene-test/use.md` | `midscene-test/use` |
+| `references/midscene-test/writing.md` | `midscene-test/writing` |
+| `references/midscene-test/builtin-nodes.md` | `midscene-test/builtin-nodes` |
+| `references/midscene-test/configuration.md` | `midscene-test/configuration` |
+| `references/midscene-test/execution.md` | `midscene-test/execution` |
+| `references/midscene-test/running.md` | `midscene-test/running` |
+| `references/midscene-test/extend.md` | `midscene-test/extend` |
+| `references/midscene-test/overview.md` | `midscene-test/overview`、`common/test-philosophy` |
 | `references/faq.md` | `faq`、`caching`、`consume-report-file`、`data-privacy` |
 
+`midscene-test/` 下 8 个参考文件与上游页面**一一对应**，便于逐页比对同步。
 `common/*` 四页是跨页复用的嵌入片段（SDK 前置条件、平台选择器、测试理念与工作流），不是独立主题页；
 `reference/index` 是完整 API 参考，本技能按「分类 + 高频 API」提炼，不逐条复制。
 
@@ -37,6 +45,36 @@ skills/midscenejs 的参考文件提炼自 **Midscene 主仓库的中文文档�
 | `showcases*`、`awesome-midscene` | 视频与社区项目清单，维护频率高、时效性强 |
 | `advanced/bdd-style-scripts-with-gherkin` | Beta 特性，面向特定场景，用户问到时再查源码 |
 | `bridge-mode`、`llm-txt`、`common/*`、`blog-*` | 要点已并入其他参考页 |
+
+## v1.17.3 同步记录（2026-10-30）
+
+从 `v1.17.2` 同步到 `v1.17.3`。中文文档 17 个文件（+1201 / −917），主体是 **Midscene Test 文档拆分**。
+
+### 上游结构变化
+
+原 5 页拆为 8 页：`use`（560→132 行，只讲建项目）、`configuration`（重写，只讲配置与 Node 注册），新增 `writing`（用例编写）、`execution`（生命周期与并发）、`running`（运行与报告）、`builtin-nodes`（Node 清单）；**删除 `midscene-test/github-actions.mdx`**，CI 内容并入 `running`。
+
+### 已纳入技能
+
+- `midscene-test/` 重建为 8 个文件与上游一一对应：
+  - 新增 `writing.md`：术语（Workflow Document / Case / Step / Hook）、**用例设计约定**（线性执行、Step 无状态、不能用“上一步”指代）、Node 调用、粒度建议。
+  - 新增 `builtin-nodes.md`：字符串简写 vs 对象传参、核心 AI Node、原子操作（不推荐细粒度编排）、Web/移动端预置 Node、`setCookies` 禁写真实 Cookie。
+  - 新增 `execution.md`：`setup → fileSetup → beforeAll` 层级、四个 YAML 钩子、**并发两个维度**、超时三项、取消与清理。
+  - 新增 `running.md`：运行命令、两类产物、退出码（清理失败也是 1）、环境变量注入（`model verify` 反例）、GitHub Actions 与 Action 输出表。
+  - 重写 `use.md`：压缩为「创建项目 → 配模型环境 → 运行 → 改第一条用例」+ 创建命令参考。
+  - `configuration.md`：补 `defineFileSetup()` 用法；并发章节从已移除的 `maxConcurrency` 改为 `maxConcurrentFiles`/`maxConcurrentProjects`；超时/取消收敛为指向 `execution.md`。
+  - `extend.md`：补 `stringInputKey` 字符串简写声明。
+  - 删除 `github-actions.md`（源页已删），其 Action 输出表并入 `running.md`。
+- `SKILL.md`：版本 1.3.0、tag 改 v1.17.3；**修正 `test.maxConcurrency` 已移除的错误描述**、补文件并发必须配 `fileSetup`、补「每条 AI 指令要自身完整」约定；路由表按 8 个文件重列；检查清单补并发与用例独立性两条。
+
+### 事实修正（重要）
+
+v1.17.2 及更早的 `configuration.md` 写「并发单位是执行项目，`test.maxConcurrency` 默认 1」。**该字段在 v1.17.3 已被移除**，配置里留着会直接报错，且不能简单改名成 `maxConcurrentFiles`（原字段控制项目级并发）。本轮已全面改写。
+
+### 未纳入
+
+- `midscene-test/github-actions.mdx` 已从上游删除，本技能不再保留独立页，仅保留 Action 用法与输出表。
+- `changelog`、`*benchmark-report*`、`showcases*`、`blog-*`、`llm-txt` 按既定原因不纳入。
 
 ## v1.17.2 同步记录（2026-10-29）
 

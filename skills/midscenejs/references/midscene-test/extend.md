@@ -61,6 +61,29 @@ pnpm exec midscene-test nodes
 
 这一步只验证 Node 是否注册、schema 能否导出，**不会执行 Node 或创建数据**。
 
+## 声明字符串简写
+
+Node 若只有一个必填字符串参数，可用 `stringInputKey` 让它支持 YAML 的字符串简写：
+
+```ts
+const logMessage = defineNode({
+  name: 'message.log',
+  stringInputKey: 'message',           // 字符串直接映射到 input.message
+  inputSchema: z.strictObject({ message: z.string() }),
+  execute({ input }) {
+    return { summary: input.message };
+  },
+});
+```
+
+```yaml
+steps:
+  - message.log: Checkout started
+```
+
+- 简写只能提供一个字段；若 `inputSchema` 里还有其他**无默认值的必填字段**，简写调用仍会校验失败。
+- 省略 `stringInputKey` 或设 `false`，该 Node 不支持简写，必须用键值对传参。
+
 ## Node 执行参数
 
 `execute()` 接收包含本次执行参数和运行信息的对象，可用 `execute({ input, $, context })` 解构。
