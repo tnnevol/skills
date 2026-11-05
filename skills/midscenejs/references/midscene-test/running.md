@@ -19,6 +19,15 @@ pnpm exec midscene-test --help              # 全部选项
 | 结构化结果 | `.midscene/test-results/<runId>/` | `summary.json`（程序读取）+ `result.md`（人读）；`--result-dir` 可改根目录，仍会建 `<runId>` 子目录 |
 | HTML 报告 | `midscene_run/report/` | 由 `output.reportDir` 控制；含用例结果、每步截图、输入输出、报错堆栈、视觉执行回放 |
 
+**报告格式**由 `output.reportFormat` 决定（v1.17.5 起语义收紧）：
+
+| 取值 | 产物 | 查看方式 |
+| --- | --- | --- |
+| `single-html`（默认） | 单个 `midscene-e2e-<runId>.html` | 直接双击打开，支持离线 |
+| `html-and-external-assets` | 目录报告（含 `index.html` 与截图资源） | **需通过 HTTP 服务预览**，CI 归档时要保留整个目录 |
+
+> 报告格式**独立于** Agent 源记录的保存格式，两者不要混为一谈。
+> 程序化分析时请保留完整的结果目录；最终报告可以单独分享。
 > `summary.json` 字段结构**可能随版本演进**，外部工具消费时以当前版本实际输出为准，不要写死。
 
 ## 退出码

@@ -8,7 +8,7 @@ description: >
 compatibility: Node.js ^20.19.0 || ^22.12.0 || >=24.0.0；Playwright / Puppeteer；Android adb / iOS WebDriverAgent / HarmonyOS HDC
 metadata:
   author: Tnnevol
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # Midscene.js
@@ -57,7 +57,7 @@ Midscene 迭代很快。若用户项目安装的版本高于快照，明确标�
 ### API 编排
 
 - **`aiAct` 自主规划**：多步骤、条件分支、路径不确定的任务用它。执行中会基于最新界面状态持续重规划，因此**比即时交互更耗时间和 token**。
-- **即时交互**（`aiTap`/`aiInput`/`aiHover`/`aiScroll`/`aiKeyboardPress`/`aiDoubleClick`/`aiRightClick`/`aiLongPress`/`aiPinch`/`aiClearInput`）每次只做一个固定动作，**不规划**。提示词是"目标元素描述"，**不是工作流**——"如果出现弹窗先关掉再点结账"必须用 `aiAct`。
+- **即时交互**（`aiTap`/`aiInput`/`aiHover`/`aiScroll`/`aiKeyboardPress`/`aiDoubleClick`/`aiRightClick`/`aiMiddleClick`/`aiLongPress`/`aiPinch`/`aiClearInput`）每次只做一个固定动作，**不规划**。提示词是"目标元素描述"，**不是工作流**——"如果出现弹窗先关掉再点结账"必须用 `aiAct`。
 - **界面理解**（`aiAssert`/`aiQuery`/`aiBoolean`/`aiNumber`/`aiString`/`aiAsk`）只观察不操作。`aiAssert` 不成立时抛错；`aiQuery` 需在提示词里写明期望类型/结构。
 - **`aiInput` 默认 `replace` 模式**（先清空再输入），另有 `typeOnly`（保留原内容）和 `clear`（仅清空）。
 - **选型原则**：默认用 `aiAct`；仅当流程明确稳定才用 JS 编排；JS 编排难维护或成功率下降就改回 `aiAct`。JS 编排确定性强但只能响应代码已覆盖的 UI 变化（如分辨率变化导致需要额外滚动就会失败）。

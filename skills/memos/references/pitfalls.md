@@ -3,6 +3,10 @@
 以下结论来自真实实例（memos **v0.31.0**）实测，以及上游 `proto/gen/openapi.yaml` 的对照。
 凡文档与服务端冲突处，CLI 以**真实服务端**为准，此处供排查与理解。
 
+> ⚠️ **2026-10 起 memos 改用日历版本号并移除 `/api/v1`**：v0.31.0 之后的版本是 `26.10.0`、`26.11.0`（不是 v0.32）。
+> 新版把 REST 路径从 `/api/v1/...` 改成 `/api/...`，并且对 `/api/v1/...` 返回 **410 Gone**（只保留一个版本用于提示迁移，下一版删除）。
+> 连 26.x 实例必须 `--api-path /api`；连 v0.29–v0.31 用默认的 `/api/v1`。详见第 2 节。
+
 ## 1. 输出与判定
 
 - 成功：`{ success:true, operation, data }`（stdout，退出码 0）。
@@ -12,12 +16,14 @@
 
 ## 2. API 路径前缀在版本间变过（最容易踩）
 
-| memos 版本    | 路径          | 实测                                        |
-| ------------- | ------------- | ------------------------------------------- |
-| v0.29 – v0.31 | `/api/v1/...` | v0.31.0 实例 `/api/v1/auth/me` → 200        |
-| main / v0.32+ | `/api/...`    | 同一实例 `/api/auth/me` → 404               |
+| memos 版本 | 路径 | 实测 |
+| --- | --- | --- |
+| v0.29 – v0.31 | `/api/v1/...` | v0.31.0 实例 `/api/v1/auth/me` → 200 |
+| **26.10.0 / 26.11.0**（v0.31.0 之后的日历版本号） | `/api/...` | 新版 `/api/auth/me` → 200；**旧前缀 `/api/v1/...` → 410 Gone**，响应体是 `API v1 has been removed. Use /api/...` 的 `UNIMPLEMENTED` 错误 |
 
-CLI 默认 `/api/v1`，连新版本用 `--api-path /api` 或 `MEMOS_API_PATH=/api`。
+CLI 默认 `/api/v1`，连 26.x 用 `--api-path /api` 或 `MEMOS_API_PATH=/api`。
+
+**注意区分状态码**：老版本上打错前缀是 **404**，26.x 上打老前缀是 **410 Gone**。看到 410 就直接改 `--api-path /api`，不要怀疑令牌或网络。上游声明 410 只保留一个 release，之后老路径直接消失（届时会是 404）。
 
 ## 3. 标签过滤语法（旧写法已失效）
 
@@ -38,18 +44,22 @@ CLI 默认 `/api/v1`，连新版本用 `--api-path /api` 或 `MEMOS_API_PATH=/ap
 
 ## 4. 列表响应字段名不统一
 
-| 接口                              | 真实字段            | 易错写法       |
-| --------------------------------- | ------------------- | -------------- |
-| `GET /memos`                      | `memos`             | —              |
-| `GET /memos/{memo}/comments`      | `memos`             | `comments`     |
-| `GET /memos/{memo}/reactions`     | `reactions`         | —              |
-| `GET /memos/{memo}/relations`     | `relations`         | —              |
-| `GET /memos/{memo}/shares`        | **`memoShares`**    | `shares`       |
-| `GET /memos/{memo}/attachments`   | `attachments`       | —              |
-| `GET /spaces/{space}/members`     | **`spaceMembers`**  | `members`      |
-| `GET /spaces/{space}/invitations` | **`spaceInvitations`** | `invitations` |
+| 接口                              | v0.29–v0.31 字段     | **26.10+ 字段**        | 易错写法       |
+| --------------------------------- | -------------------- | ---------------------- | -------------- |
+| `GET /memos`                      | `memos`              | `memos`                | —              |
+| `GET /memos/{memo}/comments`      | `memos`              | **`comments`（已改名）** | `memos`（新版拿空数组） |
+| `GET /memos/{memo}/reactions`     | `reactions`          | `reactions`            | —              |
+| `GET /memos/{memo}/relations`     | `relations`          | `relations`            | —              |
+| `GET /memos/{memo}/shares`        | **`memoShares`**     | `memoShares`           | `shares`       |
+| `GET /memos/{memo}/attachments`   | `attachments`        | `attachments`          | —              |
+| `GET /spaces/{space}/members`     | **`spaceMembers`**   | `spaceMembers`         | `members`      |
+| `GET /spaces/{space}/invitations` | **`spaceInvitations`** | `spaceInvitations`   | `invitations`  |
+| `GET /users/{user}:getStats`      | `tagCount`           | **`tagCounts`（已改名）**、新增 `totalMemoCount` | `tagCount` |
 
-按错字段名解析不会报错，只会拿到空数组——这是最隐蔽的一类 bug。
+按错字段名解析不会报错，只会拿到空数组/`undefined`——这是最隐蔽的一类 bug。
+
+> ⚠️ **评论列表的字段名在 26.10 反转了**：旧版是 `memos`，新版按 AIP 规范改成 `comments`。
+> 写兼容两条路径的代码时依赖 `data.comments ?? data.memos`；`memos-cli` 当前只读 `memos`，在 26.x 实例上 `comment list` 会返回空数组。
 
 ## 5. 分页是游标，不是页码
 
@@ -87,7 +97,11 @@ CLI 默认 `/api/v1`，连新版本用 `--api-path /api` 或 `MEMOS_API_PATH=/ap
 v0.29 / v0.30 没有 `/spaces`，`space` 分组命令在旧实例上必然 404。
 `--api-path` 只解决路径前缀，不能跨版本降级特性。
 
+26.10+ 的空间接口仍在，但字段与路由按 AIP 规范重排（例如 `ListMemoComments` 等改用 `parent` 参数、若干资源复数名调整）。
+
 ## 10. `--api-path` 与 `me instance` 的关系
 
-`me instance` 也走同样的前缀，所以**前缀错时它自己也会 404**，不能拿它"先探版本"。
-真正稳妥的做法是：先试默认 `/api/v1`，全 404 时再换 `/api`，或直接问用户实例版本。
+`me instance` 也走同样的前缀，所以**前缀错时它自己也会 404 / 410**，不能拿它"先探版本"。
+真正稳妥的做法是：先问用户实例版本，或按「默认 `/api/v1` → 全 404/410 就换 `/api`」两步试。
+
+26.x 上另一种确认方式：直接看错误体。410 会带 `API v1 has been removed. Use /api/...`，这是**最明确的版本信号**，比探接口更快。

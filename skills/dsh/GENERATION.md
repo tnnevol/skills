@@ -4,11 +4,46 @@ skills/dsh 的参考文件依据 `sources/dsh`（deepseek-ai/deepseek-harness �
 sparse 检出 `docs/`）的快照手工提炼维护，不复制原文。
 
 - **Source:** `sources/dsh`
-- **Pinned tag:** `dsh-v0.2.1-rc.4`
-- **Git SHA:** `504a01a9578abc2c6f1fb896b1dc322c9fe24f66`
-- **Synced:** 2026-10-29
-- **Skill version:** `1.2.0`
+- **Pinned tag:** `dsh-v0.2.2-rc.1`
+- **Git SHA:** `66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db`
+- **Synced:** 2026-11-05
+- **Skill version:** `1.3.0`
 - **语言范围:** 仅简体中文（`*.zh.md`）。上游英文页与 `.i18n.yaml` 配对文件不纳入本技能。
+
+## v0.2.2-rc.1 同步记录（2026-11-05）
+
+从 `dsh-v0.2.1-rc.4` 同步到 `dsh-v0.2.2-rc.1`，跨 2627 个 commit。`docs/` 下中文页（`*.zh.md`）114 个文件、+4804 / −918（60 新增、54 修改）。
+
+### 已纳入技能
+
+| 变更 | 影响面 | 落点 |
+| --- | --- | --- |
+| **Node.js 要求升到 24.9+**，不再支持 Node.js 22 | 所有安装方式与 CI | `SKILL.md` 安装段与排错段、`references/cli.md` |
+| **pnpm 固定版本纠正为 `11.28.5`** | 源码开发 | `SKILL.md`、`references/cli.md`（原文的 `11.7.0` 是更早版本遗留，rc.4 时已是 11.28.5） |
+| **Schedule 工具改名**：`schedule_create` / `schedule_list` / `schedule_view` / `schedule_edit`，旧 `schedule_update`、`schedule_delete` 移除 | 提醒功能的全部调用 | `SKILL.md` 关键规则与排错、`references/user-guide.md` 新增「定时提醒」整节、`references/docs-map.md` |
+| **提醒语义改为 RFC 5545 重复规则 + 三种投递目标**（当前对话 / 首次新建后复用 / 每次新建），支持暂停、恢复、立即执行和发送记录保留 | 提醒功能 | `references/user-guide.md` |
+| **「插件市场」改名为「插件索引」**：bundle 叫「自定义插件索引」，界面文案改为索引；`plugin_market` 工具名与 JSON 格式不变 | 插件索引的浏览与发布 | `references/user-guide.md`、`references/docs-map.md` |
+| **索引生成器收紧**：npm 包须未弃用且非 private，Git 组合包须 `package.json` 未设 `"private": true` | 发布索引 | `references/user-guide.md` |
+| **模型探测交互变化**：已有模型默认勾选、按钮改为「更新列表」、端点未列出的已配置模型保持不变；新增拖动调整模型顺序 | 模型配置 | `references/user-guide.md` 新增「模型目录的探测与排序」 |
+| **新增子系统 forge 与 liveshare** | 扩展开发与新 bundle | `SKILL.md` 关键规则与功能概览、`references/docs-map.md` |
+| 新增 `docs/upgrade-guide/v0.2.2-alpha.2/` 13 份迁移指南 | 升级排错 | `references/docs-map.md` 索引行 |
+
+### 一并修正
+
+- `references/docs-map.md`、`references/cli.md`、`SKILL.md` 的版本引用统一为 `0.2.2-rc.1` / `dsh-v0.2.2-rc.1`。
+- `SKILL.md` frontmatter 版本 `1.2.0` → `1.3.0`。
+
+### 未纳入
+
+| 目录/项 | 原因 |
+| --- | --- |
+| `docs/upgrade-guide/v0.2.2-alpha.2/`（13 份） | 逐版本迁移指引，只补索引行，不摘录正文；需要时读子模块 |
+| `docs/persistence-changes/`（3 份新增） | 会话持久化格式的内部迁移记录，面向维护者 |
+| `docs/subsystems/*.zh.md` 的内部实现改动（tools、filesystem、session-projection、boot、core、session、cordis-api/fiber、llm-streaming、web-server、computer-use 等） | 属面向维护者的类型与服务细节，技能已有对应约束覆盖；只有 forge / liveshare 两个**新增子系统**补了索引 |
+| `docs/web-styling.zh.md`、`docs/user/develop/framework/events.zh.md`、`docs/user/develop/practice/dynamic-cordis.zh.md` 的措辞修订 | 无行为变化（events 示例里去掉 `agent/request` 只是举例范围调整，该事件本身未被移除） |
+| `docs/subsystems/forge.zh.md`（+1181）全文 | 篇幅过大且是内部契约细节，技能只记录能力 seam 与服务名，需要时读子模块 |
+
+> 技能定位不变：面向使用者的速查与约束提炼，不是源文档镜像。
 
 ## v0.2.1-rc.4 同步记录（2026-10-29）
 

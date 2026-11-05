@@ -8,7 +8,7 @@ description: >-
   当用户提到 memos、笔记、随手记、时间线、标签检索、给笔记评论、上传附件、分享笔记时使用。
 metadata:
   author: Tnnevol
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 # SKILL: memos
@@ -53,12 +53,16 @@ memos-cli me get           # 确认已认证（返回当前用户即 OK）
 
 ### API 路径前缀（跨版本必看）
 
-| memos 版本    | 路径前缀   | 用法                                                    |
-| ------------- | ---------- | ------------------------------------------------------- |
-| v0.29 – v0.31 | `/api/v1`  | 默认，无需配置                                          |
-| main / v0.32+ | `/api`     | `--api-path /api` 或 `MEMOS_API_PATH=/api`              |
+| memos 版本 | 路径前缀 | 用法 |
+| --- | --- | --- |
+| v0.29 – v0.31 | `/api/v1` | 默认，无需配置 |
+| **26.10.0 及以后**（日历版本号，v0.31.0 的下一版就是 26.10.0，**没有 v0.32**） | `/api` | `--api-path /api` 或 `MEMOS_API_PATH=/api` |
 
-**症状**：所有命令都返回 404 → 先怀疑路径前缀。用 `memos-cli me instance` 看实例 `version`，再决定是否需要 `--api-path`。
+**症状判断**：
+
+- 全 **404** → 老版本上新旧前缀不匹配，或路径写错。
+- 全 **410 Gone**（响应体提示 `API v1 has been removed`）→ 连的是 26.10+ 实例，加 `--api-path /api` 即可，不用怀疑令牌。
+- 用 `memos-cli me instance` 看实例 `version` 字段确认，再决定前缀。
 
 ## 基础用法
 
@@ -128,7 +132,7 @@ Memos 用**游标分页**（不是页码）：
 - **破坏性操作**：`memo delete`、`comment delete`、`attachment delete`/`batch-delete`、
   `share delete`、`space delete`、`space member-remove`、`space invitation-revoke`、
   `attachment set-memo`（整体覆盖附件列表）、`relation remove`——执行前先向用户确认目标。
-- 环境是 v0.32+ 还是 v0.29–v0.31 不确定、且命令全 404 时——先问用户实例版本或让其确认 `--api-path`。
+- 实例是 26.10+ 还是 v0.29–v0.31 不确定、且命令全 404 / 410 时——先问用户实例版本或让其确认 `--api-path`。
 - `tag list` 结果被截断（`truncated: true`）时——告知不完整，问是否扩大 `--max-pages`。
 
 ## 错误处理
@@ -139,7 +143,8 @@ Memos 用**游标分页**（不是页码）：
 | 未认证 / 地址未配置                           | `auth login`，或设置 `MEMOS_BASE_URL` / `MEMOS_ACCESS_TOKEN`                           |
 | `authentication required`（code 16）          | 令牌无效或已撤销，重新生成并登录                                                       |
 | `memo not found`（code 5）                    | 检查 ID 是否属于当前用户可见范围；不要重试同一 ID                                      |
-| 所有接口 404                                  | 路径前缀不匹配：v0.29–v0.31 用 `/api/v1`，v0.32+ 用 `--api-path /api`                  |
+| 所有接口 404                                  | 路径前缀不匹配：v0.29–v0.31 用默认 `/api/v1`；26.10+ 要 `--api-path /api`                |
+| 所有接口 410 Gone                             | 连的是 26.10+ 实例，`/api/v1` 已被移除；加 `--api-path /api`                            |
 | `invalid filter: unsupported value expression`| 标签过滤要用 `"tag" in tags`；直接用 `--tag` 即可                                      |
 | 不知道参数                                    | `memos-cli <group> <command> --help`                                                   |
 
@@ -156,7 +161,8 @@ Memos 用**游标分页**（不是页码）：
 - 输出为结构化 JSON：`{ success, operation, data }` 或错误 `{ success:false, message, code, httpStatus }`；加 `--pretty` 美化。判断成功用 `success`，不要只看退出码。
 - 分页是**游标**：`pagination.nextPageToken` + `hasMore`，续页用 `--page-token`。
 - 标签过滤语法是 `"tag" in tags`；`tags == ["tag"]` 会报 400。
-- 评论在数据模型上就是 memo（带 `parent`）：更新/删除评论走 `/memos/{commentMemo}`。
+- 评论在数据模型上就是 memo（带 `parent`）：更新/删除评论走 `/memos/{commentMemo}`。注意**评论列表的响应字段**：v0.29–v0.31 是 `memos`，26.10+ 改成 `comments`。
 - `relation add/remove` 与 `attachment set-memo` 在服务端是**整体覆盖**，CLI 已做先读后写；不要绕过 CLI 直接调 PATCH。
 - 附件上传返回的 `externalLink` 是**会过期的预签名 URL**；笔记正文要用 `permanentPath`（`{baseUrl}/file/attachments/...`）。
 - `space` 分组是 v0.31 新增，旧实例上必然 404。
+- memos 从 2026-10 起改用**日历版本号**（26.10.0、26.11.0），并移除了 `/api/v1` 前缀。

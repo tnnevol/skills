@@ -33,7 +33,7 @@
 | 系列 | 常用模型 | `MIDSCENE_MODEL_FAMILY` | 备注 |
 | --- | --- | --- | --- |
 | 豆包 2.x | `Doubao-Seed-2.1-turbo`、`Doubao-Seed-2.0-Lite` | `doubao-seed` | 2.1-turbo 私有测评集中定位速度最快且效果好，**推荐** |
-| 豆包 1.x | `Doubao-Seed-1.6-Vision`、`Doubao-Seed-1.8` | `doubao-seed` | 旧版不具竞争力；`doubao-vision` 仍兼容但建议用 `doubao-seed` |
+| 豆包 1.x | `Doubao-Seed-1.6-Vision`、`Doubao-Seed-1.8` | `doubao-seed` | 旧版本，新配置不再推荐（历史配置里的 `doubao-vision` 仍可解析） |
 | 千问 Qwen3.x | `qwen3.7-plus`、`qwen3.5-plus`、`qwen3.6-plus` | `qwen3` | 推荐顺序 Qwen3.7 > 3.5 > 3.6 |
 | 千问 Qwen3-VL | `qwen3-vl-plus` | `qwen3-vl` | 旧版，不推荐 |
 | 千问 Qwen2.5-VL | `qwen-vl-max-latest` | `qwen2.5-vl` | 旧版，不推荐 |
@@ -50,7 +50,7 @@
 | 服务商 | Base URL |
 | --- | --- |
 | 火山引擎（豆包/UI-TARS） | `https://ark.cn-beijing.volces.com/api/v3` |
-| 阿里云 DashScope | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| 阿里云 DashScope | `https://dashscope.aliyuncs.com/compatible-mode/v1`（北京地域；其他地域见 [Model Studio 地域文档](https://www.alibabacloud.com/help/en/model-studio/regions)） |
 | DeepSeek | `https://api.deepseek.com` |
 | Google Gemini | `https://generativelanguage.googleapis.com/v1beta/openai/` |
 | OpenAI | `https://api.openai.com/v1` |
@@ -59,6 +59,8 @@
 | 智谱 BigModel / Z.AI | `https://open.bigmodel.cn/api/paas/v4` / `https://api.z.ai/api/paas/v4` |
 
 ### 配置示例
+
+> ⚠️ **阿里云示例用的是北京地域**。API Key、Base URL 和模型必须属于**同一地域**，跨地域组合会失败。
 
 ```bash
 # 豆包 Seed 2.1 Turbo

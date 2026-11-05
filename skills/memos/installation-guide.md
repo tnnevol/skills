@@ -58,8 +58,9 @@ memos-cli auth login --base-url <BASE_URL> --token <TOKEN>
 
 登录信息保存到 `~/.memos/config.json`。
 
-> **API 路径前缀**：v0.29–v0.31 使用 `/api/v1`（默认）。若实例是 v0.32 及以上（上游 main 将
-> 路径改为 `/api`），请在登录时追加 `--api-path /api`。
+> **API 路径前缀**：v0.29–v0.31 使用 `/api/v1`（默认）。若实例是 **26.10.0 及以后**（2026-10 起
+> 上游改用日历版本号并去掉 `v1` 段），请在登录时追加 `--api-path /api`。
+> 连新版时旧前缀会返回 **410 Gone**（提示 `API v1 has been removed`），见到 410 直接换前缀即可。
 
 ## Step 4: 记录默认服务配置（推荐）
 
@@ -70,7 +71,7 @@ memos-cli auth login --base-url <BASE_URL> --token <TOKEN>
 ```bash
 export MEMOS_BASE_URL="https://memos.example.com"
 export MEMOS_ACCESS_TOKEN="<TOKEN>"
-# 仅 v0.32+ 需要
+# 仅 26.10.0+ 需要
 # export MEMOS_API_PATH="/api"
 ```
 
@@ -131,7 +132,7 @@ hermes skills install tnnevol/skills/memos
 | 提示服务地址/令牌未配置             | 重新执行 `memos-cli auth login`，或设置 `MEMOS_BASE_URL` / `MEMOS_ACCESS_TOKEN`          |
 | `authentication required`（code 16）| 令牌无效或已撤销，重新生成并登录                                                         |
 | `memo not found`（code 5）          | 检查笔记 ID；`memos/xxx` 与纯 `xxx` 都接受，但必须属于当前用户可见范围                   |
-| 接口全 404                          | API 路径前缀不匹配：v0.29–v0.31 用 `/api/v1`，v0.32+ 用 `/api`（`--api-path`）           |
+| 接口全 404 / 410                    | API 路径前缀不匹配：v0.29–v0.31 用 `/api/v1`，26.10+ 用 `/api`（`--api-path`）            |
 | `invalid filter: unsupported value expression` | 标签过滤要用 `"tag" in tags`，不是 `tags == ["tag"]`；直接用 `--tag` 即可      |
 | 命令参数不确定                      | 执行 `memos-cli <group> <command> --help` 查看最新用法                                   |
 | Node 版本过低                       | 升级到 Node.js ≥ 20                                                                      |

@@ -1,6 +1,6 @@
 # 文档索引
 
-本技能不把生成型 API 目录和全部教程机械复制进 SKILL.md，而是把稳定规则提炼到参考文件，并保留官方文档索引。本索引按源项目 `0.2.1-rc.4` 整理。需要当前实现、完整类型声明或精确配置字段时，读取本地 deepseek-harness/docs 的中文文件；没有本地检出时使用下列线上文档页面。
+本技能不把生成型 API 目录和全部教程机械复制进 SKILL.md，而是把稳定规则提炼到参考文件，并保留官方文档索引。本索引按源项目 `0.2.2-rc.1` 整理。需要当前实现、完整类型声明或精确配置字段时，读取本地 deepseek-harness/docs 的中文文件；没有本地检出时使用下列线上文档页面。
 
 ## 按任务查找
 
@@ -15,13 +15,13 @@
 | 了解 API Gateway | [API Gateway](https://deepseek-harness.github.io/deepseek-harness/reference/api-gateway) | Remote 声明、对象查找、Gateway、Connection 与生成流程 |
 | 新增 Remote API | [GitHub 源文档](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cookbook/adding-a-remote-api.zh.md) | 五步实现、RemoteError、RemoteResult、测试和 `build:lib`；当前在线文档目录尚未单独发布此页 |
 | 了解服务、提供方和使用方 | [能力服务](https://deepseek-harness.github.io/deepseek-harness/reference/capability-seams) | 能力 seam 和依赖图 |
-| 从第三方插件市场安装组合包 | 本技能 [用户指南](user-guide.md)；[线上插件市场](https://deepseek-harness.github.io/deepseek-harness/guide/plugin-market) | 实验性「自定义插件市场」bundle、JSON 索引源、确认安装与索引发布 |
+| 从第三方插件索引安装组合包 | 本技能 [用户指南](user-guide.md)；[线上插件索引](https://deepseek-harness.github.io/deepseek-harness/guide/plugin-market) | 实验性「自定义插件索引」bundle（0.2.2 前叫插件市场）、JSON 索引源、确认安装与索引发布 |
 | 把 Web UI 发布到反向代理后 | 本技能 [用户指南](user-guide.md)；[线上对外部署](https://deepseek-harness.github.io/deepseek-harness/guide/public-deployments) | `--public-url`、`--trusted-host`、`--tls-cert`/`--tls-key`、挂载前缀剥离与 cookie 作用域 |
 | 配置出站网络代理 | [网络代理指南](https://deepseek-harness.github.io/deepseek-harness/guide/network-proxy) | `HTTP_PROXY`、`HTTPS_PROXY`、`NO_PROXY`、企业 CA、直连范围和验证方法 |
 | 配置模型与自定义提供方 | [模型配置](https://deepseek-harness.github.io/deepseek-harness/guide/providers) | 内置和自定义提供方、三种协议、模型目录探测、推理等级、图片能力与 `settings.yaml` |
 | 使用 Python SDK | [Python SDK](https://deepseek-harness.github.io/deepseek-harness/guide/python-sdk) | SDK 安装、`sdk`/`sdk-minimal`、工作区、home、会话和显式启用编辑器 |
 | 通过 GitHub Webhook 创建评审会话 | [GitHub 评审会话](https://deepseek-harness.github.io/deepseek-harness/guide/github-review) | 可选 overlay、签名校验、只读评审 Session 和专用端点 |
-| 安排会话内提醒 | [会话内提醒](https://deepseek-harness.github.io/deepseek-harness/guide/schedule) | 可选「自动化任务」bundle、一次性和重复提醒、时区与恢复行为；Schedule 行已从 Web 组合移除 |
+| 安排会话内提醒 | [会话内提醒](https://deepseek-harness.github.io/deepseek-harness/guide/schedule)、本技能 [用户指南](user-guide.md) | 可选「自动化任务」bundle、`schedule_create/list/view/edit` 四工具（0.2.2 改名）、RFC 5545 重复规则与三种投递目标；Schedule 行已从 Web 组合移除 |
 | 接入记忆 MCP | [记忆 MCP](https://deepseek-harness.github.io/deepseek-harness/guide/mcp-memory) | 默认关闭的 stdio/Streamable HTTP 示例、安装前置条件和安全边界 |
 | 从零写 Cordis 插件 | [Cordis 框架教程](https://deepseek-harness.github.io/deepseek-harness/develop/cordis-tutorial/) | 七章可运行教程：插件、生命周期、服务、事件、配置、HMR、接入 harness |
 | 写第一个 Harness 插件 | [第一个 Harness 插件](https://deepseek-harness.github.io/deepseek-harness/develop/basic/) | 在 Web UI 中加载本地插件 |
@@ -36,7 +36,7 @@
 | 接入 Web 对话节点 | [Conversation 组装](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/conversation) | 可回放事件族、客户端适配和三条摄入路径 |
 | 编写 PTC 程序 | [PTC 运行时](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/ptc-runtime) | `ctx.ptcRuntime`、绑定命名空间、受管 Node 执行和结构化错误 |
 | 请求用户回答 | [用户交互](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/user-questions) | `ctx.userQuestions`、作用域 answerer、计时问题与迟到回复、计划审阅意图和运行时根权限 |
-| 使用宿主级 Schedule | [定时提醒](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/schedule) | 一次性、间隔、每日、每周和 cron 提醒；由可选 bundle 插入，随发行版 Web 组合不再包含 |
+| 使用宿主级 Schedule | [定时提醒](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/schedule) | 重复规则（RFC 5545）、三种投递目标、暂停/恢复/立即执行和发送记录保留；由可选 bundle 插入，随发行版 Web 组合不再包含 |
 | 使用 MCP 资源 | 本地源项目 `docs/subsystems/mcp.zh.md`、`packages/mcp/mcp-resources/README.zh.md` | MCP 工具与资源的连接、作用域和配置；默认服务器仍不自动启用 |
 | 预览 Office 文档 | 本地源项目 `docs/subsystems/office-to-pdf.zh.md`、`packages/document/office-to-pdf/README.zh.md` | 有界 Office 转 PDF、原生/WASM 引擎和 Web 预览 |
 | 使用语音输入 | 本地源项目 `docs/subsystems/voice-input.zh.md`、`packages/experimental/voice-input-bundle/README.zh.md` | 实验性语音识别、准备状态、临时音频和草稿插入 |
@@ -47,6 +47,7 @@
 | 隔离 Windows 子进程写入 | 本地源项目 `packages/sandbox/sandbox-windows-acl/README.zh.md` | 受限令牌、能力 SID ACE、Low 完整性标签和 `AclSandbox` 直接 API |
 | 迁移到 Schedule 可选 bundle | 本地源项目 `docs/upgrade-guide/v0.1.7-rc.2/` | `patch: entry schedule not found` 的原因和插件管理页迁移步骤 |
 | 新会话复用空白 Session | 本地源项目 `docs/upgrade-guide/v0.2.1-rc.2/new-session-blank-reuse/guide.zh.md` | rc.2 起新会话复用工作区首个未开始、未归档的空白 Session；被复用会话保留创建时的 preset 装配 |
+| 从 0.2.1 升级到 0.2.2 | 本地源项目 `docs/upgrade-guide/v0.2.2-alpha.2/` | 13 份迁移指南：`schedule` 工具改名与远程宿主任务、`projection` 事件帧与快照范围、`forge` Git 权限与工作树入口、`fs-observation-policy` 默认关闭、Cordis loader 条目树、LLM 请求用途声明、Pi-AI 图片计数和 SDK run 命令 |
 | 添加 Web 设置卡片 | [新增设置卡片](https://deepseek-harness.github.io/deepseek-harness/reference/cookbook/adding-a-settings-card) | 宿主端配置命名空间、客户端卡片、凭据和版本号 |
 | 支持图片和文件附件 | 本地源项目 `docs/subsystems/attachment.zh.md`、`packages/attachment/attachment/README.zh.md` | 图片校验与规范化、通用文件原样保存、文件上传凭证、读取和可回放引用 |
 | 声明文件交付和轮次改动 | 本地源项目 `docs/subsystems/deliverables.zh.md`、`packages/deliverables/tool-present/README.zh.md`、`packages/deliverables/workspace-changes/README.zh.md` | `present`、`deliverables/presented`、`workspace/changes`、文件卡片和当前 Host 生命周期 |
@@ -95,6 +96,7 @@ docs/subsystems/ 每个页面负责一个子系统，包含数据结构、服务
 - agent-team：实验性成员、邮箱、`Steer` 投递和共享任务板；当前线上文档清单未发布此页面，请读取本地源项目文档。
 - settings、credentials、storage、workspace：配置、凭据、非会话存储和工作区。
 - schedule、mcp、office-to-pdf、voice-input：宿主提醒、MCP 资源、Office 预览转换和实验性语音输入。
+- forge、liveshare：实验性代码托管变更请求 seam（`ctx.forge` / `ctx.forgeSession` / `ctx.forgePanel`），以及把会话分享给外部 viewer 并对其轮次施加沙箱上限的 LiveShare bundle。
 - otel：共享 OTel 上报通道、普通事件与 Session 日志通道的职责边界。
 - web、web-server、client-modules：网络提供方、HTTP 路由和浏览器插件图。
 
@@ -107,4 +109,4 @@ docs/config-catalog.zh.md、docs/tool-catalog.zh.md、docs/persistence-catalog.z
 - 中文页面与英文页面成对维护；源项目的生成器和配对检查拥有最终规则。
 - 普通文档写当前状态和操作方法，历史背景放在 postmortem 或 Agent Note，不要混入技能的使用规则。
 - 一个事实只保留一个权威位置；本技能只复制稳定且高频的操作规则，其余通过索引指向源文档。
-- 需要更新本技能时，先更新或拉取 deepseek-harness，再比较本文档中的 CLI 命令、profile 初始化、HMR、配置 schema、插件兼容性、默认工具、Remote 契约、会话格式、会话持久化、文件交付、轮次改动、可选集成和事件顺序。当前技能对应源项目 `0.2.1-rc.4`；版本间破坏性行为优先读 `docs/upgrade-guide/` 下的迁移指南。
+- 需要更新本技能时，先更新或拉取 deepseek-harness，再比较本文档中的 CLI 命令、profile 初始化、HMR、配置 schema、插件兼容性、默认工具、Remote 契约、会话格式、会话持久化、文件交付、轮次改动、可选集成和事件顺序。当前技能对应源项目 `0.2.2-rc.1`；版本间破坏性行为优先读 `docs/upgrade-guide/` 下的迁移指南。

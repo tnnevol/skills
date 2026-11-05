@@ -313,6 +313,7 @@ steps:
 | `test.testTimeout` | 每个步骤默认超时（毫秒），默认 `120000`；步骤 `$` 可覆盖 |
 | `test.bail` | 达到失败用例数阈值后停止调度新任务，`0` 表示不启用 |
 | `output.reportDir` | 报告输出目录，默认 `./midscene_run/report` |
+| `output.reportFormat` | `single-html`（默认，单文件可直接离线打开）或 `html-and-external-assets`（目录报告，需 HTTP 预览）；独立于 Agent 源记录的保存格式 |
 
 脚手架默认选择 `cases/**/*.{yaml,yml}`；未配置 `files` 时按 `**/*.{yaml,yml}` 递归查找。
 
@@ -371,6 +372,7 @@ export default defineTestProject<ProjectContext>({
   },
   output: {
     reportDir: './midscene_run/report',
+    reportFormat: 'single-html', // 或 'html-and-external-assets'
   },
 });
 ```

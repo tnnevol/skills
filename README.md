@@ -48,9 +48,9 @@ CLI 工具可直接被 AI Agent 调用，实现自动化管理。
 
 | 子模块                               | 上游                                                                                            | 锁定版本          |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------- | ----------------- |
-| `sources/dsh`                        | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)                 | `dsh-v0.2.1-rc.2` |
-| `sources/vitepress-mermaid-renderer` | [sametcn99/vitepress-mermaid-renderer](https://github.com/sametcn99/vitepress-mermaid-renderer) | `v1.2.2`          |
-| `sources/midscenejs` | [web-infra-dev/midscene](https://github.com/web-infra-dev/midscene) | `v1.16.0` |
+| `sources/dsh`                        | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)                 | `dsh-v0.2.2-rc.1` |
+| `sources/vitepress-mermaid-renderer` | [sametcn99/vitepress-mermaid-renderer](https://github.com/sametcn99/vitepress-mermaid-renderer) | `v1.2.3`          |
+| `sources/midscenejs` | [web-infra-dev/midscene](https://github.com/web-infra-dev/midscene) | `v1.17.5` |
 
 上游没有 git 仓库的技能改用抓取脚本 + 状态文件同步，`pnpm start check` 也会一并报告：
 

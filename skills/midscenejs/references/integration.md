@@ -48,12 +48,13 @@ await agent.aiAct('完成结账表单，在下单前停止', {
 | `aiInput` | 定位输入框并输入内容（**默认 `replace` 模式**：先清空再输入） |
 | `aiHover` / `aiScroll` / `aiPinch` / `aiLongPress` | 悬停 / 滚动 / 捏合 / 长按 |
 | `aiClearInput` / `aiKeyboardPress` | 清空输入 / 按键 |
-| `aiDoubleClick` / `aiRightClick` | 双击 / 右键 |
+| `aiDoubleClick` / `aiRightClick` / `aiMiddleClick` | 双击 / 右键 / 中键（中键仅 Web 与桌面端，移动端不支持） |
 
 ```typescript
 await agent.aiTap('购物车中的结账按钮');
 await agent.aiTap('右上角的购物车图标', { deepLocate: true });   // 目标小/不明显时
 await agent.aiInput('邮箱地址输入框', { value: 'user@example.com' });
+await agent.aiMiddleClick('搜索结果中的链接');   // 仅 Web / 桌面端
 ```
 
 `aiInput` 其他模式：`typeOnly`（保留现有内容后输入）、`clear`（仅清空）。

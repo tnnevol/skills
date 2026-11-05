@@ -4,10 +4,10 @@ skills/midscenejs 的参考文件提炼自 **Midscene 主仓库的中文文档�
 （`apps/site/docs/zh/`，rspress 驱动 midscenejs.com 的同一份源码）。
 
 - **Source:** `sources/midscenejs`
-- **Pinned tag:** `v1.17.3`（npm release，与文档同 commit 发布）
-- **Git SHA:** `05028dafd764b2d4a1eca187149f1dde1a15102d`
-- **Skill version:** `1.3.0`
-- **Synced:** 2026-10-30
+- **Pinned tag:** `v1.17.5`（npm release，与文档同 commit 发布）
+- **Git SHA:** `fa2ecdff05106b71b210298bcd8b8c9cd80e52d6`
+- **Skill version:** `1.4.0`
+- **Synced:** 2026-11-05
 - **语言范围:** 仅简体中文（`apps/site/docs/zh`）。上游英文页（`docs/en`）不纳入本技能。
 
 ## 快照范围
@@ -45,6 +45,31 @@ skills/midscenejs 的参考文件提炼自 **Midscene 主仓库的中文文档�
 | `showcases*`、`awesome-midscene` | 视频与社区项目清单，维护频率高、时效性强 |
 | `advanced/bdd-style-scripts-with-gherkin` | Beta 特性，面向特定场景，用户问到时再查源码 |
 | `bridge-mode`、`llm-txt`、`common/*`、`blog-*` | 要点已并入其他参考页 |
+
+## v1.17.5 同步记录（2026-11-05）
+
+从 `v1.17.3` 同步到 `v1.17.5`，跨 v1.17.4、v1.17.5 两个 release；`apps/site/docs/zh` 下 16 个文件、+274 / −132。
+
+### 已纳入技能
+
+| 变更 | 版本 | 落点 |
+| --- | --- | --- |
+| **新增 `aiMiddleClick()`**：鼠标中键点击；仅支持 Web 与桌面端（`@midscene/computer`），移动端不支持 | v1.17.4 | `SKILL.md` 即时交互清单、`references/integration.md` 交互 API 表与示例 |
+| **报告格式语义收紧**：`output.reportFormat` 只有 `single-html`（默认，单文件可离线）与 `html-and-external-assets`（目录报告，需 HTTP 预览）；格式独立于 Agent 源记录的保存格式 | v1.17.5 | `references/midscene-test/running.md`、`references/midscene-test/configuration.md` |
+| **报告归档建议**：程序化分析保留完整结果目录，最终报告可单独分享 | v1.17.5 | `references/midscene-test/running.md` |
+| **阿里云地域约束**：API Key、Base URL 和模型必须属于同一地域；中文示例用北京地域 | v1.17.5 | `references/model-config.md` Base URL 表与配置示例 |
+| **豆包 1.x 表述**：上游改为「旧版本」，不再强调 `doubao-vision` 兼容 | v1.17.5 | `references/model-config.md` 模型表 |
+
+### 未纳入
+
+| 变更 | 原因 |
+| --- | --- |
+| `model-api-setup.mdx` 的 `ModelConfigCard` 组件重构（`baseUrl`/`modelName` 单供应商改 `providers` 数组、新增 `openRouterModel`） | 站点文档的**展示组件**变化，不是用户侧配置方式变化；技能记录的是环境变量与 Base URL，不涉及组件 props |
+| 新增 `exportReportArtifact()` API 与 `mergeReports` 的 `outputFormat` 选项 | 属报告工具链的进阶 API，技能已有「报告归档」覆盖主路径；需要时读上游 `reference/index` |
+| `index.mdx` / `changelog.mdx` 的首页文案与 release notes | 站点内容，非技能所需 |
+| `common/test-execution.mdx`（新增）、`midscene-test/overview.mdx` 的「测试框架能力」小节 | 首页/概览的营销区块复用，技能未覆盖该层级 |
+| `integrate-with-playwright/puppeteer.mdx`、`sdk/playwright.mdx` 的措辞修订 | 无 API 变化 |
+| 模型表「`MIDSCENE_MODEL_FAMILY`」列头改为「Model family」 | 纯排版 |
 
 ## v1.17.3 同步记录（2026-10-30）
 

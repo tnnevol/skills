@@ -4,8 +4,8 @@ skills/openlist 的参考文件以本仓库 `apps/openlist-cli` 的真实命令�
 （经真实服务端核验，见 `references/pitfalls.md`），不提炼自上游文档仓库。
 
 - **Source:** `apps/openlist-cli`（本仓库应用）+ 上游单点引用
-- **Skill version:** `1.2.2`
-- **Synced:** 2026-10-09
+- **Skill version:** `1.2.3`
+- **Synced:** 2026-11-05
 
 ## 技能自带文件
 

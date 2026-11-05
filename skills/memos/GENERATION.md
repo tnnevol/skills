@@ -4,8 +4,8 @@ skills/memos 的参考文件以本仓库 `apps/memos-cli` 的真实命令行为�
 （经真实实例 v0.31.0 核验，见 `references/pitfalls.md`），不提炼自上游文档仓库。
 
 - **Source:** `apps/memos-cli`（本仓库应用）+ 上游 OpenAPI 单点引用
-- **Skill version:** `2.0.0`
-- **Synced:** 2026-10-29
+- **Skill version:** `2.1.0`
+- **Synced:** 2026-11-05
 
 ## 技能自带文件
 
@@ -26,6 +26,33 @@ skills/memos 的参考文件以本仓库 `apps/memos-cli` 的真实命令行为�
   | ≤ v0.23.0     | 无生成产物                                  | —           |
 
 - 上游文档站无独立文档仓库可挂 submodule，**不建子模块**，以 tag 内的 spec 直链引用。
+
+## v2.1.0 同步记录（2026-11-05）：上游新版本体系的破坏性变更
+
+`apps/memos-cli` 本身未改动（仍是 2.0.0 那套），但**上游 memos 发布了破坏性变更**，技能原先写的版本事实已过期，本次只修文档、不动 CLI。
+
+### 上游事实（已核实）
+
+- **版本号体系切换**：v0.31.0（2026-09-19）之后改用日历版本号，依次是 `26.10.0`（2026-10-31）、`26.11.0`（2026-11-01）。**没有 v0.32**。
+- **`/api/v1` 前缀被移除**：REST 从 `/api/v1/...` 改为 `/api/...`，SSE 从 `/api/v1/sse` 改为 `/api/sse`；proto 包 `memos.api.v1` 改为 `memos.api`。26.10 这一个 release 内，旧路径返回 **410 Gone**（`UNIMPLEMENTED` + 迁移提示），下一版删除。
+- **响应字段按 AIP 规范改名**（影响解析）：`ListMemoCommentsResponse.memos` → **`comments`**；`UserStats.tagCount` → **`tagCounts`**，并新增 `totalMemoCount`；`ListAllUserStats` → `ListUserStats`（要求 `parent`，`GET /api/users/-/stats`，响应字段 `user_stats`）。
+- **新增端点**：`GET /api/instance/configuration`（管理员，列出受配置文件管理的项）、`GET /api/users/{user}/stats`、`GET /api/users/{user}/usage`。
+
+### 已纳入技能
+
+| 文件 | 改动 |
+| --- | --- |
+| `references/pitfalls.md` | 顶部加 26.x 警告；第 2 节加入日历版本号与 **410 Gone** 的区分（老版本打错前缀是 404，26.x 打老前缀是 410）；第 4 节字段表按版本分列，标注 `comments` / `tagCounts` 改名；第 9、10 节补充 26.x 行为 |
+| `references/setup.md` | API 前缀表改为「26.10.0 及以后」，补实测与「没有 v0.32」说明；`MEMOS_API_PATH` 说明同步 |
+| `SKILL.md` | 版本号 `2.0.0` → `2.1.0`；前缀表与症状判断改为区分 404/410；错误处理表新增 410 行；关键提示补版本体系与字段改名 |
+| `installation-guide.md` | 前缀提示与排错表同步为 26.10+ / 410 |
+
+### 已知未修（需要改 CLI，不在本次文档同步范围）
+
+- `apps/memos-cli` 的 `comment list` 只读 `data.memos`，在 26.x 实例上会返回空数组；应改为 `data.comments ?? data.memos`。
+- `config.ts` 的 `DEFAULT_API_PATH` 仍是 `/api/v1`，对 26.x 实例必须显式传 `--api-path /api`。目前的取舍是保持向后兼容（现存实例多为 v0.29–v0.31），改默认值会让这些实例失效。
+- 枚举重编号（`User.Role`、`UserSetting.Key` 等从 1 起）只影响发数字枚举值的客户端，CLI 用字符串，无需改。
+- 访问令牌在 26.10 起与密码哈希绑定，改密后立即失效——这属服务端行为，技能只在 `authentication required` 排错时体现。
 
 ## 同步方式
 
