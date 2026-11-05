@@ -1,6 +1,6 @@
 // bump.config.ts
-import { defineConfig } from "bumpp";
+import { defineConfig } from 'bumpp'
 
 export default defineConfig({
-  files: ["package.json"],
-});
+  files: ['package.json'],
+})

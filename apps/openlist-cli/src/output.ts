@@ -1,44 +1,47 @@
-import type { ApiResponse } from "./client.js";
+/* eslint-disable no-console -- CLI 入口：结果必须原样写 stdout，错误写 stderr */
+import type { ApiResponse } from './client.js'
+import process from 'node:process'
 
-let prettyMode = false;
+let prettyMode = false
 
 export function setPretty(pretty: boolean): void {
-  prettyMode = pretty;
+  prettyMode = pretty
 }
 
 export function printResult(data: unknown): void {
   if (prettyMode) {
-    console.log(JSON.stringify(data, null, 2));
-  } else {
-    console.log(JSON.stringify(data));
+    console.log(JSON.stringify(data, null, 2))
+  }
+  else {
+    console.log(JSON.stringify(data))
   }
 }
 
 export function printSuccess(data: unknown, operation?: string): void {
   const result: Record<string, unknown> = {
     success: true,
-  };
-
-  if (operation) {
-    result.operation = operation;
   }
 
-  result.data = data;
-  printResult(result);
+  if (operation) {
+    result.operation = operation
+  }
+
+  result.data = data
+  printResult(result)
 }
 
 export function printError(message: string, code?: number): void {
   const result: Record<string, unknown> = {
     success: false,
     message,
-  };
-
-  if (code !== undefined) {
-    result.code = code;
   }
 
-  console.error(JSON.stringify(result));
-  process.exit(code ?? 1);
+  if (code !== undefined) {
+    result.code = code
+  }
+
+  console.error(JSON.stringify(result))
+  process.exit(code ?? 1)
 }
 
 export function handleApiResponse<T>(
@@ -46,9 +49,10 @@ export function handleApiResponse<T>(
   operation?: string,
 ): void {
   if (response.code === 200) {
-    printSuccess(response.data, operation);
-  } else {
-    printError(response.message || "Unknown error", response.code);
+    printSuccess(response.data, operation)
+  }
+  else {
+    printError(response.message || 'Unknown error', response.code)
   }
 }
 
@@ -57,29 +61,29 @@ export function handleApiResponse<T>(
 export function handlePagedResponse<T>(
   response: ApiResponse<T>,
   operation: string,
-  paging: { page: number; perPage: number },
+  paging: { page: number, perPage: number },
 ): void {
   if (response.code !== 200) {
-    printError(response.message || "Unknown error", response.code);
-    return;
+    printError(response.message || 'Unknown error', response.code)
+    return
   }
 
   const result: Record<string, unknown> = {
     success: true,
     operation,
     data: response.data,
-  };
+  }
 
-  const data = response.data as { total?: unknown } | null | undefined;
-  if (data && typeof data.total === "number") {
-    const { page, perPage } = paging;
+  const data = response.data as { total?: unknown } | null | undefined
+  if (data && typeof data.total === 'number') {
+    const { page, perPage } = paging
     result.pagination = {
       page,
       perPage,
       total: data.total,
       totalPages: perPage > 0 ? Math.ceil(data.total / perPage) : 0,
-    };
+    }
   }
 
-  printResult(result);
+  printResult(result)
 }

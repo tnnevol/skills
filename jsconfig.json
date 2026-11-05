@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "checkJs": false,
-    "noEmit": true,
+    "module": "nodenext",
     "moduleResolution": "nodenext",
-    "module": "nodenext"
+    "checkJs": false,
+    "noEmit": true
   },
   "include": ["skills/**/*.mjs", "skills/**/*.js", "skills/**/*.cjs"],
   "exclude": ["node_modules"]

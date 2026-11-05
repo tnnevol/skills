@@ -1,15 +1,30 @@
 {
   "name": "@tnnevol/openlist-cli",
+  "type": "module",
   "version": "1.2.0",
   "description": "CLI for OpenList - A modern file list program",
-  "type": "module",
+  "author": "tnnevol",
+  "license": "AGPL-3.0",
+  "homepage": "https://github.com/tnnevol/skills",
+  "bugs": {
+    "url": "https://github.com/tnnevol/skills/issues"
+  },
+  "keywords": [
+    "openlist",
+    "alist",
+    "cli",
+    "file-manager"
+  ],
   "bin": {
     "openlist-cli": "./dist/cli.js"
   },
   "files": [
-    "dist",
-    "README.md"
+    "README.md",
+    "dist"
   ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
@@ -29,21 +44,6 @@
     "tsup": "^8.4.0",
     "typescript": "^5.8.2",
     "vitest": "^4.1.10"
-  },
-  "engines": {
-    "node": ">=20.0.0"
-  },
-  "keywords": [
-    "openlist",
-    "alist",
-    "cli",
-    "file-manager"
-  ],
-  "author": "tnnevol",
-  "license": "AGPL-3.0",
-  "homepage": "https://github.com/tnnevol/skills",
-  "bugs": {
-    "url": "https://github.com/tnnevol/skills/issues"
   },
   "publishConfig": {
     "access": "public"

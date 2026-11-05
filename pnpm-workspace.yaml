@@ -1,4 +1,6 @@
-
+shellEmulator: true
+trustChecks: false
+trustPolicy: no-downgrade
 packages:
   - 'apps/*'
   - 'skills/*'
@@ -6,6 +8,3 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - simple-git-hooks
-shellEmulator: true
-trustChecks: false
-trustPolicy: no-downgrade

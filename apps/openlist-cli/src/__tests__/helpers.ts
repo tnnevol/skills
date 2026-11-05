@@ -1,19 +1,19 @@
-import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
+import { spawnSync } from 'node:child_process'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const currentDir = dirname(fileURLToPath(import.meta.url));
+const currentDir = dirname(fileURLToPath(import.meta.url))
 
 // 针对编译后的 CLI 进行测试
-export const CLI_PATH = resolve(currentDir, "../../dist/cli.js");
+export const CLI_PATH = resolve(currentDir, '../../dist/cli.js')
 
 export interface CliResult {
   /** 进程退出码 */
-  code: number;
-  stdout: string;
-  stderr: string;
+  code: number
+  stdout: string
+  stderr: string
   /** 解析后的 JSON 输出（优先 stdout，失败时回退 stderr） */
-  json: any;
+  json: any
 }
 
 /**
@@ -25,37 +25,38 @@ export function runCli(
   args: string[],
   env: Record<string, string> = {},
 ): CliResult {
-  const result = spawnSync("node", [CLI_PATH, ...args], {
-    encoding: "utf-8",
+  const result = spawnSync('node', [CLI_PATH, ...args], {
+    encoding: 'utf-8',
     env: { ...process.env, ...env },
-  });
+  })
 
-  const stdout = result.stdout ?? "";
-  const stderr = result.stderr ?? "";
+  const stdout = result.stdout ?? ''
+  const stderr = result.stderr ?? ''
 
-  let json: any;
-  const raw = stdout.trim() || stderr.trim();
+  let json: any
+  const raw = stdout.trim() || stderr.trim()
   try {
-    json = JSON.parse(raw);
-  } catch {
-    json = undefined;
+    json = JSON.parse(raw)
+  }
+  catch {
+    json = undefined
   }
 
-  return { code: result.status ?? 0, stdout, stderr, json };
+  return { code: result.status ?? 0, stdout, stderr, json }
 }
 
 /** 读取必需的环境变量，缺失时抛错以便测试尽早失败。 */
 export function requireEnv(name: string): string {
-  const value = process.env[name];
+  const value = process.env[name]
   if (!value) {
     throw new Error(
       `缺少环境变量 ${name}，请在 apps/openlist-cli/.env 中配置后重试`,
-    );
+    )
   }
-  return value;
+  return value
 }
 
 /** 生成本次测试运行专用的唯一目录名，避免与已有数据冲突。 */
-export function uniqueName(prefix = "cli-test"): string {
-  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e4)}`;
+export function uniqueName(prefix = 'cli-test'): string {
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e4)}`
 }

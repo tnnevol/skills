@@ -1,25 +1,26 @@
-import { Command } from "commander";
-import { createClient } from "../client.js";
-import { resolveConfig } from "../config.js";
+import type { Command } from 'commander'
+import { Buffer } from 'node:buffer'
+import { createClient } from '../client.js'
+import { resolveConfig } from '../config.js'
 import {
   handleApiResponse,
   handlePagedResponse,
   printError,
-} from "../output.js";
+} from '../output.js'
 
 function getClient(cmd: Command) {
-  const opts = cmd.optsWithGlobals();
-  const config = resolveConfig({ baseUrl: opts.baseUrl, token: opts.token });
-  return createClient(config);
+  const opts = cmd.optsWithGlobals()
+  const config = resolveConfig({ baseUrl: opts.baseUrl, token: opts.token })
+  return createClient(config)
 }
 
 interface UploadOptions {
-  asTask?: boolean;
-  overwrite?: string;
-  lastModified?: string;
-  md5?: string;
-  sha1?: string;
-  sha256?: string;
+  asTask?: boolean
+  overwrite?: string
+  lastModified?: string
+  md5?: string
+  sha1?: string
+  sha256?: string
 }
 
 // 依据文档为 /api/fs/put 与 /api/fs/form 构造上传请求头；
@@ -30,368 +31,392 @@ function buildUploadHeaders(
   options: UploadOptions,
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    "File-Path": encodeURIComponent(remote),
-    "Content-Type": contentType,
-  };
-  if (options.asTask) headers["As-Task"] = "true";
-  if (options.overwrite !== undefined) headers["Overwrite"] = options.overwrite;
-  if (options.lastModified) headers["Last-Modified"] = options.lastModified;
-  if (options.md5) headers["X-File-Md5"] = options.md5;
-  if (options.sha1) headers["X-File-Sha1"] = options.sha1;
-  if (options.sha256) headers["X-File-Sha256"] = options.sha256;
-  return headers;
+    'File-Path': encodeURIComponent(remote),
+    'Content-Type': contentType,
+  }
+  if (options.asTask)
+    headers['As-Task'] = 'true'
+  if (options.overwrite !== undefined)
+    headers.Overwrite = options.overwrite
+  if (options.lastModified)
+    headers['Last-Modified'] = options.lastModified
+  if (options.md5)
+    headers['X-File-Md5'] = options.md5
+  if (options.sha1)
+    headers['X-File-Sha1'] = options.sha1
+  if (options.sha256)
+    headers['X-File-Sha256'] = options.sha256
+  return headers
 }
 
 // 上传命令共用的可选头选项（对应文档 header 参数）
 function withUploadOptions(command: Command): Command {
   return command
-    .option("--as-task", "作为后台任务上传（As-Task）")
-    .option("--overwrite <bool>", "是否允许覆盖 true/false（默认 true）")
-    .option("--last-modified <ms>", "文件修改时间（Unix 毫秒时间戳）")
-    .option("--md5 <hash>", "文件 MD5（X-File-Md5）")
-    .option("--sha1 <hash>", "文件 SHA1（X-File-Sha1）")
-    .option("--sha256 <hash>", "文件 SHA256（X-File-Sha256）");
+    .option('--as-task', '作为后台任务上传（As-Task）')
+    .option('--overwrite <bool>', '是否允许覆盖 true/false（默认 true）')
+    .option('--last-modified <ms>', '文件修改时间（Unix 毫秒时间戳）')
+    .option('--md5 <hash>', '文件 MD5（X-File-Md5）')
+    .option('--sha1 <hash>', '文件 SHA1（X-File-Sha1）')
+    .option('--sha256 <hash>', '文件 SHA256（X-File-Sha256）')
 }
 
 export function registerFsCommand(program: Command): void {
-  const fs = program.command("fs").description("管理文件和目录");
+  const fs = program.command('fs').description('管理文件和目录')
 
-  fs.command("list <path>")
-    .description("列出目录内容")
-    .option("-p, --password <password>", "目录密码")
-    .option("--page <page>", "页码", "1")
-    .option("--per-page <perPage>", "每页数量（1-100）", "30")
-    .option("--refresh", "强制刷新")
+  fs.command('list <path>')
+    .description('列出目录内容')
+    .option('-p, --password <password>', '目录密码')
+    .option('--page <page>', '页码', '1')
+    .option('--per-page <perPage>', '每页数量（1-100）', '30')
+    .option('--refresh', '强制刷新')
     .action(async (path: string, options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const page = parseInt(options.page);
-        const perPage = parseInt(options.perPage);
-        const response = await client.post("/api/fs/list", {
+        const client = getClient(cmd)
+        const page = Number.parseInt(options.page)
+        const perPage = Number.parseInt(options.perPage)
+        const response = await client.post('/api/fs/list', {
           path,
-          password: options.password || "",
+          password: options.password || '',
           page,
           per_page: perPage,
           refresh: options.refresh || false,
-        });
-        handlePagedResponse(response, "fs.list", { page, perPage });
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "列出目录失败");
+        })
+        handlePagedResponse(response, 'fs.list', { page, perPage })
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '列出目录失败')
+      }
+    })
 
-  fs.command("get <path>")
-    .description("获取文件或目录信息")
-    .option("-p, --password <password>", "目录密码")
+  fs.command('get <path>')
+    .description('获取文件或目录信息')
+    .option('-p, --password <password>', '目录密码')
     .action(async (path: string, options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/get", {
+        const client = getClient(cmd)
+        const response = await client.post('/api/fs/get', {
           path,
-          password: options.password || "",
-        });
-        handleApiResponse(response, "fs.get");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "获取信息失败");
+          password: options.password || '',
+        })
+        handleApiResponse(response, 'fs.get')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '获取信息失败')
+      }
+    })
 
-  fs.command("search")
-    .description("搜索文件和目录")
-    .requiredOption("-k, --keywords <keywords>", "搜索关键词")
-    .option("-p, --parent <parent>", "父目录路径", "/")
-    .option("--scope <scope>", "搜索类型: 0=全部 1=文件夹 2=文件", "0")
-    .option("--page <page>", "页码", "1")
-    .option("--per-page <perPage>", "每页数量", "30")
-    .option("-P, --password <password>", "目录密码", "")
+  fs.command('search')
+    .description('搜索文件和目录')
+    .requiredOption('-k, --keywords <keywords>', '搜索关键词')
+    .option('-p, --parent <parent>', '父目录路径', '/')
+    .option('--scope <scope>', '搜索类型: 0=全部 1=文件夹 2=文件', '0')
+    .option('--page <page>', '页码', '1')
+    .option('--per-page <perPage>', '每页数量', '30')
+    .option('-P, --password <password>', '目录密码', '')
     .action(async (options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const page = parseInt(options.page);
-        const perPage = parseInt(options.perPage);
-        const response = await client.post("/api/fs/search", {
+        const client = getClient(cmd)
+        const page = Number.parseInt(options.page)
+        const perPage = Number.parseInt(options.perPage)
+        const response = await client.post('/api/fs/search', {
           parent: options.parent,
           keywords: options.keywords,
-          scope: parseInt(options.scope),
+          scope: Number.parseInt(options.scope),
           page,
           per_page: perPage,
           password: options.password,
-        });
-        handlePagedResponse(response, "fs.search", { page, perPage });
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "搜索失败");
+        })
+        handlePagedResponse(response, 'fs.search', { page, perPage })
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '搜索失败')
+      }
+    })
 
-  fs.command("dirs <path>")
-    .description("获取目录树")
+  fs.command('dirs <path>')
+    .description('获取目录树')
     .action(async (path: string, options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/dirs", { path });
-        handleApiResponse(response, "fs.dirs");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "获取目录树失败");
+        const client = getClient(cmd)
+        const response = await client.post('/api/fs/dirs', { path })
+        handleApiResponse(response, 'fs.dirs')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '获取目录树失败')
+      }
+    })
 
-  fs.command("mkdir <path>")
-    .description("创建目录")
+  fs.command('mkdir <path>')
+    .description('创建目录')
     .action(async (path: string, options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/mkdir", { path });
-        handleApiResponse(response, "fs.mkdir");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "创建目录失败");
+        const client = getClient(cmd)
+        const response = await client.post('/api/fs/mkdir', { path })
+        handleApiResponse(response, 'fs.mkdir')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '创建目录失败')
+      }
+    })
 
-  fs.command("rename <path> <name>")
-    .description("重命名文件或目录")
+  fs.command('rename <path> <name>')
+    .description('重命名文件或目录')
     .action(async (path: string, name: string, options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/rename", { path, name });
-        handleApiResponse(response, "fs.rename");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "重命名失败");
+        const client = getClient(cmd)
+        const response = await client.post('/api/fs/rename', { path, name })
+        handleApiResponse(response, 'fs.rename')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '重命名失败')
+      }
+    })
 
-  fs.command("move")
-    .description("移动文件或目录")
-    .requiredOption("--src-dir <srcDir>", "源目录")
-    .requiredOption("--dst-dir <dstDir>", "目标目录")
-    .requiredOption("--names <names>", "文件名列表（逗号分隔）")
+  fs.command('move')
+    .description('移动文件或目录')
+    .requiredOption('--src-dir <srcDir>', '源目录')
+    .requiredOption('--dst-dir <dstDir>', '目标目录')
+    .requiredOption('--names <names>', '文件名列表（逗号分隔）')
     .action(async (options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/move", {
+        const client = getClient(cmd)
+        const response = await client.post('/api/fs/move', {
           src_dir: options.srcDir,
           dst_dir: options.dstDir,
-          names: options.names.split(","),
-        });
-        handleApiResponse(response, "fs.move");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "移动失败");
+          names: options.names.split(','),
+        })
+        handleApiResponse(response, 'fs.move')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '移动失败')
+      }
+    })
 
-  fs.command("copy")
-    .description("复制文件或目录")
-    .requiredOption("--src-dir <srcDir>", "源目录")
-    .requiredOption("--dst-dir <dstDir>", "目标目录")
-    .requiredOption("--names <names>", "文件名列表（逗号分隔）")
+  fs.command('copy')
+    .description('复制文件或目录')
+    .requiredOption('--src-dir <srcDir>', '源目录')
+    .requiredOption('--dst-dir <dstDir>', '目标目录')
+    .requiredOption('--names <names>', '文件名列表（逗号分隔）')
     .action(async (options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/copy", {
+        const client = getClient(cmd)
+        const response = await client.post('/api/fs/copy', {
           src_dir: options.srcDir,
           dst_dir: options.dstDir,
-          names: options.names.split(","),
-        });
-        handleApiResponse(response, "fs.copy");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "复制失败");
+          names: options.names.split(','),
+        })
+        handleApiResponse(response, 'fs.copy')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '复制失败')
+      }
+    })
 
-  fs.command("remove")
-    .description("删除文件或目录")
-    .requiredOption("--dir <dir>", "所在目录")
-    .requiredOption("--names <names>", "文件名列表（逗号分隔）")
+  fs.command('remove')
+    .description('删除文件或目录')
+    .requiredOption('--dir <dir>', '所在目录')
+    .requiredOption('--names <names>', '文件名列表（逗号分隔）')
     .action(async (options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/remove", {
+        const client = getClient(cmd)
+        const response = await client.post('/api/fs/remove', {
           dir: options.dir,
-          names: options.names.split(","),
-        });
-        handleApiResponse(response, "fs.remove");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "删除失败");
+          names: options.names.split(','),
+        })
+        handleApiResponse(response, 'fs.remove')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '删除失败')
+      }
+    })
 
-  withUploadOptions(fs.command("put <local> <remote>"))
-    .description("上传文件（流式）")
+  withUploadOptions(fs.command('put <local> <remote>'))
+    .description('上传文件（流式）')
     .action(async (local: string, remote: string, options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const { readFileSync } = await import("node:fs");
-        const content = readFileSync(local);
+        const client = getClient(cmd)
+        const { readFileSync } = await import('node:fs')
+        const content = readFileSync(local)
 
         const response = await client.put(
-          "/api/fs/put",
+          '/api/fs/put',
           content,
-          buildUploadHeaders(remote, "application/octet-stream", options),
-        );
-        handleApiResponse(response, "fs.put");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "上传失败");
+          buildUploadHeaders(remote, 'application/octet-stream', options),
+        )
+        handleApiResponse(response, 'fs.put')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '上传失败')
+      }
+    })
 
   // Phase 3 扩展命令
-  withUploadOptions(fs.command("form <local> <remote>"))
-    .description("上传文件（表单模式）")
+  withUploadOptions(fs.command('form <local> <remote>'))
+    .description('上传文件（表单模式）')
     .action(async (local: string, remote: string, options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const { readFileSync } = await import("node:fs");
-        const content = readFileSync(local);
+        const client = getClient(cmd)
+        const { readFileSync } = await import('node:fs')
+        const content = readFileSync(local)
 
-        const boundary = "----OpenListCLI" + Date.now();
-        const fileName = local.split("/").pop() || "file";
+        const boundary = `----OpenListCLI${Date.now()}`
+        const fileName = local.split('/').pop() || 'file'
         const header = [
           `--${boundary}\r\n`,
           `Content-Disposition: form-data; name="file"; filename="${fileName}"\r\n`,
           `Content-Type: application/octet-stream\r\n\r\n`,
-        ].join("");
-        const end = `\r\n--${boundary}--\r\n`;
+        ].join('')
+        const end = `\r\n--${boundary}--\r\n`
         const bodyBuffer = Buffer.concat([
           Buffer.from(header),
           content,
           Buffer.from(end),
-        ]);
+        ])
 
         const response = await client.put(
-          "/api/fs/form",
+          '/api/fs/form',
           bodyBuffer,
           buildUploadHeaders(
             remote,
             `multipart/form-data; boundary=${boundary}`,
             options,
           ),
-        );
-        handleApiResponse(response, "fs.form");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "上传失败");
+        )
+        handleApiResponse(response, 'fs.form')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '上传失败')
+      }
+    })
 
-  fs.command("batch-rename")
-    .description("批量重命名")
-    .requiredOption("--src-dir <srcDir>", "源目录")
-    .requiredOption("--rename-objects <json>", "重命名规则 JSON")
+  fs.command('batch-rename')
+    .description('批量重命名')
+    .requiredOption('--src-dir <srcDir>', '源目录')
+    .requiredOption('--rename-objects <json>', '重命名规则 JSON')
     .action(async (options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const renameObjects = JSON.parse(options.renameObjects);
-        const response = await client.post("/api/fs/batch_rename", {
+        const client = getClient(cmd)
+        const renameObjects = JSON.parse(options.renameObjects)
+        const response = await client.post('/api/fs/batch_rename', {
           src_dir: options.srcDir,
           rename_objects: renameObjects,
-        });
-        handleApiResponse(response, "fs.batch-rename");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "批量重命名失败");
+        })
+        handleApiResponse(response, 'fs.batch-rename')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '批量重命名失败')
+      }
+    })
 
-  fs.command("regex-rename")
-    .description("正则批量重命名")
-    .requiredOption("--src-dir <srcDir>", "源目录")
-    .requiredOption("--src-name-regex <regex>", "源文件名正则表达式")
-    .requiredOption("--new-name-regex <regex>", "新文件名正则表达式")
+  fs.command('regex-rename')
+    .description('正则批量重命名')
+    .requiredOption('--src-dir <srcDir>', '源目录')
+    .requiredOption('--src-name-regex <regex>', '源文件名正则表达式')
+    .requiredOption('--new-name-regex <regex>', '新文件名正则表达式')
     .action(async (options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/regex_rename", {
+        const client = getClient(cmd)
+        const response = await client.post('/api/fs/regex_rename', {
           src_dir: options.srcDir,
           src_name_regex: options.srcNameRegex,
           new_name_regex: options.newNameRegex,
-        });
-        handleApiResponse(response, "fs.regex-rename");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "正则重命名失败");
+        })
+        handleApiResponse(response, 'fs.regex-rename')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '正则重命名失败')
+      }
+    })
 
-  fs.command("recursive-move")
-    .description("递归移动")
-    .requiredOption("--src-dir <srcDir>", "源目录")
-    .requiredOption("--dst-dir <dstDir>", "目标目录")
+  fs.command('recursive-move')
+    .description('递归移动')
+    .requiredOption('--src-dir <srcDir>', '源目录')
+    .requiredOption('--dst-dir <dstDir>', '目标目录')
     .action(async (options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/recursive_move", {
+        const client = getClient(cmd)
+        const response = await client.post('/api/fs/recursive_move', {
           src_dir: options.srcDir,
           dst_dir: options.dstDir,
-        });
-        handleApiResponse(response, "fs.recursive-move");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "递归移动失败");
+        })
+        handleApiResponse(response, 'fs.recursive-move')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '递归移动失败')
+      }
+    })
 
-  fs.command("remove-empty-dirs <path>")
-    .description("删除空目录")
+  fs.command('remove-empty-dirs <path>')
+    .description('删除空目录')
     .action(async (path: string, options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/remove_empty_directory", {
+        const client = getClient(cmd)
+        const response = await client.post('/api/fs/remove_empty_directory', {
           src_dir: path,
-        });
-        handleApiResponse(response, "fs.remove-empty-dirs");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "删除空目录失败");
+        })
+        handleApiResponse(response, 'fs.remove-empty-dirs')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '删除空目录失败')
+      }
+    })
 
-  fs.command("archive-decompress")
-    .description("解压压缩包")
-    .requiredOption("--path <path>", "压缩包完整路径")
-    .requiredOption("--dst-dir <dstDir>", "解压目标目录")
+  fs.command('archive-decompress')
+    .description('解压压缩包')
+    .requiredOption('--path <path>', '压缩包完整路径')
+    .requiredOption('--dst-dir <dstDir>', '解压目标目录')
     .action(async (options, cmd) => {
       try {
-        const client = getClient(cmd);
+        const client = getClient(cmd)
         // 文档标注 name 为 string，但服务端实际要求 []string（ArchiveDecompressReq.Names）
-        const p = options.path as string;
-        const idx = p.lastIndexOf("/");
-        const srcDir = idx >= 0 ? p.slice(0, idx) || "/" : "/";
-        const name = idx >= 0 ? p.slice(idx + 1) : p;
-        const response = await client.post("/api/fs/archive/decompress", {
+        const p = options.path as string
+        const idx = p.lastIndexOf('/')
+        const srcDir = idx >= 0 ? p.slice(0, idx) || '/' : '/'
+        const name = idx >= 0 ? p.slice(idx + 1) : p
+        const response = await client.post('/api/fs/archive/decompress', {
           src_dir: srcDir,
           name: [name],
           dst_dir: options.dstDir,
-        });
-        handleApiResponse(response, "fs.archive-decompress");
-      } catch (error) {
-        printError(error instanceof Error ? error.message : "解压失败");
+        })
+        handleApiResponse(response, 'fs.archive-decompress')
       }
-    });
+      catch (error) {
+        printError(error instanceof Error ? error.message : '解压失败')
+      }
+    })
 
-  fs.command("archive-meta <path>")
-    .description("获取压缩包元信息")
+  fs.command('archive-meta <path>')
+    .description('获取压缩包元信息')
     .action(async (path: string, options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/archive/meta", { path });
-        handleApiResponse(response, "fs.archive-meta");
-      } catch (error) {
-        printError(
-          error instanceof Error ? error.message : "获取压缩包信息失败",
-        );
+        const client = getClient(cmd)
+        const response = await client.post('/api/fs/archive/meta', { path })
+        handleApiResponse(response, 'fs.archive-meta')
       }
-    });
+      catch (error) {
+        printError(
+          error instanceof Error ? error.message : '获取压缩包信息失败',
+        )
+      }
+    })
 
-  fs.command("archive-list")
-    .description("列出压缩包内容")
-    .requiredOption("--path <path>", "压缩包路径")
-    .option("--inner-path <innerPath>", "内部路径", "/")
+  fs.command('archive-list')
+    .description('列出压缩包内容')
+    .requiredOption('--path <path>', '压缩包路径')
+    .option('--inner-path <innerPath>', '内部路径', '/')
     .action(async (options, cmd) => {
       try {
-        const client = getClient(cmd);
-        const response = await client.post("/api/fs/archive/list", {
+        const client = getClient(cmd)
+        const response = await client.post('/api/fs/archive/list', {
           path: options.path,
           archive_path: options.innerPath,
-        });
-        handleApiResponse(response, "fs.archive-list");
-      } catch (error) {
-        printError(
-          error instanceof Error ? error.message : "列出压缩包内容失败",
-        );
+        })
+        handleApiResponse(response, 'fs.archive-list')
       }
-    });
+      catch (error) {
+        printError(
+          error instanceof Error ? error.message : '列出压缩包内容失败',
+        )
+      }
+    })
 }
