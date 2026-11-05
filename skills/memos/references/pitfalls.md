@@ -102,6 +102,12 @@ CLI 默认 `/api/v1`，连 26.x 用 `--api-path /api` 或 `MEMOS_API_PATH=/api`�
   2. `attachment set-memo <memo> -a <id1>,<id2>,...`（整体覆盖，必须给全量列表）
   3. `memo update <memo> --content-file final.md`（这时正文里的 `![](/file/...)` 才会被接受）
 - `externalLink` 是预签名 URL（部分实例直接为空），会过期，不要写进正文。
+- **`attachment list` 只返回「你本人创建的」附件**：服务端 `ListAttachments` 强制
+  `CreatorID = 当前登录用户`（`server/api/v1/attachment_service.go`），不受 visibility 影响。
+  多用户实例里，别人传的附件在你账号下**永远查不到**，但笔记页面仍能正常显示图片
+  （`/file/` 路由按 memo 访问权限判断，不经过 ListAttachments）。
+  遇到「图片显示正常、附件列表却为空」，先比对附件 `creator` 与当前令牌用户，不要误判为上传失败。
+  同理，`content` 字段是 `writeOnly`，查询恒为空串，也不能作为「没存」的依据。
 - 大文件应走分块接口 `POST /attachments:upload`（`spec` + `uploadId` + `writeOffset` +
   `data` + `finishWrite`，30 分钟无活动失效），CLI 暂未封装。
 

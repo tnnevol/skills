@@ -4,7 +4,7 @@ skills/memos 的参考文件以本仓库 `apps/memos-cli` 的真实命令行为�
 （经真实实例 v0.31.0 核验，见 `references/pitfalls.md`），不提炼自上游文档仓库。
 
 - **Source:** `apps/memos-cli`（本仓库应用）+ 上游 OpenAPI 单点引用
-- **Skill version:** `2.2.0`
+- **Skill version:** `2.3.0`
 - **Synced:** 2026-11-05
 
 ## 技能自带文件
@@ -26,6 +26,19 @@ skills/memos 的参考文件以本仓库 `apps/memos-cli` 的真实命令行为�
   | ≤ v0.23.0     | 无生成产物                                  | —           |
 
 - 上游文档站无独立文档仓库可挂 submodule，**不建子模块**，以 tag 内的 spec 直链引用。
+
+## v2.3.0 记录（2026-11-05）：记录附件列表的「按创建者隔离」
+
+实测多用户实例（11 个用户）时发现：图片在笔记页面显示正常，但附件列表为空。
+定位到服务端 `ListAttachments` 强制 `CreatorID = 当前登录用户`
+（`server/api/v1/attachment_service.go`），不受 visibility 影响，也不可绕过。
+
+| 文件 | 改动 |
+| --- | --- |
+| `references/pitfalls.md` 第 8 节 | 补充「只返回本人创建的附件」及其与 `/file/` 路由的差异；强调 `content` 是 `writeOnly`，恒为空串，二者都不能作为「上传失败」的判据 |
+
+同时 CLI 已发布 npm：`@tnnevol/memos-cli@1.1.0`（附件路径修复 + 默认 PROTECTED）、
+`@tnnevol/openlist-cli@1.2.1`（仅格式化，patch 发布）。
 
 ## v2.2.0 记录（2026-11-05）：修复附件路径与图文流程，默认可见性改为受保护
 

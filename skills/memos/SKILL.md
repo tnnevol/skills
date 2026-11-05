@@ -8,7 +8,7 @@ description: >-
   当用户提到 memos、笔记、随手记、时间线、标签检索、给笔记评论、上传附件、分享笔记时使用。
 metadata:
   author: Tnnevol
-  version: "2.2.0"
+  version: "2.3.0"
 ---
 
 # SKILL: memos
@@ -169,5 +169,8 @@ Memos 用**游标分页**（不是页码）：
 - 图文笔记必须先绑定后引用：`memo create` 没有附件参数，标准三步是「建纯文本 → `attachment set-memo -a ...`
   → `memo update` 写入 `![](/file/...)`」；否则 400 `must be bound to the memo`。
 - 新笔记默认可见性 **`PROTECTED`**（对登录用户可见），需要时用 `--visibility PRIVATE|PUBLIC` 覆盖。
+- **`attachment list` 只列你自己创建的附件**（服务端按 `creator` 强制过滤，不受 visibility 影响）：
+  多用户实例里别人传的附件查不到，但笔记页面图片仍正常显示（走 `/file/` 路由）。
+  `content` 字段是 `writeOnly` 恒为空串，两者都不能当作「上传失败」的依据。
 - `space` 分组是 v0.31 新增，旧实例上必然 404。
 - memos 从 2026-10 起改用**日历版本号**（26.10.0、26.11.0），并移除了 `/api/v1` 前缀。
