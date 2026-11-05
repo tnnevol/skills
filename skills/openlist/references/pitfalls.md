@@ -47,12 +47,36 @@
 - `--as-task` 会让响应返回后台任务对象（`data.task`），文件稍后落地。
 - `--md5/--sha1/--sha256`、`--last-modified` 在部分存储（如 SMB）**被接受但不校验/不应用**（不同驱动行为不同）。
 
-## 7. 认证
+## 7. 分片上传：参数走 HTTP 头，不是 JSON body（v4.2.9+）
+
+`/api/fs/multipart/*` 的入参全部来自**请求头**（源码 `server/handles/multipart.go`），
+按 JSON body 传会得到 400。CLI 已封装，直接用 `multipart` 分组即可。
+
+| 接口 | 关键参数 |
+| --- | --- |
+| `init` | `File-Path`（**URL 编码**的远端路径）、`X-File-Size`；可选 `X-Chunk-Size`、`Overwrite`、`X-File-Md5/Sha1/Sha256` |
+| `chunk` | `X-Upload-Id`、`X-Chunk-Index`，body 为分片**原始字节** |
+| `complete` / `abort` | `X-Upload-Id` |
+| `status` | query：`upload_id`，或 `path` + `size`（用于恢复中断的上传） |
+
+- 需要实例开启分片上传，否则 **403 `multipart upload is disabled`**。
+- 分片是**幂等**的，可乱序并发；返回码语义：**429** = 窗口已满（稍后重试）、**409** = 同一分片正在另一连接上传。
+- 空文件不能走分片（`X-File-Size` 必须为正），改用 `fs put`。
+- `init` 返回体里 `upload_id` 的字段名可能是 `upload_id` 或 `uploadId`，两种都要认。
+
+## 8. 媒体库与种子（v4.2.9+）
+
+- `media` 分组依赖实例**启用媒体库并完成扫描**；未启用时相册等接口返回 404 或空列表，这不是 CLI 故障。
+- `seed capabilities` 等接口**必填 `seed_data`**（解析后的种子数据），只传 `path` 会得到 400 `seed_data is required`。
+- `seed quick-save` / `rapid-upload` / `offline-download` 在服务端是**同一个实现**，参数一致。
+- `admin media export` 与 `admin media import` 用 `--file` 传完整 JSON。
+
+## 9. 认证
 
 - `auth login` 的 `--base-url`/`--token` 与全局同名选项曾冲突，现已通过读取全局选项修复；正常可用。
 - 未配置服务地址时命令直接报错退出；Token 可选，服务允许无 Token 访问时可省略。
 
-## 8. 文档来源
+## 10. 文档来源
 
 - Apifox 文档：`https://openlist.apifox.cn`，仅作参考，字段以真实服务端为准。
 - 相关社区记录：OpenList-Docs issue #306（share 参数 paths vs files）。

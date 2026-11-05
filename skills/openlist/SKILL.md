@@ -3,10 +3,10 @@ name: openlist
 displayName: openlist
 slug: openlist
 description: >
-  通过 openlist-cli 操作 OpenList（多存储文件列表 / 网盘聚合，AList 开源分支）。触发场景：管理文件与目录（列出/获取/搜索/新建/重命名/移动/复制/删除/上传/解压压缩包）、创建与管理分享、查看当前用户、后台管理（用户/存储/元信息/设置/驱动/索引）。命令输出为结构化 JSON，所有命令支持 --help。当用户提到 openlist、alist、网盘文件管理、文件分享、跨盘复制/移动、解压等时使用。
+  通过 openlist-cli 操作 OpenList（多存储文件列表 / 网盘聚合，AList 开源分支）。触发场景：管理文件与目录（列出/获取/搜索/新建/重命名/移动/复制/删除/上传/分片上传/解压压缩包）、创建与管理分享、查看当前用户、媒体库（相册/收藏/播放进度）、种子文件（BT/磁力解析与生成）、接口凭证、后台管理（用户/存储/元信息/设置/驱动/索引/媒体库/扫描/转码）。命令输出为结构化 JSON，所有命令支持 --help。当用户提到 openlist、alist、网盘文件管理、文件分享、跨盘复制/移动、解压等时使用。
 metadata:
   author: Tnnevol
-  version: "1.2.3"
+  version: "1.3.0"
 ---
 
 # SKILL: openlist
@@ -76,6 +76,20 @@ openlist-cli <group> <command> --help
 | admin setting | `list` / `get <key>` / `save` / `delete <key>` / `reset-token`                                               | 设置（按 key）                                                                   |
 | admin driver  | `list` / `names` / `info <name>`                                                                             | 驱动（只读）                                                                     |
 | admin index   | `build` / `stop` / `clear` / `progress` / `update`                                                           | 搜索索引                                                                         |
+| media         | `albums` / `album <id>` / `list` / `item <id>` / `folders`                                              | 媒体库浏览（v4.2.9+，需实例启用）                                                |
+| media         | `favorites` / `favorite <id>` / `progress` / `set-progress <id> <pos>` / `resume`                       | 收藏与播放进度                                                                   |
+| media         | `annotations` / `set-annotations <id>` / `strm` / `stream-url` / `userdata` / `scan-paths`              | 批注、STRM 与播放地址                                                            |
+| multipart     | `init` / `chunk` / `complete` / `abort` / `status` / `upload <local> <remote>`                          | 分片上传大文件（参数走 HTTP 头，见 pitfalls）                                     |
+| seed          | `parse` / `upload-parse` / `generate` / `convert` / `diagnose`                                          | 种子文件解析、生成与转换                                                         |
+| seed          | `capabilities` / `update` / `update-channels` / `quick-save` / `rapid-upload` / `offline-download`      | 种子能力、元信息与保存                                                           |
+| appkey        | `list` / `create` / `delete <id>`                                                                       | 媒体接口凭证                                                                     |
+| public        | `settings` / `init-status` / `offline-tools` / `archive-extensions`                                     | 公开信息（免登录）                                                               |
+| admin media   | `config-list` / `config-save` / `items` / `item-update` / `item-delete`                                 | 媒体库配置与条目                                                                 |
+| admin media   | `scan-start` / `scan-progress` / `scrape-start` / `scrape-stats` / `strm-generate`                      | 扫描与刮削                                                                       |
+| admin media   | `scan-paths` / `scan-path-create` / `scan-path-update` / `scan-path-delete` / `scan-path-clear`         | 扫描目录                                                                         |
+| admin media   | `clear` / `clear-scrape` / `delete-invalid` / `export` / `import`                                       | 数据维护与导出导入                                                               |
+| admin scan    | `start` / `stop` / `progress`                                                                           | 手动扫描任务                                                                     |
+| admin transcode | `jobs` / `workers` / `cancel <jobId>`                                                                 | 转码任务与工作节点                                                               |
 
 > `admin` 增删改用 `--file <path>` 或 `--data <json>` 传 JSON 体。详见 [commands](references/commands.md)。
 

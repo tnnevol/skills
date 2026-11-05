@@ -126,3 +126,103 @@ openlist-cli admin storage create --data '{"mount_path":"/smb","driver":"SMB","o
 ```
 
 > 注意：`get`/`delete`/`enable`/`disable` 内部用 `?id=` 查询；`setting` 用 `?key=`；这些由 CLI 封装，用户只需给位置参数 `<id>`/`<key>`。
+
+## media — 媒体库（v4.2.9+）
+
+需实例启用媒体库；未启用时相册接口返回 404 或空列表。
+
+| 命令 | 说明 | 关键参数 |
+| --- | --- | --- |
+| `media albums` | 列出相册 | `-p/--page`、`-n/--per-page` |
+| `media album <id>` | 相册详情 | `--id` |
+| `media list` | 列出媒体条目 | `--path`、`--type`（image/video/audio） |
+| `media item <id>` | 条目详情 | |
+| `media folders` | 媒体所在目录 | |
+| `media favorites` | 收藏列表 | 分页 |
+| `media favorite <id>` | 收藏/取消（`--off`） | |
+| `media progress` / `media set-progress <id> <pos>` | 查询 / 上报播放进度 | `--duration` |
+| `media resume` | 可续播列表 | |
+| `media annotations` / `media set-annotations <id>` | 查询 / 写入批注 | `-c` 或 `-f` |
+| `media strm` / `media stream-url` / `media userdata` | STRM、播放地址、用户数据 | `--id` |
+| `media scan-paths` | 扫描目录（用户视角） | |
+
+## multipart — 分片上传（v4.2.9+）
+
+参数走 **HTTP 头**（服务端约定），JSON body 传参一律 400。CLI 已封装。
+
+```bash
+# 一键上传（自动 init → chunk → complete）
+openlist-cli multipart upload ./big.iso /backup/big.iso --chunk-size 8388608
+
+# 手动分步
+openlist-cli multipart init --path /backup/big.iso --size 104857600
+openlist-cli multipart status --upload-id <id>
+openlist-cli multipart chunk --upload-id <id> --index 0 --file ./part0.bin
+openlist-cli multipart complete --upload-id <id>
+openlist-cli multipart abort --upload-id <id>
+```
+
+- 实例未开启分片上传 → `403 multipart upload is disabled`。
+- 分片幂等、可乱序并发；`429` 表示窗口已满需重试，`409` 表示该分片正在另一连接上传。
+- 空文件不能分片上传（`X-File-Size` 必须为正），用 `fs put`。
+
+## seed — 种子文件（v4.2.9+）
+
+| 命令 | 说明 | 关键参数 |
+| --- | --- | --- |
+| `seed parse` | 解析种子 | `--seed-data` 或 `--seed-file`，`--format`、`--file-name` |
+| `seed upload-parse <path>` | 上传并解析 | `--target` |
+| `seed generate` | 为目录生成种子 | `--paths`（必填）、`--format`/`--formats`、`--name`、`--comment`、`--piece-size`、`--save-path` |
+| `seed convert` | 转换容器格式 | `--target-format`（必填） |
+| `seed diagnose` | 诊断种子 | `--seed-data`/`--seed-file` |
+| `seed capabilities` | 能力与容量估算 | `--path`/`--paths`；**必填 `seed_data`** |
+| `seed update` | 更新元信息 | `--comment`、`--trackers`、`--output-path` |
+| `seed update-channels` | 替换公开频道 | `--channels`（JSON 数组） |
+| `seed quick-save` / `rapid-upload` / `offline-download` | 保存种子到目录（服务端同一实现） | `--path`（必填）、`--files`、`--tool`、`--transit-path`、`--overwrite` |
+
+> 复杂结构统一可用 `--file <json>` 传完整请求体，命令行参数会覆盖其中的同名键。
+
+## appkey — 接口凭证
+
+```bash
+openlist-cli appkey list
+openlist-cli appkey create --name "手机端"
+openlist-cli appkey delete <id>
+```
+
+`delete` 的服务端参数是 query `?id=`，CLI 已处理。
+
+## public — 公开信息（免登录）
+
+```bash
+openlist-cli public settings          # 含实例 version，可用于确认服务端版本
+openlist-cli public init-status       # {"initialized": true}
+openlist-cli public offline-tools
+openlist-cli public archive-extensions
+```
+
+## admin media / admin scan / admin transcode（v4.2.9+）
+
+```bash
+# 媒体库
+openlist-cli admin media config-list
+openlist-cli admin media config-save --file config.json
+openlist-cli admin media items --page 1 --per-page 30
+openlist-cli admin media scan-start --paths /media,/movies
+openlist-cli admin media scan-progress
+openlist-cli admin media scrape-start --ids 1,2,3
+openlist-cli admin media scan-paths
+openlist-cli admin media scan-path-create --path /media --name 影视
+openlist-cli admin media export > media-backup.json
+openlist-cli admin media import --file media-backup.json
+
+# 手动扫描
+openlist-cli admin scan start --path /
+openlist-cli admin scan progress
+openlist-cli admin scan stop
+
+# 转码
+openlist-cli admin transcode jobs
+openlist-cli admin transcode workers
+openlist-cli admin transcode cancel <jobId>
+```
