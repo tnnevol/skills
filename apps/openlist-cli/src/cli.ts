@@ -1,9 +1,13 @@
 import { createRequire } from 'node:module'
 import { Command } from 'commander'
 import { registerAdminCommand } from './commands/admin.js'
+import { registerAppkeyCommand, registerPublicCommand } from './commands/appkey.js'
 import { registerAuthCommand } from './commands/auth.js'
 import { registerFsCommand } from './commands/fs.js'
 import { registerMeCommand } from './commands/me.js'
+import { registerMediaCommand } from './commands/media.js'
+import { registerMultipartCommand } from './commands/multipart.js'
+import { registerSeedCommand } from './commands/seed.js'
 import { registerShareCommand } from './commands/share.js'
 import { setPretty } from './output.js'
 
@@ -32,5 +36,10 @@ registerFsCommand(program)
 registerShareCommand(program)
 registerMeCommand(program)
 registerAdminCommand(program)
+registerMediaCommand(program)
+registerMultipartCommand(program)
+registerSeedCommand(program)
+registerAppkeyCommand(program)
+registerPublicCommand(program)
 
 program.parse()

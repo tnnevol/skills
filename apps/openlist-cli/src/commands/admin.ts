@@ -6,6 +6,7 @@ import {
   handlePagedResponse,
   printError,
 } from '../output.js'
+import { registerAdminMediaCommand, registerAdminScanCommand, registerAdminTranscodeCommand } from './admin-media.js'
 
 function getClient(cmd: Command) {
   const opts = cmd.optsWithGlobals()
@@ -402,4 +403,8 @@ export function registerAdminCommand(program: Command): void {
   registerSetting(admin)
   registerDriver(admin)
   registerIndex(admin)
+  // v4.2.9 新增的后台能力
+  registerAdminMediaCommand(admin)
+  registerAdminScanCommand(admin)
+  registerAdminTranscodeCommand(admin)
 }

@@ -62,15 +62,20 @@ export class OpenListClient {
     }
   }
 
-  async get<T = unknown>(path: string): Promise<ApiResponse<T>> {
-    return this.request<T>('GET', path)
+  async get<T = unknown>(
+    path: string,
+    query?: Record<string, unknown>,
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>('GET', buildQueryPath(path, query))
   }
 
   async post<T = unknown>(
     path: string,
     body?: unknown,
+    headers?: Record<string, string>,
+    query?: Record<string, unknown>,
   ): Promise<ApiResponse<T>> {
-    return this.request<T>('POST', path, body)
+    return this.request<T>('POST', buildQueryPath(path, query), body, headers)
   }
 
   async put<T = unknown>(
@@ -87,6 +92,27 @@ export class OpenListClient {
   ): Promise<ApiResponse<T>> {
     return this.request<T>('DELETE', path, body)
   }
+}
+
+/** 把查询参数拼到路径上，跳过 undefined/null，数组重复同名键。 */
+export function buildQueryPath(path: string, query?: Record<string, unknown>): string {
+  if (!query)
+    return path
+
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(query)) {
+    if (value === undefined || value === null || value === '')
+      continue
+    if (Array.isArray(value)) {
+      for (const item of value) params.append(key, String(item))
+    }
+    else {
+      params.append(key, String(value))
+    }
+  }
+
+  const search = params.toString()
+  return search ? `${path}?${search}` : path
 }
 
 export function createClient(config: OpenListConfig): OpenListClient {
