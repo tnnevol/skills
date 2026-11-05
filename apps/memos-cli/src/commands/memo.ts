@@ -103,7 +103,7 @@ export function registerMemoCommand(program: Command): void {
     .description('创建笔记')
     .option('-c, --content <content>', '笔记内容（Markdown）；省略时从 stdin 读取')
     .option('--content-file <path>', '从文件读取笔记内容')
-    .option('--visibility <visibility>', '可见性：PRIVATE | PROTECTED | PUBLIC', 'PRIVATE')
+    .option('--visibility <visibility>', '可见性：PRIVATE | PROTECTED | PUBLIC（默认 PROTECTED，对登录用户可见）', 'PROTECTED')
     .option('--memo-id <id>', '自定义笔记 ID')
     .option('--space <space>', '所属空间（spaces/xxx 或纯 ID）')
     .option('--pinned', '创建后置顶')

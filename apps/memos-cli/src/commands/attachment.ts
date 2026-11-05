@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { basename, extname, resolve } from 'node:path'
 import { normalizeAttachmentName, normalizeMemoName, shortId } from '../names.js'
 import { printSuccess, withPagination } from '../output.js'
+import { buildAttachmentPaths } from '../paths.js'
 import { clampPageSize } from './memo.js'
 import { fail, getClient } from './shared.js'
 
@@ -116,10 +117,12 @@ export function registerAttachmentCommand(program: Command): void {
         )
 
         const name = data?.name || ''
+        const paths = name ? buildAttachmentPaths(client.origin, name, filename) : null
         printSuccess(
           {
             ...data,
-            permanentPath: name ? `${client.origin}/file/attachments/${name}/${filename}` : null,
+            permanentPath: paths?.permanentPath ?? null,
+            relativePath: paths?.relativePath ?? null,
             sizeBytes: bytes.byteLength,
           },
           'attachment.upload',
