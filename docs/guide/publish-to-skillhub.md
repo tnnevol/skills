@@ -96,7 +96,7 @@ done
 | dsh | `dsh` | 1.3.0 | 1.3.0 |
 | fnnas-docs | `fnnas-docs` | 1.1.4 | 1.1.4 |
 | halo | `tnnevol-halo` | 1.0.2 | 1.0.2 |
-| memos | `tnnevol-memos` | 2.2.0 | 2.2.0 |
+| memos | `tnnevol-memos` | 2.3.0 | 2.3.0 |
 | openlist | `openlist` | 1.2.3 | 1.2.3 |
 | midscenejs | `midscenejs` | 1.4.0 | 1.4.0 |
 | vitepress-mermaid-renderer | `vitepress-mermaid-renderer` | 1.0.1 | 1.0.1 |
