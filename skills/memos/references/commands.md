@@ -24,7 +24,7 @@
 | -------------------- | ---------------- | ------------------------------------------------------------------------------------- |
 | `memo list`          | 列出笔记         | `-n/--page-size`(50)、`--page-token`、`--state`、`--order-by`、`--filter`、`--tag`、`--show-deleted`、`--full` |
 | `memo get <memo>`    | 单条笔记         | —                                                                                     |
-| `memo create`        | 创建笔记         | `-c/--content`、`--content-file`、`--visibility`(PRIVATE)、`--memo-id`、`--space`、`--pinned` |
+| `memo create`        | 创建笔记         | `-c/--content`、`--content-file`、`--visibility`(PROTECTED)、`--memo-id`、`--space`、`--pinned` |
 | `memo update <memo>` | 更新内容/可见性  | `-c/--content`、`--content-file`、`--visibility`（至少一项）                           |
 | `memo delete <memo>` | 删除笔记         | `--force`                                                                             |
 | `memo pin <memo>`    | 置顶             | —                                                                                     |
@@ -132,8 +132,15 @@ memos-cli relation remove memos/abc memos/def
 | `attachment batch-delete <...>`     | 批量删除（可多个）                                      |
 | `attachment set-memo <memo>`        | 设置笔记附件列表（整体覆盖）；`-a/--attachments` 逗号分隔 |
 
-上传返回里 `permanentPath` = `{baseUrl}/file/attachments/{name}/{filename}`，这是笔记正文该用的
-**永久路径**；`externalLink` 是预签名 URL，会过期，不要写进笔记。
+上传返回里带两个路径（`attachmentName` 形如 `attachments/xxx`，**已含 `attachments/` 前缀，两端都不要再补**）：
+
+- `relativePath` = `/file/{attachmentName}/{filename}`，**写进笔记正文用这个**。
+  实例未配置 `instanceUrl` 时，服务端只接受相对路径，绝对地址会 400。
+- `permanentPath` = `{baseUrl}/file/{attachmentName}/{filename}`，绝对地址，用于站外下载/分享。
+- `externalLink` 是预签名 URL（可能为空），会过期，不要写进笔记。
+
+正文引用附件前，附件必须已绑定到该笔记（否则 400 `must be bound to the memo`）；
+`memo create` 没有附件参数，图文笔记按三步走：建纯文本 → `attachment set-memo` → `memo update` 写入图片。
 
 ```bash
 memos-cli attachment upload ./pic.png --memo memos/abc

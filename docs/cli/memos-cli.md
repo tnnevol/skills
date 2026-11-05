@@ -206,8 +206,12 @@ memos-cli attachment upload ./pic.png --memo memos/abc
 memos-cli attachment list-by-memo memos/abc
 ```
 
-上传返回的 `permanentPath`（`{baseUrl}/file/attachments/...`）是笔记正文应使用的永久路径；
-`externalLink` 是预签名 URL，会过期。
+上传返回 `relativePath`（`/file/attachments/...`）和 `permanentPath`（绝对地址）：
+**笔记正文用 `relativePath`**——实例未配置 `instanceUrl` 时，正文写绝对地址会被服务端 400 拒收；
+`permanentPath` 用于站外下载/分享。`externalLink` 是可能为空的预签名 URL，会过期。
+
+`attachmentName` 已包含 `attachments/` 前缀，拼接时不要重复；正文引用附件前，还必须先用
+`attachment set-memo` 把它绑定到该笔记，否则同样 400。
 
 ### share — 分享
 

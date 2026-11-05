@@ -84,11 +84,24 @@ CLI 默认 `/api/v1`，连 26.x 用 `--api-path /api` 或 `MEMOS_API_PATH=/api`�
   （自动翻页）再回写；`attachment set-memo` 则要求用户显式给出完整列表。
 - 重复添加关联不报错，CLI 返回 `changed: false`。
 
-## 8. 附件上传：base64 内联 vs 分块
+## 8. 附件与图文笔记
 
 - `POST /attachments` 的 `content` 是 base64 字符串，请求体随文件线性增大，适合中小文件。
-- `externalLink` 是**预签名 URL，会过期**，不能写进笔记正文；正文用永久路径
-  `{baseUrl}/file/attachments/{attachmentName}/{filename}`（CLI 以 `permanentPath` 返回）。
+- 访问路径有两种形态，别混。`attachmentName` 形如 `attachments/xxx`，**本身已含 `attachments/` 前缀**：
+  - 相对路径 `/file/{attachmentName}/{filename}` → `/file/attachments/xxx/pic.png`，
+    **笔记正文用这个**（CLI 返回 `relativePath`）。
+  - 绝对路径 `{baseUrl}/file/{attachmentName}/{filename}`，站外下载/分享用（CLI 返回 `permanentPath`）。
+  - 多拼一层 `attachments` 得到 `/file/attachments/attachments/xxx/pic.png` → **404**。
+    旧版 CLI 的 `permanentPath` 就是这个 bug（已在 1.1.0 修复）。
+- 实例未配置 `instanceUrl` 时，正文里写**绝对地址会被服务端拒收**：
+  `absolute managed attachment image URLs require a configured instance URL`（400）。只能用相对路径。
+- **正文引用前，附件必须已绑定到该笔记**，否则 400：
+  `managed image attachment xxx must be bound to the memo`。
+  `memo create` / `memo update` 没有附件参数，所以图文笔记的标准流程是三步：
+  1. `memo create --content-file draft.md`（先写纯文本，正文里不放图片）
+  2. `attachment set-memo <memo> -a <id1>,<id2>,...`（整体覆盖，必须给全量列表）
+  3. `memo update <memo> --content-file final.md`（这时正文里的 `![](/file/...)` 才会被接受）
+- `externalLink` 是预签名 URL（部分实例直接为空），会过期，不要写进正文。
 - 大文件应走分块接口 `POST /attachments:upload`（`spec` + `uploadId` + `writeOffset` +
   `data` + `finishWrite`，30 分钟无活动失效），CLI 暂未封装。
 

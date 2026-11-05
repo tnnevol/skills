@@ -4,7 +4,7 @@ skills/memos 的参考文件以本仓库 `apps/memos-cli` 的真实命令行为�
 （经真实实例 v0.31.0 核验，见 `references/pitfalls.md`），不提炼自上游文档仓库。
 
 - **Source:** `apps/memos-cli`（本仓库应用）+ 上游 OpenAPI 单点引用
-- **Skill version:** `2.1.0`
+- **Skill version:** `2.2.0`
 - **Synced:** 2026-11-05
 
 ## 技能自带文件
@@ -26,6 +26,33 @@ skills/memos 的参考文件以本仓库 `apps/memos-cli` 的真实命令行为�
   | ≤ v0.23.0     | 无生成产物                                  | —           |
 
 - 上游文档站无独立文档仓库可挂 submodule，**不建子模块**，以 tag 内的 spec 直链引用。
+
+## v2.2.0 记录（2026-11-05）：修复附件路径与图文流程，默认可见性改为受保护
+
+`apps/memos-cli` 升到 `1.1.0`，同时纠正技能里错误的图文结论。
+
+### CLI 变更
+
+- **修复 `permanentPath` 重复段**：原先拼成 `/file/attachments/attachments/<id>/<file>`（404），
+  现已输出 `/file/attachments/<id>/<file>`；拼接抽到 `src/paths.ts` 的 `buildAttachmentPaths` 并加单测。
+- **新增 `relativePath`**：`/file/attachments/<id>/<file>`，笔记正文用这个。
+- **默认可见性 `PRIVATE` → `PROTECTED`**：`memo create` 默认对登录用户可见，可用 `--visibility` 覆盖。
+
+### 技能变更（原结论有误，已纠正）
+
+| 文件 | 改动 |
+| --- | --- |
+| `references/pitfalls.md` | 第 8 节重写：区分相对/绝对路径；实例未配置 `instanceUrl` 时正文只能写相对路径；补「先绑定后引用」与三步图文流程；记录旧版 `permanentPath` 的 404 bug |
+| `references/commands.md` | 修正 `permanentPath` 说明并补 `relativePath`；`memo create` 默认 `PROTECTED` |
+| `SKILL.md` | 关键提示改为相对路径 + 先绑定后引用 + 默认 `PROTECTED` |
+| `docs/cli/memos-cli.md`（文档站） | 同步上述结论 |
+
+### 实测（真实实例 v0.31.0）
+
+- 上传后 `permanentPath` / `relativePath` 带令牌均 200；无令牌 401（私有附件）。
+- 正文写绝对地址 → 400 `absolute managed attachment image URLs require a configured instance URL`。
+- 未绑定就引用 → 400 `managed image attachment xxx must be bound to the memo`。
+- 三步流程（建文本 → `attachment set-memo` → `memo update`）可写入 39 张图的图文笔记。
 
 ## v2.1.0 同步记录（2026-11-05）：上游新版本体系的破坏性变更
 

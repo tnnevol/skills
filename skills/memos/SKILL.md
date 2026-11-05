@@ -8,7 +8,7 @@ description: >-
   当用户提到 memos、笔记、随手记、时间线、标签检索、给笔记评论、上传附件、分享笔记时使用。
 metadata:
   author: Tnnevol
-  version: "2.1.0"
+  version: "2.2.0"
 ---
 
 # SKILL: memos
@@ -163,6 +163,11 @@ Memos 用**游标分页**（不是页码）：
 - 标签过滤语法是 `"tag" in tags`；`tags == ["tag"]` 会报 400。
 - 评论在数据模型上就是 memo（带 `parent`）：更新/删除评论走 `/memos/{commentMemo}`。注意**评论列表的响应字段**：v0.29–v0.31 是 `memos`，26.10+ 改成 `comments`。
 - `relation add/remove` 与 `attachment set-memo` 在服务端是**整体覆盖**，CLI 已做先读后写；不要绕过 CLI 直接调 PATCH。
-- 附件上传返回的 `externalLink` 是**会过期的预签名 URL**；笔记正文要用 `permanentPath`（`{baseUrl}/file/attachments/...`）。
+- 附件路径：`attachmentName` 已含 `attachments/` 前缀，**不要重复拼**。正文用 `relativePath`
+  （`/file/attachments/xxx/pic.png`），站外下载/分享用 `permanentPath`（绝对地址）；`externalLink`
+  是可能为空的预签名 URL，会过期，别写进正文。实例未配置 `instanceUrl` 时，正文写绝对地址会被 400 拒收。
+- 图文笔记必须先绑定后引用：`memo create` 没有附件参数，标准三步是「建纯文本 → `attachment set-memo -a ...`
+  → `memo update` 写入 `![](/file/...)`」；否则 400 `must be bound to the memo`。
+- 新笔记默认可见性 **`PROTECTED`**（对登录用户可见），需要时用 `--visibility PRIVATE|PUBLIC` 覆盖。
 - `space` 分组是 v0.31 新增，旧实例上必然 404。
 - memos 从 2026-10 起改用**日历版本号**（26.10.0、26.11.0），并移除了 `/api/v1` 前缀。
