@@ -1,6 +1,6 @@
 # 技能总览
 
-本项目提供 9 个技能和 1 个命令行应用，覆盖项目管理、应用开发、博客、笔记、网盘管理、智能体运行时开发、浏览器与移动端自动化、VitePress Mermaid 渲染和 YonBuilder（APICloud）客户端 API 文档。
+本项目提供 9 个技能和 2 个命令行应用，覆盖项目管理、应用开发、博客、笔记、网盘管理、智能体运行时开发、浏览器与移动端自动化、VitePress Mermaid 渲染和 YonBuilder（APICloud）客户端 API 文档。
 
 ## 技能列表
 
@@ -21,5 +21,6 @@
 | 名称 | 描述 |
 |------|------|
 | [openlist-cli](/cli/openlist-cli) | OpenList 网盘文件管理命令行工具 |
+| [memos-cli](/cli/memos-cli) | Memos 笔记、评论、标签与附件管理命令行工具 |
 
 所有技能页面统一提供安装、使用和功能说明，详细参考资料由对应技能目录维护。

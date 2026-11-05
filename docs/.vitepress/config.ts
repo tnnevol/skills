@@ -40,6 +40,8 @@ export default defineConfig({
             { text: '项目介绍', link: '/guide/what-is-skills' },
             { text: '快速开始', link: '/guide/getting-started' },
             { text: '技能开发规范', link: '/guide/skill-structure' },
+            { text: '发布规范（SPEC）', link: '/guide/specs/skillhub-publish' },
+            { text: '发布到 SkillHub', link: '/guide/publish-to-skillhub' },
           ],
         },
       ],

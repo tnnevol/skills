@@ -29,9 +29,12 @@ name: {skill-name}
 description: {简短描述}
 metadata:
   author: Tnnevol
-  version: "YYYY.MM.DD"
+  version: "x.y.z"
 ---
 ```
+
+`metadata.version` 必须是 SemVer（`x.y.z`），不能用日期格式（`2026.07.31`）——SkillHub 会直接拒收；
+内容一有改动就要 bump 版本号，不要用同版本号覆盖线上内容。详见[发布规范](./specs/skillhub-publish)。
 
 ### 文件内容结构
 
@@ -41,7 +44,7 @@ name: my-skill
 description: 我的技能简短描述
 metadata:
   author: Tnnevol
-  version: "2026.07.31"
+  version: "1.0.0"
 ---
 
 # 我的技能

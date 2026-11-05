@@ -54,6 +54,22 @@ skillhub publish skills/chandao --changelog "sync from repo 2026-09-14"
 
 发布接口是 `POST /api/v1/community/skills/publish`，按 `slug` 覆盖。成功回执会给出 `skillId`。
 
+## 发布之后：回执 ≠ 已上线
+
+这段最容易误判，完整状态机见 [发布规范（SPEC）](./specs/skillhub-publish)。
+
+`✓ Published: skillId=xxx status=None` 只说明**已登记**。新版本还要过安全扫描和审核（实测 0～10 分钟）
+才进版本列表；这期间 `/api/v1/skills/<slug>/versions` 和 `latestVersion` 都还是旧值，看着像没发出去。
+
+- `status=None` 是服务端没回传该字段，不是失败。
+- **别急着重发**：同版本重发会返回 409，CLI 提示「slug 冲突」，其实那是「已经登记成功」的反证。
+- 只读确认方式：用回执里的 `skillId` 探 CDN 直链
+  `https://skillhub-1388575217.cos.accelerate.myqcloud.com/skills/<skillId>/<slug>/<version>.zip`，
+  返回 200 就说明包已上传，只剩等审核。
+- `updatedAt` 会因浏览刷新，不能当发布证据。
+
+上线后的验收（版本对齐 + 包内容逐字节比对）按规范第 5 节 AC1～AC5 执行。
+
 ## 全量发布的坑：限流
 
 一口气连发多个会被 429 限流，报错是「发布频率过高，请稍后再试」。CLI 本身不会自动退避重试。
@@ -62,7 +78,7 @@ skillhub publish skills/chandao --changelog "sync from repo 2026-09-14"
 
 ```bash
 cd /Users/tnnevol/workspace/my-pj/gits/skills
-for d in chandao dsh fnnas-docs halo memos openlist; do
+for d in chandao dsh fnnas-docs halo memos openlist midscenejs vitepress-mermaid-renderer yonyou-doc; do
   skillhub publish "skills/$d" --changelog "sync from repo $(date +%F)"
   sleep 10
 done
@@ -74,17 +90,20 @@ done
 
 仓库目录名和线上 slug 不完全一样，别想当然：
 
-| 目录 | 线上 slug | 当前版本 |
-|------|-----------|----------|
-| chandao | `chandao` | 1.0.2 |
-| dsh | `dsh` | 1.0.2 |
-| fnnas-docs | `fnnas-docs` | 1.1.2 |
-| halo | `tnnevol-halo` | 1.0.2 |
-| memos | `tnnevol-memos` | 1.0.2 |
-| openlist | `openlist` | 1.2.2 |
-| midscenejs | `midscenejs` | 1.0.0 |
-| vitepress-mermaid-renderer | `vitepress-mermaid-renderer` | 1.0.0 |
-| yonyou-doc | `yonyou-doc` | 1.0.0 |
+| 目录 | 线上 slug | 线上版本 | 仓库版本 |
+|------|-----------|----------|----------|
+| chandao | `chandao` | 1.0.2 | 1.0.2 |
+| dsh | `dsh` | 1.3.0 | 1.3.0 |
+| fnnas-docs | `fnnas-docs` | 1.1.4 | 1.1.4 |
+| halo | `tnnevol-halo` | 1.0.2 | 1.0.2 |
+| memos | `tnnevol-memos` | 2.1.0 | 2.1.0 |
+| openlist | `openlist` | 1.2.3 | 1.2.3 |
+| midscenejs | `midscenejs` | 1.4.0 | 1.4.0 |
+| vitepress-mermaid-renderer | `vitepress-mermaid-renderer` | 1.0.1 | 1.0.1 |
+| yonyou-doc | `yonyou-doc` | 1.0.1 | 1.0.1 |
+
+> 这张表在 2026-11-05 的批量同步后更新为当时的线上版本。改动技能后以 `SKILL.md` 的 `version` 为准，
+> 发布成功后回来更新「线上版本」列。
 
 halo 和 memos 的线上 slug 带 `tnnevol-` 前缀，这是当时发上去定的，改 slug 等于换一份，别动。
 
@@ -147,4 +166,5 @@ skillhub verify chandao
 
 ## 一句话流程
 
-改内容 → bump `version` → `skillhub publish <目录> --changelog "..."` → 被限流就等会儿补发 → 拿 `skillId` 当成功凭据。
+改内容 → bump `version` → `skillhub publish <目录> --dry-run` → `skillhub publish <目录> --changelog "..."`
+→ 记下 `skillId`，等审核 → 按 [SPEC](./specs/skillhub-publish) 的 AC1～AC5 验收 → 回写上面的版本表。

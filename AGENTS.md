@@ -91,9 +91,9 @@ Brief description of what this skill covers.
 
 | 子模块 | 上游 | 锁定 | sparse 范围 | 技能 |
 | ------ | ---- | ---- | ----------- | ---- |
-| `sources/dsh` | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) | `dsh-v0.2.1-rc.2` | `docs/` | [skills/dsh](skills/dsh) |
-| `sources/vitepress-mermaid-renderer` | [sametcn99/vitepress-mermaid-renderer](https://github.com/sametcn99/vitepress-mermaid-renderer) | `v1.2.2` | `docs/content/zh/` | [skills/vitepress-mermaid-renderer](skills/vitepress-mermaid-renderer) |
-| `sources/midscenejs` | [web-infra-dev/midscene](https://github.com/web-infra-dev/midscene) | `v1.16.0` | `apps/site/docs/zh/` | [skills/midscenejs](skills/midscenejs) |
+| `sources/dsh` | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) | `dsh-v0.2.2-rc.1` | `docs/` | [skills/dsh](skills/dsh) |
+| `sources/vitepress-mermaid-renderer` | [sametcn99/vitepress-mermaid-renderer](https://github.com/sametcn99/vitepress-mermaid-renderer) | `v1.2.3` | `docs/content/zh/` | [skills/vitepress-mermaid-renderer](skills/vitepress-mermaid-renderer) |
+| `sources/midscenejs` | [web-infra-dev/midscene](https://github.com/web-infra-dev/midscene) | `v1.17.5` | `apps/site/docs/zh/` | [skills/midscenejs](skills/midscenejs) |
 
 ### 当前远程抓取来源（上游不是 git 仓库）
 
@@ -124,3 +124,16 @@ Brief description of what this skill covers.
 2. 运行该技能 `GENERATION.md` 里的同步命令刷新 `references/`
 3. 章节数/菜单结构变化时，人工核对 `SKILL.md` 的索引描述
 4. 更新 `GENERATION.md` 的 Synced 与 `SKILL.md` 的版本号，一并提交
+
+### 发布与验收（强制）
+
+技能内容改动后发布到 SkillHub，必须遵循 [SPEC-SKILLHUB-PUBLISH](docs/guide/specs/skillhub-publish.md)：
+
+1. 内容变了就 bump `metadata.version`（SemVer），禁止用同版本号覆盖线上内容
+2. `skillhub publish skills/<dir> --dry-run` 预检
+3. 正式发布，记录 `slug@version`、`skillId`、时间
+4. **不得**用「版本列表里没有」判定失败——那是审核窗口；回执 `status=None` 同样不是失败信号
+5. 按规范 AC1～AC5 验收：版本对齐、包内容逐字节一致（仅 `_meta.json` 可不同）、无孤儿 slug、版本表回写、台账完整
+6. 技能改动、`GENERATION.md`、版本表与子模块指针一并提交
+
+状态机与误判对照见规范第 3、6 节；操作细节见 [docs/guide/publish-to-skillhub.md](docs/guide/publish-to-skillhub.md)。
