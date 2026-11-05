@@ -42,6 +42,7 @@ export default defineConfig({
             { text: '技能开发规范', link: '/guide/skill-structure' },
             { text: '发布规范（SPEC）', link: '/guide/specs/skillhub-publish' },
             { text: '发布到 SkillHub', link: '/guide/publish-to-skillhub' },
+            { text: 'Apifox 版本目录规划', link: '/guide/apifox-openlist-versions' },
           ],
         },
       ],
