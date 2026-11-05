@@ -15,19 +15,8 @@ interface CommentRecord {
 }
 
 interface ListCommentsResponse {
-  /** v0.29–v0.31 的字段名 */
   memos?: CommentRecord[]
-  /** 26.10.0 起按 AIP 规范改名，见 proto/api/CHANGELOG.md */
-  comments?: CommentRecord[]
   nextPageToken?: string
-}
-
-/**
- * 评论列表的响应字段在 26.10 改名：旧版 `memos`，新版 `comments`。
- * 两个都认，输出统一用 `memos` 以保持 CLI 既有契约不变。
- */
-function pickComments(data: ListCommentsResponse): CommentRecord[] {
-  return data.comments ?? data.memos ?? []
 }
 
 export function registerCommentCommand(program: Command): void {
@@ -48,7 +37,7 @@ export function registerCommentCommand(program: Command): void {
           pageToken: options.pageToken,
           orderBy: options.orderBy,
         })
-        printSuccess(withPagination({ ...data, memos: pickComments(data) }, pageSize), 'comment.list')
+        printSuccess(withPagination({ ...data, memos: data.memos ?? [] }, pageSize), 'comment.list')
       }
       catch (error) {
         fail(error, '列出评论失败')

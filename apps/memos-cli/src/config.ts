@@ -6,24 +6,11 @@ import { env, exit } from 'node:process'
 export interface MemosConfig {
   baseUrl: string
   token?: string
-  /** API 路径前缀，v0.29–v0.31 为 /api/v1，26.10.0 起改为 /api */
+  /** API 路径前缀，v0.29–v0.31 为 /api/v1，main（v0.32+）改为 /api */
   apiPath?: string
-  /**
-   * apiPath 是否由用户**显式**指定（仅 CLI 选项与环境变量，不含配置文件）。
-   *
-   * 配置文件里存下来的 apiPath 大多是 `auth login` 时写入的默认值，不能当作
-   * 「用户刻意选择」；只有 CLI/env 这种一次性的显式输入才阻止自动降级。
-   */
-  apiPathExplicit?: boolean
 }
 
 export const DEFAULT_API_PATH = '/api/v1'
-
-/** 26.10.0 起新版去掉 v1 段，旧前缀返回 410 Gone 并给出这条提示 */
-export const API_PATH_FALLBACK = '/api'
-
-/** 服务端移除 v1 前缀时，错误信息里的特征片段 */
-export const REMOVED_V1_HINT = 'API v1 has been removed'
 
 const CONFIG_DIR = join(homedir(), '.memos')
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json')
@@ -77,8 +64,7 @@ export function resolveConfig(options: {
     .trim()
     .replace(TRAILING_SLASHES, '')
   const token = options.token || env.MEMOS_ACCESS_TOKEN || fileConfig?.token || ''
-  const explicitApiPath = options.apiPath || env.MEMOS_API_PATH
-  const apiPath = normalizeApiPath(explicitApiPath || fileConfig?.apiPath)
+  const apiPath = normalizeApiPath(options.apiPath || env.MEMOS_API_PATH || fileConfig?.apiPath)
 
   if (!baseUrl) {
     console.error(
@@ -100,5 +86,5 @@ export function resolveConfig(options: {
     exit(1)
   }
 
-  return { baseUrl, token, apiPath, apiPathExplicit: Boolean(explicitApiPath) }
+  return { baseUrl, token, apiPath }
 }

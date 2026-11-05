@@ -1,6 +1,5 @@
 import type { MemosConfig } from './config.js'
 import { request as undiciRequest } from 'undici'
-import { API_PATH_FALLBACK, DEFAULT_API_PATH, REMOVED_V1_HINT } from './config.js'
 
 export interface MemosApiError {
   /** HTTP 状态码 */
@@ -18,50 +17,19 @@ export class MemosClientError extends Error {
   }
 }
 
-/**
- * 是否应该换前缀重试。
- *
- * 只在「用户没显式指定 apiPath」+「当前用的是默认 /api/v1」+「服务端返回 410 且提示 v1 已移除」时为真。
- * 显式配置永不覆盖；404 也不触发（404 可能是资源真的不存在）。
- */
-export function shouldFallbackApiPath(opts: {
-  httpStatus: number
-  message: string
-  apiPath: string
-  apiPathExplicit: boolean
-}): boolean {
-  if (opts.apiPathExplicit) {
-    return false
-  }
-  if (opts.apiPath !== DEFAULT_API_PATH) {
-    return false
-  }
-  if (opts.httpStatus !== 410) {
-    return false
-  }
-  return opts.message.includes(REMOVED_V1_HINT)
-}
-
 export class MemosClient {
   private readonly baseUrl: string
-  private apiPath: string
+  private readonly apiPath: string
   private readonly token?: string
-  private readonly apiPathExplicit: boolean
 
   constructor(config: MemosConfig) {
     this.baseUrl = config.baseUrl
-    this.apiPath = config.apiPath || DEFAULT_API_PATH
-    this.apiPathExplicit = config.apiPathExplicit === true
+    this.apiPath = config.apiPath || '/api/v1'
     this.token = config.token
   }
 
   get origin(): string {
     return this.baseUrl
-  }
-
-  /** 当前生效的 API 前缀（自动降级后会变）。 */
-  get currentApiPath(): string {
-    return this.apiPath
   }
 
   /** 拼接带 API 前缀的路径，入参为 `/memos` 之类的前缀相对路径。 */
@@ -85,40 +53,6 @@ export class MemosClient {
       body?: unknown
     } = {},
   ): Promise<T> {
-    const result = await this.send<T>(method, path, options)
-
-    // 26.10 起 /api/v1 被移除并返回 410；默认前缀下自动换 /api 重试一次
-    if (
-      result.error
-      && shouldFallbackApiPath({
-        httpStatus: result.error.apiError.httpStatus,
-        message: result.error.apiError.message,
-        apiPath: this.apiPath,
-        apiPathExplicit: this.apiPathExplicit,
-      })
-    ) {
-      this.apiPath = API_PATH_FALLBACK
-      const retried = await this.send<T>(method, path, options)
-      if (retried.error) {
-        throw retried.error
-      }
-      return retried.data as T
-    }
-
-    if (result.error) {
-      throw result.error
-    }
-    return result.data as T
-  }
-
-  private async send<T>(
-    method: string,
-    path: string,
-    options: {
-      query?: Record<string, string | number | boolean | undefined>
-      body?: unknown
-    },
-  ): Promise<{ data?: T, error?: MemosClientError }> {
     const url = this.url(path, options.query)
 
     const headers: Record<string, string> = {
@@ -140,12 +74,10 @@ export class MemosClient {
       })
     }
     catch (error) {
-      return {
-        error: new MemosClientError({
-          httpStatus: 0,
-          message: `请求失败: ${error instanceof Error ? error.message : '未知错误'}`,
-        }),
-      }
+      throw new MemosClientError({
+        httpStatus: 0,
+        message: `请求失败: ${error instanceof Error ? error.message : '未知错误'}`,
+      })
     }
 
     const text = await response.body.text()
@@ -153,19 +85,17 @@ export class MemosClient {
     const httpStatus = response.statusCode
 
     if (httpStatus >= 200 && httpStatus < 300) {
-      return { data: (payload ?? {}) as T }
+      return (payload ?? {}) as T
     }
 
     // gRPC-gateway 错误体：{ code, message, details }
     const status = payload as { code?: number, message?: string, details?: unknown[] } | undefined
-    return {
-      error: new MemosClientError({
-        httpStatus,
-        code: typeof status?.code === 'number' ? status.code : undefined,
-        message: status?.message || text.slice(0, 500) || `HTTP ${httpStatus}`,
-        details: status?.details,
-      }),
-    }
+    throw new MemosClientError({
+      httpStatus,
+      code: typeof status?.code === 'number' ? status.code : undefined,
+      message: status?.message || text.slice(0, 500) || `HTTP ${httpStatus}`,
+      details: status?.details,
+    })
   }
 
   get<T = unknown>(path: string, query?: Record<string, string | number | boolean | undefined>): Promise<T> {
