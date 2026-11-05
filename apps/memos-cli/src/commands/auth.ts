@@ -208,17 +208,25 @@ export function registerAuthCommand(program: Command): void {
   auth
     .command('status')
     .description('查看当前登录状态')
-    .action(async () => {
+    .action(async (_options, cmd: Command) => {
       const fileConfig = loadConfig()
-      const config = resolveConfig({})
+      const opts = cmd.optsWithGlobals() as { baseUrl?: string, token?: string, apiPath?: string }
+      // 和其他命令一样尊重全局选项：--base-url / --token / --api-path
+      const config = resolveConfig({
+        baseUrl: opts.baseUrl,
+        token: opts.token,
+        apiPath: opts.apiPath,
+      })
+      const client = createClient(config)
       try {
-        const me = await createClient(config).get<{ user?: { username?: string, displayName?: string, role?: string } }>('/auth/me')
+        const me = await client.get<{ user?: { username?: string, displayName?: string, role?: string } }>('/auth/me')
         printSuccess(
           {
             loggedIn: true,
             source: fileConfig ? 'config' : 'env',
             baseUrl: config.baseUrl,
-            apiPath: config.apiPath,
+            // 自动降级前缀后这里显示实际生效值，而不是配置值
+            apiPath: client.currentApiPath,
             user: me?.user ?? null,
           },
           'auth.status',

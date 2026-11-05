@@ -23,7 +23,7 @@ program
   .version(version)
   .option('--base-url <url>', 'Memos 服务地址（或 env: MEMOS_BASE_URL）')
   .option('--token <token>', '访问令牌（或 env: MEMOS_ACCESS_TOKEN）')
-  .option('--api-path <path>', 'API 路径前缀，默认 /api/v1；v0.32+ 用 /api（或 env: MEMOS_API_PATH）')
+  .option('--api-path <path>', 'API 路径前缀，默认 /api/v1；26.10+ 用 /api（或 env: MEMOS_API_PATH）。省略时遇到 410 会自动降级')
   .option('--pretty', '美化 JSON 输出')
   .hook('preAction', (thisCommand) => {
     const opts = thisCommand.opts()
