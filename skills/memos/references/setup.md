@@ -131,3 +131,23 @@ node apps/memos-cli/dist/cli.js me get
 - 失败：stderr 输出 `{ "success": false, "message": "...", "code": <gRPC状态码>, "httpStatus": <HTTP状态码> }`，退出码非 0。
 
 常见 `code`：`3` INVALID_ARGUMENT、`5` NOT_FOUND、`7` PERMISSION_DENIED、`16` UNAUTHENTICATED。
+
+## 配置文件加密（2.4.0+）
+
+`~/.memos/config.json` 中的**凭证字段加密存储**，`baseUrl` 等非敏感字段保持明文。
+**环境变量（`MEMOS_BASE_URL` / `MEMOS_ACCESS_TOKEN`）始终是明文**，不参与加解密。
+
+- 算法：混合加密 —— RSA-3072-OAEP(SHA-256) 包裹 AES-256-GCM 数据密钥，密文以 `enc:v1:` 前缀标识
+- 公钥 `~/.memos/public.pem` 明文存放（公钥泄露无风险），私钥优先存**系统钥匙串**
+  （macOS `security` / Linux `secret-tool`），不可用时降级为 `~/.memos/private.pem`（权限 600）
+- 旧版明文配置会在首次读取时**自动迁移**为密文，无需手动操作
+- 私钥丢失会导致解密失败并明确报错，此时重新执行 `memos-cli auth login` 即可重建
+
+### 关于 macOS 钥匙串
+
+- **非交互环境（CI、SSH、沙箱、管道）不会调用钥匙串**，直接走文件降级，
+  避免出现 `User interaction is not allowed` 或系统授权弹窗阻塞进程
+- 可用 `MEMOS_CLI_NO_KEYCHAIN=1` 强制走文件降级
+- 交互式终端首次访问钥匙串可能要求一次授权，除非给条目配置了 partition list
+  （`security set-generic-password-partition-list -S "apple-tool:,apple:"`）。这是 macOS 的设计，不是 CLI 缺陷
+- `~/.memos/keymeta.json` 记录实际使用的存储方式（`keychain` 或 `file`），便于排查

@@ -8,7 +8,7 @@ description: >-
   当用户提到 memos、笔记、随手记、时间线、标签检索、给笔记评论、上传附件、分享笔记时使用。
 metadata:
   author: Tnnevol
-  version: "2.3.0"
+  version: "2.4.0"
 ---
 
 # SKILL: memos

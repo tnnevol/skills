@@ -4,7 +4,7 @@ skills/openlist 的参考文件以本仓库 `apps/openlist-cli` 的真实命令�
 （经真实服务端核验，见 `references/pitfalls.md`），不提炼自上游文档仓库。
 
 - **Source:** `apps/openlist-cli`（本仓库应用）+ 上游单点引用
-- **Skill version:** `1.3.0`
+- **Skill version:** `1.4.0`
 - **Synced:** 2026-11-05
 
 ## v1.3.0 记录（2026-11-05）：补齐 v4.2.9 新增 API
@@ -38,6 +38,19 @@ skills/openlist 的参考文件以本仓库 `apps/openlist-cli` 的真实命令�
 
 `client.get` 增加 query 参数、`client.post` 增加 headers 与 query 参数，
 统一由 `buildQueryPath` 拼接（跳过 undefined/null/空串，数组展开为重复键）。
+
+## v1.4.0 记录（2026-11-06）：配置文件凭证加密
+
+`~/.openlist/config.json` 的 `token` 字段改为加密存储，`baseUrl` 保持明文；环境变量仍为明文。
+
+- 混合加密：RSA-3072-OAEP(SHA-256) 包裹 AES-256-GCM DEK，密文前缀 `enc:v1:`
+- 公钥 `public.pem` 明文；私钥优先进系统钥匙串，不可用时降级 `private.pem`（600）
+- 旧明文配置首次读取时自动迁移；私钥缺失时明确报错而非静默降级
+- **钥匙串 TTY 门控**：非交互环境（CI/SSH/沙箱/管道）不调用 `security`，
+  避免 `User interaction is not allowed` 与系统弹窗阻塞；可用 `OPENLIST_CLI_NO_KEYCHAIN=1` 强制降级
+- 配置路径改为惰性求值（`configDir()`），便于测试隔离
+
+实测：9 条加密单测全过（加解密往返、超长 Token、篡改检测、私钥不匹配、落盘字段范围）。
 
 ## 技能自带文件
 

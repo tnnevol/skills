@@ -4,8 +4,21 @@ skills/memos 的参考文件以本仓库 `apps/memos-cli` 的真实命令行为�
 （经真实实例 v0.31.0 核验，见 `references/pitfalls.md`），不提炼自上游文档仓库。
 
 - **Source:** `apps/memos-cli`（本仓库应用）+ 上游 OpenAPI 单点引用
-- **Skill version:** `2.3.0`
+- **Skill version:** `2.4.0`
 - **Synced:** 2026-11-05
+
+## v2.4.0 记录（2026-11-06）：配置文件凭证加密
+
+`~/.memos/config.json` 的 `token` 字段改为加密存储，`baseUrl` 与 `apiPath` 保持明文；环境变量仍为明文。
+
+实现与 openlist-cli 一致（各 CLI 独立发包，因此各自内置一份）：
+
+- 混合加密 RSA-3072-OAEP(SHA-256) + AES-256-GCM，密文前缀 `enc:v1:`
+- 私钥优先进系统钥匙串，不可用时降级 `~/.memos/private.pem`（600）
+- 旧明文配置自动迁移；非交互环境不调用钥匙串（避免弹窗阻塞）
+- 可用 `MEMOS_CLI_NO_KEYCHAIN=1` 强制文件降级
+
+实测：8 条加密单测全过。
 
 ## 技能自带文件
 
