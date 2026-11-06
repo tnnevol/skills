@@ -11,6 +11,8 @@ logs
 node_modules
 temp
 .env
+.env.*
+*.env.backup.*
 -e
 target/
 node_modules/
