@@ -2,8 +2,8 @@
 spec:
   id: SPEC-SKILLHUB-PUBLISH
   status: active
-  version: 1.0.0
-  updated: "2026-11-05"
+  version: 1.1.0
+  updated: "2026-11-06"
   scope: skills/* 发布到 SkillHub 社区源（api.skillhub.cn）
 ---
 
@@ -64,6 +64,11 @@ spec:
 
 ## 4. 强制规则
 
+**R0｜未经用户明确申明，禁止发布（最高优先级）。** 本规范只在**用户于当前对话中明确要求发布**后生效。
+未获授权时，自动化流程最远只做到「提交 + 推送」，不得执行 `skillhub publish` / `npm publish`，
+也不得以「版本已 bump」「内容已改完」「测试已通过」「规范要求回写版本表」为由自行发布。
+授权仅当次有效，下一次发布需用户重新申明。
+
 **R1｜内容变了必须 bump 版本。** 同 `slug` + 同 `version` 的发布覆盖线上同版本内容，
 历史版本失去可复现性。（2026-11-05 的 openlist、vitepress-mermaid-renderer 就曾改内容不 bump。）
 
@@ -93,6 +98,8 @@ spec:
 因此 `GENERATION.md` 也会随包上线。
 
 ## 5. 验收判据（Definition of Done）
+
+> 前置条件：已获得 R0 要求的用户发布授权。
 
 一次「发布完成」必须同时满足：
 
@@ -143,3 +150,4 @@ diff -rq "$tmp/x" "skills/$dir"
 | 版本 | 日期 | 变更 |
 |---|---|---|
 | 1.0.0 | 2026-11-05 | 首次发布：状态机、R1～R10、AC1～AC5、误判对照表 |
+| 1.1.0 | 2026-11-06 | 新增 R0：未经用户明确申明禁止发布（最高优先级） |

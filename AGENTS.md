@@ -125,9 +125,18 @@ Brief description of what this skill covers.
 3. 章节数/菜单结构变化时，人工核对 `SKILL.md` 的索引描述
 4. 更新 `GENERATION.md` 的 Synced 与 `SKILL.md` 的版本号，一并提交
 
+### 发布需用户明确授权（强制，最高优先级）
+
+**未经用户在当前对话中明确申明，禁止主动发布**：不执行 `skillhub publish`、`npm publish`、
+`npm version` 触发的自动发布，也不得用「版本已 bump」「内容已改完」「测试已通过」等理由自行发布。
+改完内容、跑完验证后，**停在提交/推送，把发布交给用户决定**。
+
+- 授权只对当次有效：用户说「发布」才发，发完即失效，下一次仍需重新申明。
+- 用户授权发布时，可按下方流程执行；未授权时最远只做到「提交 + 推送」。
+
 ### 发布与验收（强制）
 
-技能内容改动后发布到 SkillHub，必须遵循 [SPEC-SKILLHUB-PUBLISH](docs/guide/specs/skillhub-publish.md)：
+**仅当用户在对话中明确要求发布后**，按 [SPEC-SKILLHUB-PUBLISH](docs/guide/specs/skillhub-publish.md) 执行：
 
 1. 内容变了就 bump `metadata.version`（SemVer），禁止用同版本号覆盖线上内容
 2. `skillhub publish skills/<dir> --dry-run` 预检
