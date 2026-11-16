@@ -1,5 +1,7 @@
 import {
+  accessSync,
   chmodSync,
+  constants,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -46,6 +48,17 @@ const SECRET_FIELDS = ['token'] as const
  * - 密文格式：用私钥解密；私钥丢失/缺失时**返回 null 并提示**，
  *   不返回半成品配置，避免把密文当明文用。
  */
+/** 配置目录是否可写。不可写（只读挂载/受限沙箱）时跳过自动迁移且不告警。 */
+function isConfigDirWritable(): boolean {
+  try {
+    accessSync(configDir(), constants.W_OK)
+    return true
+  }
+  catch {
+    return false
+  }
+}
+
 export function loadConfig(): OpenListConfig | null {
   if (!existsSync(configFile())) {
     return null
@@ -66,17 +79,26 @@ export function loadConfig(): OpenListConfig | null {
 
   // 全是明文（升级前写入的旧格式）：先按明文用，同时尝试迁移为加密格式
   const config = raw as unknown as OpenListConfig
-  try {
-    saveConfig(config)
-  }
-  catch (error) {
-    // 迁移失败不阻塞使用，但要留痕：多半是目录不可写或密钥生成失败
-    console.error(
-      `warn: 配置迁移为加密格式失败（本次仍按明文读取）：${error instanceof Error ? error.message : String(error)}`,
-    )
+  // 目录不可写（只读挂载、受限沙箱）时静默保持明文：
+  // 这是环境限制而非用户需要处理的问题，反复刷告警只会污染 stderr。
+  if (isConfigDirWritable()) {
+    try {
+      saveConfig(config)
+    }
+    catch (error) {
+      console.error(
+        `warn: 配置迁移为加密格式失败（本次仍按明文读取）：${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
   }
   return config
 }
+
+/**
+ * 解密失败时置为 true，供 resolveConfig 区分
+ * 「没有配置文件」与「有配置但解不开」，避免给出误导性的补配置提示。
+ */
+let configDecryptFailed = false
 
 function decryptConfig(raw: Record<string, unknown>): OpenListConfig | null {
   const paths = defaultCryptoPaths(configDir())
@@ -89,6 +111,7 @@ function decryptConfig(raw: Record<string, unknown>): OpenListConfig | null {
       continue
 
     if (!privateKeyPem) {
+      configDecryptFailed = true
       console.error(
         `Error: 配置文件中的 \`${field}\` 已加密，但本机找不到解密私钥（钥匙串或 ${paths.privateKeyFile}）。\n`
         + '请重新执行 `openlist-cli auth login` 以重建密钥与配置。',
@@ -100,6 +123,7 @@ function decryptConfig(raw: Record<string, unknown>): OpenListConfig | null {
       result[field] = decryptSecret(value, privateKeyPem)
     }
     catch {
+      configDecryptFailed = true
       console.error(
         `Error: 解密配置项 \`${field}\` 失败（私钥不匹配或密文损坏）。\n`
         + '请重新执行 `openlist-cli auth login` 以重建密钥与配置。',
@@ -150,7 +174,10 @@ export function resolveConfig(options: {
   baseUrl?: string
   token?: string
 }): OpenListConfig {
-  const fileConfig = loadConfig()
+  // 只有 CLI 选项与环境变量都没提供时才读配置文件：
+  // 既避免无谓的磁盘/钥匙串访问，也避免在只读环境下刷迁移告警。
+  const needsFile = !(options.baseUrl || env.OPENLIST_BASE_URL) || !(options.token || env.OPENLIST_TOKEN)
+  const fileConfig = needsFile ? loadConfig() : null
 
   const baseUrl
     = options.baseUrl
@@ -162,9 +189,12 @@ export function resolveConfig(options: {
     = options.token || env.OPENLIST_TOKEN || fileConfig?.token || ''
 
   if (!baseUrl) {
-    console.error(
-      'Error: OpenList 服务地址未配置。请使用 --base-url 选项或设置 OPENLIST_BASE_URL 环境变量，或运行 `openlist-cli auth login` 进行配置。',
-    )
+    // 已因解密失败报过错，不要再用「未配置」掩盖真实原因
+    if (!configDecryptFailed) {
+      console.error(
+        'Error: OpenList 服务地址未配置。请使用 --base-url 选项或设置 OPENLIST_BASE_URL 环境变量，或运行 `openlist-cli auth login` 进行配置。',
+      )
+    }
     exit(1)
   }
 

@@ -1,4 +1,4 @@
-import { chmodSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
+import { accessSync, chmodSync, constants, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { env, exit } from 'node:process'
@@ -44,6 +44,17 @@ const SECRET_FIELDS = ['token'] as const
  * - 明文旧格式（升级前写入）：照常返回，并自动迁移为加密格式。
  * - 密文格式：用私钥解密；私钥丢失/缺失时返回 null 并提示，不把密文当明文用。
  */
+/** 配置目录是否可写。不可写（只读挂载/受限沙箱）时跳过自动迁移且不告警。 */
+function isConfigDirWritable(): boolean {
+  try {
+    accessSync(configDir(), constants.W_OK)
+    return true
+  }
+  catch {
+    return false
+  }
+}
+
 export function loadConfig(): MemosConfig | null {
   if (!existsSync(configFile())) {
     return null
@@ -63,17 +74,23 @@ export function loadConfig(): MemosConfig | null {
 
   // 明文旧格式：先按明文用，同时尝试迁移为加密格式
   const config = raw as unknown as MemosConfig
-  try {
-    saveConfig(config)
-  }
-  catch (error) {
-    // 迁移失败不阻塞使用，但要留痕：多半是目录不可写或密钥生成失败
-    console.error(
-      `warn: 配置迁移为加密格式失败（本次仍按明文读取）：${error instanceof Error ? error.message : String(error)}`,
-    )
+  // 目录不可写（只读挂载、受限沙箱）时静默保持明文：
+  // 这是环境限制而非用户需要处理的问题，反复刷告警只会污染 stderr。
+  if (isConfigDirWritable()) {
+    try {
+      saveConfig(config)
+    }
+    catch (error) {
+      console.error(
+        `warn: 配置迁移为加密格式失败（本次仍按明文读取）：${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
   }
   return config
 }
+
+/** 解密失败标记，避免叠加误导性的「未配置」提示。 */
+let configDecryptFailed = false
 
 function decryptConfig(raw: Record<string, unknown>): MemosConfig | null {
   const paths = defaultCryptoPaths(configDir())
@@ -86,6 +103,7 @@ function decryptConfig(raw: Record<string, unknown>): MemosConfig | null {
       continue
 
     if (!privateKeyPem) {
+      configDecryptFailed = true
       console.error(JSON.stringify({
         success: false,
         message: `配置文件中的 \`${field}\` 已加密，但本机找不到解密私钥（钥匙串或 ${paths.privateKeyFile}）。请重新执行 \`memos-cli auth login\`。`,
@@ -97,6 +115,7 @@ function decryptConfig(raw: Record<string, unknown>): MemosConfig | null {
       result[field] = decryptSecret(value, privateKeyPem)
     }
     catch {
+      configDecryptFailed = true
       console.error(JSON.stringify({
         success: false,
         message: `解密配置项 \`${field}\` 失败（私钥不匹配或密文损坏）。请重新执行 \`memos-cli auth login\`。`,
@@ -159,7 +178,9 @@ export function resolveConfig(options: {
   token?: string
   apiPath?: string
 }): MemosConfig {
-  const fileConfig = loadConfig()
+  // 只有 CLI 选项与环境变量都没提供时才读配置文件（同上）
+  const needsFile = !(options.baseUrl || env.MEMOS_BASE_URL) || !(options.token || env.MEMOS_ACCESS_TOKEN) || !options.apiPath
+  const fileConfig = needsFile ? loadConfig() : null
 
   const baseUrl = (options.baseUrl || env.MEMOS_BASE_URL || fileConfig?.baseUrl || '')
     .trim()
@@ -168,12 +189,14 @@ export function resolveConfig(options: {
   const apiPath = normalizeApiPath(options.apiPath || env.MEMOS_API_PATH || fileConfig?.apiPath)
 
   if (!baseUrl) {
-    console.error(
-      JSON.stringify({
-        success: false,
-        message: 'Memos 服务地址未配置。请使用 --base-url 选项或设置 MEMOS_BASE_URL 环境变量，或运行 `memos-cli auth login` 进行配置。',
-      }),
-    )
+    if (!configDecryptFailed) {
+      console.error(
+        JSON.stringify({
+          success: false,
+          message: 'Memos 服务地址未配置。请使用 --base-url 选项或设置 MEMOS_BASE_URL 环境变量，或运行 `memos-cli auth login` 进行配置。',
+        }),
+      )
+    }
     exit(1)
   }
 
