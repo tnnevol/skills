@@ -93,7 +93,7 @@ done
 | 目录 | 线上 slug | 线上版本 | 仓库版本 |
 |------|-----------|----------|----------|
 | chandao | `chandao` | 1.0.2 | 1.0.2 |
-| dsh | `dsh` | 1.3.0 | 1.3.0 |
+| dsh | `dsh` | 1.4.0 | 1.4.0 |
 | fnnas-docs | `fnnas-docs` | 1.1.4 | 1.1.4 |
 | halo | `tnnevol-halo` | 1.0.2 | 1.0.2 |
 | memos | `tnnevol-memos` | 2.4.0 | 2.4.0 |
@@ -102,11 +102,14 @@ done
 | vitepress-mermaid-renderer | `vitepress-mermaid-renderer` | 1.0.1 | 1.0.1 |
 | yonyou-doc | `yonyou-doc` | 1.0.1 | 1.0.1 |
 
-> 这张表在 2026-11-06 更新为 `openlist@1.4.0` / `tnnevol-memos@2.4.0` 发布后的版本。
+> 这张表在 2026-11-18 更新：`openlist@1.4.0` 与 `tnnevol-memos@2.4.0`（配置文件凭证加密）
+> 已核实通过审核并生效；`dsh@1.4.0`（同步 dsh-v0.2.2-rc.4）已于当日提交、CDN 已有包，
+> 当时仍在审核队列中，过审后无需再改本表。
 > 改动技能后以 `SKILL.md` 的 `version` 为准，发布成功后回来更新「线上版本」列。
 >
 > 注意：新版本提交后会进入平台审核队列（S2），审核通过才出现在
-> `/api/v1/skills/<slug>/versions` 与 `latestVersion` 中。审核期间版本列表暂时仍是旧值，
+> `/api/v1/skills/<slug>/versions` 与 `latestVersion` 中；实测这次三个技能从提交到
+> `latestVersion` 生效约 15 分钟到 2 小时不等。审核期间版本列表仍是旧值，
 > 判定是否「已上线」请以 `latestVersion` 为准，不要以 CDN 直链 200 或发布回执为准。
 
 halo 和 memos 的线上 slug 带 `tnnevol-` 前缀，这是当时发上去定的，改 slug 等于换一份，别动。
