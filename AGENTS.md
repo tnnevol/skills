@@ -91,7 +91,7 @@ Brief description of what this skill covers.
 
 | 子模块 | 上游 | 锁定 | sparse 范围 | 技能 |
 | ------ | ---- | ---- | ----------- | ---- |
-| `sources/dsh` | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) | `dsh-v0.2.2-rc.1` | `docs/` | [skills/dsh](skills/dsh) |
+| `sources/dsh` | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) | `dsh-v0.2.2-rc.4` | `docs/` | [skills/dsh](skills/dsh) |
 | `sources/vitepress-mermaid-renderer` | [sametcn99/vitepress-mermaid-renderer](https://github.com/sametcn99/vitepress-mermaid-renderer) | `v1.2.3` | `docs/content/zh/` | [skills/vitepress-mermaid-renderer](skills/vitepress-mermaid-renderer) |
 | `sources/midscenejs` | [web-infra-dev/midscene](https://github.com/web-infra-dev/midscene) | `v1.17.5` | `apps/site/docs/zh/` | [skills/midscenejs](skills/midscenejs) |
 

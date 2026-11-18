@@ -4,11 +4,39 @@ skills/dsh 的参考文件依据 `sources/dsh`（deepseek-ai/deepseek-harness �
 sparse 检出 `docs/`）的快照手工提炼维护，不复制原文。
 
 - **Source:** `sources/dsh`
-- **Pinned tag:** `dsh-v0.2.2-rc.1`
-- **Git SHA:** `66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db`
-- **Synced:** 2026-11-05
-- **Skill version:** `1.3.0`
+- **Pinned tag:** `dsh-v0.2.2-rc.4`
+- **Git SHA:** `3f321d32bfe382212a8ed8785c1d47a5a300aa23`
+- **Synced:** 2026-11-18
+- **Skill version:** `1.4.0`
 - **语言范围:** 仅简体中文（`*.zh.md`）。上游英文页与 `.i18n.yaml` 配对文件不纳入本技能。
+
+## v0.2.2-rc.4 同步记录（2026-11-18）
+
+从 `dsh-v0.2.2-rc.1` 同步到 `dsh-v0.2.2-rc.4`。`docs/` 下中文页 99 个文件、+3317 / −474，
+新增 60+ 个升级指南与 2 个新页面。
+
+### 已纳入技能
+
+| 变更 | 影响面 | 落点 |
+| --- | --- | --- |
+| **模型协议增至四种**：新增 `google-generative-ai`（Gemini API） | 用户配置 | `SKILL.md`、`references/cli.md`、`references/docs-map.md` |
+| **Office 提供方改名**：`dsh-office-to-pdf` → `dsh-office-kit`，`ctx.officeToPdf` → `ctx.officeKit`，服务支持渲染/转换/重算 | 扩展开发 | `references/architecture.md`、`references/docs-map.md` |
+| **Agent Teams 重构**：从「实验性 roster + 邮箱」改为「子代理树共享任务 DAG」，包名去掉 `experimental-`，按根 Session 开关 | 扩展开发、用户 | `SKILL.md`、`references/architecture.md`、`references/extension.md`、`references/cli.md`、`references/docs-map.md` |
+| **`interrupt_agent` 默认关闭**：base 与 standard/cordis/ptc preset 设 `config.interrupt: false` | 用户排错、扩展开发 | `SKILL.md`、`references/extension.md` |
+| **`LlmError` 构造 code 收窄为 `BuiltinLlmFailureCode`**，自定义 code 需用 `LlmError.fromFailure` | 扩展开发 | `references/extension.md` |
+| **Web 搜索默认提供方改为 `deepseek-search-api`**，Exa/Perplexity 移除 | 用户 | `references/docs-map.md` |
+| **新增桌面端卸载指南** | 用户 | `references/docs-map.md` |
+
+### 有意未纳入
+
+- `docs/upgrade-guide/` 下的逐版本迁移细节（60+ 页）：技能定位是使用与扩展指南，不复制逐版本迁移清单；需要时按 `docs-map.md` 指引读源文档。
+- `docs/persistence-changes/` 的格式变更记录：与技能既有「会话格式 V4 + 相邻迁移链」结论一致，无需展开。
+- `plugin-market` 索引格式的字段级调整：属实现细节，技能只保留用户可见的安装路径。
+
+### 发现与修正
+
+- 原文 `references/architecture.md` 把 Agent Teams 记为「公开发布但仍属实验性」、工具包 9 个工具、`spawnTeammate`/`sendMessage` 属 `ctx.agentTeams`——rc.2 起已全部变化：包转正、只剩 4 个任务板工具、成员能力归 `tool-subagent-control`。
+- `references/extension.md` 曾建议「不支持的生成字段抛出带稳定错误码的 LlmError」，但构造函数已不收自定义 code，补上 `fromFailure` 写法。
 
 ## v0.2.2-rc.1 同步记录（2026-11-05）
 

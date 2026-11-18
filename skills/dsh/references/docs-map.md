@@ -1,6 +1,6 @@
 # 文档索引
 
-本技能不把生成型 API 目录和全部教程机械复制进 SKILL.md，而是把稳定规则提炼到参考文件，并保留官方文档索引。本索引按源项目 `0.2.2-rc.1` 整理。需要当前实现、完整类型声明或精确配置字段时，读取本地 deepseek-harness/docs 的中文文件；没有本地检出时使用下列线上文档页面。
+本技能不把生成型 API 目录和全部教程机械复制进 SKILL.md，而是把稳定规则提炼到参考文件，并保留官方文档索引。本索引按源项目 `0.2.2-rc.4` 整理。需要当前实现、完整类型声明或精确配置字段时，读取本地 deepseek-harness/docs 的中文文件；没有本地检出时使用下列线上文档页面。
 
 ## 按任务查找
 
@@ -17,8 +17,10 @@
 | 了解服务、提供方和使用方 | [能力服务](https://deepseek-harness.github.io/deepseek-harness/reference/capability-seams) | 能力 seam 和依赖图 |
 | 从第三方插件索引安装组合包 | 本技能 [用户指南](user-guide.md)；[线上插件索引](https://deepseek-harness.github.io/deepseek-harness/guide/plugin-market) | 实验性「自定义插件索引」bundle（0.2.2 前叫插件市场）、JSON 索引源、确认安装与索引发布 |
 | 把 Web UI 发布到反向代理后 | 本技能 [用户指南](user-guide.md)；[线上对外部署](https://deepseek-harness.github.io/deepseek-harness/guide/public-deployments) | `--public-url`、`--trusted-host`、`--tls-cert`/`--tls-key`、挂载前缀剥离与 cookie 作用域 |
+| 卸载桌面端并清理本地数据 | [卸载 DSH 桌面端](https://deepseek-harness.github.io/deepseek-harness/guide/desktop-uninstall-cleanup) | 先移除 Desktop 注册的 `dsh` 命令，再删应用；可选清理脚本覆盖 `~/.dsh`、日志、缓存和 updater 目录，设置过 `DSH_HOME` 时需单独检查 |
+| 理解 Web 搜索的默认行为 | 本地源项目 `docs/upgrade-guide/v0.2.2-alpha.2/web-search-default-provider/guide.zh.md`、`docs/upgrade-guide/v0.2.1-rc.3/web-search-defaults/guide.zh.md` | 默认提供方为 `deepseek-search-api`（不再走 Messages 模型调用），Exa/Perplexity 已移除；一次调用默认 10 查询、10 来源，`sendOriginalQuestion` 控制是否发送问题前缀 |
 | 配置出站网络代理 | [网络代理指南](https://deepseek-harness.github.io/deepseek-harness/guide/network-proxy) | `HTTP_PROXY`、`HTTPS_PROXY`、`NO_PROXY`、企业 CA、直连范围和验证方法 |
-| 配置模型与自定义提供方 | [模型配置](https://deepseek-harness.github.io/deepseek-harness/guide/providers) | 内置和自定义提供方、三种协议、模型目录探测、推理等级、图片能力与 `settings.yaml` |
+| 配置模型与自定义提供方 | [模型配置](https://deepseek-harness.github.io/deepseek-harness/guide/providers) | 内置和自定义提供方、四种协议、模型目录探测、推理等级、图片能力与 `settings.yaml` |
 | 使用 Python SDK | [Python SDK](https://deepseek-harness.github.io/deepseek-harness/guide/python-sdk) | SDK 安装、`sdk`/`sdk-minimal`、工作区、home、会话和显式启用编辑器 |
 | 通过 GitHub Webhook 创建评审会话 | [GitHub 评审会话](https://deepseek-harness.github.io/deepseek-harness/guide/github-review) | 可选 overlay、签名校验、只读评审 Session 和专用端点 |
 | 安排会话内提醒 | [会话内提醒](https://deepseek-harness.github.io/deepseek-harness/guide/schedule)、本技能 [用户指南](user-guide.md) | 可选「自动化任务」bundle、`schedule_create/list/view/edit` 四工具（0.2.2 改名）、RFC 5545 重复规则与三种投递目标；Schedule 行已从 Web 组合移除 |
@@ -38,7 +40,7 @@
 | 请求用户回答 | [用户交互](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/user-questions) | `ctx.userQuestions`、作用域 answerer、计时问题与迟到回复、计划审阅意图和运行时根权限 |
 | 使用宿主级 Schedule | [定时提醒](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/schedule) | 重复规则（RFC 5545）、三种投递目标、暂停/恢复/立即执行和发送记录保留；由可选 bundle 插入，随发行版 Web 组合不再包含 |
 | 使用 MCP 资源 | 本地源项目 `docs/subsystems/mcp.zh.md`、`packages/mcp/mcp-resources/README.zh.md` | MCP 工具与资源的连接、作用域和配置；默认服务器仍不自动启用 |
-| 预览 Office 文档 | 本地源项目 `docs/subsystems/office-to-pdf.zh.md`、`packages/document/office-to-pdf/README.zh.md` | 有界 Office 转 PDF、原生/WASM 引擎和 Web 预览 |
+| 预览 Office 文档 | 本地源项目 `docs/subsystems/office-kit.zh.md`、`packages/document/office-kit/README.zh.md` | 有界 Office 渲染/转换/重算（`officeKit` 服务）、原生/WASM 引擎与 Web 预览 |
 | 使用语音输入 | 本地源项目 `docs/subsystems/voice-input.zh.md`、`packages/experimental/voice-input-bundle/README.zh.md` | 实验性语音识别、准备状态、临时音频和草稿插入 |
 | 使用 DeepSeek 账号模型 | 本地源项目 `packages/credentials/deepseek-account/README.zh.md`、`packages/llm/llm-deepseek-account/README.zh.md` | 账号授权、账号模型路由和凭据生命周期；默认 profile 是否挂载需以当前组合为准 |
 | 使用会话持久化 | [会话持久化](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/persistence) | `ctx.sessionPersistence`、`SessionHandle`、JSONL 提供方、刷盘和单写者约束 |
@@ -57,7 +59,7 @@
 | 使用客户端资源和右侧 Sidebar | [客户端资源](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/client-resources)、[右侧 Sidebar](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/sidebar-right) | `dsh-resource://`、资源订阅、tab 导航、文件预览和面板组合 |
 | 使用 `@file` 文件引用 | [会话引用](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/session-reference)，本地源项目 `packages/context/file-reference/README.zh.md`、`packages/context/file-reference-local/README.zh.md` | 仅含路径的补全、命名空间匹配和 `read` 工具衔接；当前线上文档清单未发布包页 |
 | 使用子代理和后台任务 | [子代理](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/subagent)、[后台任务](https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/jobs) | 一次性子代理、可继续激活、能力检查和任务生命周期 |
-| 使用实验性智能体团队 | 本地源项目 `docs/subsystems/agent-team.zh.md`、`packages/experimental/agent-team/README.zh.md` 和 `packages/experimental/tool-agent-team/README.zh.md` | Lead 会话、成员、持久邮箱、共享任务板、`Steer` 投递和比较并交换；显式安装两个实验性包，当前线上文档清单未单独发布此页 |
+| 使用智能体团队 | 本地源项目 `docs/subsystems/agent-team.zh.md`、`packages/team/agent-team/README.zh.md` 和 `packages/team/tool-agent-team/README.zh.md` | 子代理树共享任务 DAG、按 Session 开关、四个任务板工具与比较并交换；成员协作走 subagent 控制工具 |
 | 导出 Web 会话 | 本地源项目 `packages/session-query/session-log-export/README.zh.md` | `/export`、认证下载路由、会话树和附件 ZIP；当前线上文档清单未发布此页面 |
 | 查看内置智能体模式 | 本地源项目 `apps/cli/config/agent-presets/` 和 `packages/bundle/base/README.zh.md` | 标准、PTC、极简和创造模式的名称、工具集合与提示词；base 默认文件工具为 `read`、`write`、`edit` |
 | 发布和安装插件 | [打包与安装插件](https://deepseek-harness.github.io/deepseek-harness/develop/basic/publish) | dsh.bundle、dsh.profile 和安装顺序 |
@@ -93,9 +95,9 @@ docs/subsystems/ 每个页面负责一个子系统，包含数据结构、服务
 - web-client、slots、client-resources、sidebar-right、conversation：宿主端与客户端架构、资源订阅、右侧面板、类型化槽位和对话组装。
 - session-reference：`@file` 文件引用、会话引用和模型可见路径约定。
 - attachment：持久图片和文件附件、规范化、上传和不透明引用；当前线上文档清单未发布此页面，请读取本地源项目文档。
-- agent-team：实验性成员、邮箱、`Steer` 投递和共享任务板；当前线上文档清单未发布此页面，请读取本地源项目文档。
+- agent-team：子代理树共享任务板、按根 Session 开关与任务归属；成员创建/消息/中断走 subagent 控制工具。
 - settings、credentials、storage、workspace：配置、凭据、非会话存储和工作区。
-- schedule、mcp、office-to-pdf、voice-input：宿主提醒、MCP 资源、Office 预览转换和实验性语音输入。
+- schedule、mcp、office-kit、voice-input：宿主提醒、MCP 资源、Office 渲染/转换/重算和实验性语音输入。
 - forge、liveshare：实验性代码托管变更请求 seam（`ctx.forge` / `ctx.forgeSession` / `ctx.forgePanel`），以及把会话分享给外部 viewer 并对其轮次施加沙箱上限的 LiveShare bundle。
 - otel：共享 OTel 上报通道、普通事件与 Session 日志通道的职责边界。
 - web、web-server、client-modules：网络提供方、HTTP 路由和浏览器插件图。
@@ -109,4 +111,4 @@ docs/config-catalog.zh.md、docs/tool-catalog.zh.md、docs/persistence-catalog.z
 - 中文页面与英文页面成对维护；源项目的生成器和配对检查拥有最终规则。
 - 普通文档写当前状态和操作方法，历史背景放在 postmortem 或 Agent Note，不要混入技能的使用规则。
 - 一个事实只保留一个权威位置；本技能只复制稳定且高频的操作规则，其余通过索引指向源文档。
-- 需要更新本技能时，先更新或拉取 deepseek-harness，再比较本文档中的 CLI 命令、profile 初始化、HMR、配置 schema、插件兼容性、默认工具、Remote 契约、会话格式、会话持久化、文件交付、轮次改动、可选集成和事件顺序。当前技能对应源项目 `0.2.2-rc.1`；版本间破坏性行为优先读 `docs/upgrade-guide/` 下的迁移指南。
+- 需要更新本技能时，先更新或拉取 deepseek-harness，再比较本文档中的 CLI 命令、profile 初始化、HMR、配置 schema、插件兼容性、默认工具、Remote 契约、会话格式、会话持久化、文件交付、轮次改动、可选集成和事件顺序。当前技能对应源项目 `0.2.2-rc.4`；版本间破坏性行为优先读 `docs/upgrade-guide/` 下的迁移指南。

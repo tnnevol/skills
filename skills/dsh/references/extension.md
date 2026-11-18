@@ -134,7 +134,7 @@ export function apply(ctx: Context) {
 - usage 在 finish 之前发出，finish 之后不再发出内容。
 - 工具调用参数以原始 JSON 字符串和 argumentsDelta 分片传递。
 - 按首次出现顺序分配 block index，同一 block 后续分片复用该索引。
-- 传递 options.signal；不支持的生成字段抛出带稳定错误码的 LlmError。
+- 传递 options.signal；不支持的生成字段抛出带稳定错误码的 `LlmError`。`LlmError` 构造函数的 `code` 只接受内置值（`LLM_FAILURE_CODES` 的键或 `HTTP_<status>`）；自定义 code 要用 `LlmError.fromFailure({ message, code, ...facts }, { cause })`，否则 TypeScript 无法编译。重新抛出流中收到的失败时用 `LlmError.fromFailure(finish.failure)`。
 - 不支持的生成选项使用稳定的 `UNSUPPORTED_OPTION` 错误码；模型路由应通过 `resolveModel` 等当前适配器约定解析，不要仅凭 provider 和 model 名称猜测能力。
 - 传输或协议故障抛出异常；提供方带内失败以 finish { kind: 'error' | 'aborted' } 结束，并保持消费方可区分。
 - 后续请求所需的响应 ID、签名等原生状态放入最小可回放的 `finish.replayState`。如果适配器返回 `ReplayEnvelope`，要让 envelope 的 blocks 与已组装的响应 blocks 一一对应，并在裁剪响应时同步裁剪 replay state；不要仅凭 provider 和 model 名称猜测恢复状态。
@@ -223,11 +223,15 @@ export function apply(ctx: Context) {
 
 需要发送产品埋点或 Session 事件时，从 `ctx.otel` 创建独立通道：`createEventReporter(options)` 用 SDK 按条数聚合普通事件，`createSessionLogReporter(options)` 把每条完整事件作为一个记录，未压缩请求不超过 4,000,000 字节。选项显式提供 endpoint、scope、resource attributes、队列设置和诊断回调；header 显式提供，服务不附加 channel header，也不继承环境授权。把通道的 `shutdown(signal)` 注册到调用方 Cordis fiber，并用配置期限约束清空过程；调用方卸载后不得继续保留通道。调用方拥有授权、脱敏和字段选择责任，仅挂载服务不会采集数据。
 
-## 实验性智能体团队
+## 智能体团队
 
-需要多个可继续的成员共享任务板时，显式安装并选择公开发布但仍属实验性的 `@deepseek-ai/dsh-experimental-agent-team` 与 `@deepseek-ai/dsh-experimental-tool-agent-team`。通过 `ctx.agentTeams` 使用 `spawnTeammate`、`sendMessage`、`createTask`、`updateTask`、`waitForChange` 和 `interrupt` 等 API；成员、消息和任务快照由 Lead 会话持久化，任务更新必须携带预期 `revision`，`writeScopes` 只是提示性范围而不是锁。消息发送后统一尝试通过 `Steer` 投递：运行中的成员在最近步骤边界接收，空闲成员被唤醒，非活动成员冷恢复；调用方不能选择 quiet 或 followup 模式，工具包当前提供 9 个工具。创建或中断成员仅允许 Lead，所有恢复、取消和权限错误都应按团队返回的类型处理。
+需要多个可继续的成员共享任务板时，使用随 base 组合提供的 `@deepseek-ai/dsh-agent-team` 与 `@deepseek-ai/dsh-tool-agent-team`（rc.2 起由 experimental 转正，不再需要显式安装）。通过 `ctx.agentTeams` 使用 `createTask`、`getTask`、`listTasks`、`updateTask` 等任务板 API；任务快照由根 Session 持久化，更新必须携带预期 `revision`，`writeScopes` 只是提示性范围而不是锁。
 
-需要在已有的 `dsh-base` profile 中显式添加公开发布的 `@deepseek-ai/dsh-experimental-agent-team-profile`，它负责启用 Team domain 和 Team-scoped 工具；Web 还可以添加 `@deepseek-ai/dsh-experimental-agent-team-web-profile`，以提供 roster、任务板和成员导航。随附的 Web、headless、SDK、ACP 和 Python profile 默认不会启用这些实验性层。
+分工要点：**只有四个任务板工具**属于 Team（`team_task_create` / `team_task_get` / `team_task_list` / `team_task_update`）。成员创建、列举、消息、等待和中断由标准 subagent 控制工具提供（`@deepseek-ai/dsh-tool-subagent-control`：`list_agents`、`send_message`、`wait_agent`、`interrupt_agent`），不受 Team 模式影响。Team 模式只额外增加任务板指导。
+
+**`interrupt_agent` 默认关闭**：base 组合与 Web 的 `standard`/`cordis`/`ptc` preset 为其 `tool-subagent-control` 行设置 `config.interrupt: false`（插件自身默认仍为 `true`）。恢复方式：base 派生 profile 在 `cordis.patch.yml` 追加 `- id: tool-subagent-control` 与 `config: { interrupt: true }`；Web/desktop 必须 patch 对应 `preset-<name>` 声明行的完整 `config`（顶层 patch 到 `tool-subagent-control` 无效）。重启后新建 Session 生效，已有 Session 保留原 preset 修订。消息、发现、收件箱等待和 subagent 服务的中断 API 不受影响。
+
+Team 模式按根 Session 选择（`agentTeam.enabled`，新 Session 默认关闭），后代共享；Web 在模型与推理等级菜单提供开关，`/team on`、`/team off` 已移除。客户端插件消费者把 `TeamActionProps` 换成 `TeamBoardProps`，任务内容注册到 `conversation.session.header.actions.subagent.footer`。
 
 ## Web 客户端对话节点
 

@@ -2,7 +2,7 @@
 
 本文整理 apps/cli/reference/README.zh.md、docs/development.zh.md 和用户指南中的可操作内容。命令、配置键和环境变量保持源项目原名；解释使用中文。
 
-当前源项目版本为 `0.2.2-rc.1`。项目仍处于开发者预览阶段，未来可能包含破坏性变更。源码开发要求 **Node.js 24.9+**（0.2.2 起不再支持 Node.js 22），仓库当前固定使用 `pnpm@11.28.5`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
+当前源项目版本为 `0.2.2-rc.4`。项目仍处于开发者预览阶段，未来可能包含破坏性变更。源码开发要求 **Node.js 24.9+**（0.2.2 起不再支持 Node.js 22），仓库当前固定使用 `pnpm@11.28.5`。执行 `corepack enable` 后使用仓库声明的 pnpm 版本，不要凭全局 pnpm 版本判断兼容性。
 
 ## 运行方式
 
@@ -182,7 +182,7 @@ dsh web --no-open
 
 Web 的文件预览通过 `workspaceFiles` 按 Session 身份读取：`read` 提供有界 UTF-8 行窗口，`readBytes` 提供有界原始字节窗口，`readAll` 与 `readRelated` 提供受限完整读取，`list` 与 `changes` 只作用于 Session 工作区。不要把宿主路径直接交给浏览器绕过 Session 授权。
 
-随发行版 Web 组合不再包含 `schedule`、`ui-schedule` 和 `time-context` 配置行；它们由随包可选 bundle「自动化任务」（`@deepseek-ai/dsh-experimental-schedule-bundle`）插入，每次安装都携带该 bundle 且默认关闭。需要提醒功能时，在插件管理页「官方」分组启用「自动化任务」，它会向 profile 的 `dsh.profile.bundles` 追加条目；按 id 写 `disabled: false` 的旧 overlay 已无作用，可删除。随包可选 bundle 还有 `@deepseek-ai/dsh-experimental-agent-team-profile`、`@deepseek-ai/dsh-experimental-voice-input-bundle` 和 `@deepseek-ai/dsh-experimental-auto-review`。当前 Web 还提供用户反馈、插件管理、工作区改动摘要和文件交付卡片。
+随发行版 Web 组合不再包含 `schedule`、`ui-schedule` 和 `time-context` 配置行；它们由随包可选 bundle「自动化任务」（`@deepseek-ai/dsh-experimental-schedule-bundle`）插入，每次安装都携带该 bundle 且默认关闭。需要提醒功能时，在插件管理页「官方」分组启用「自动化任务」，它会向 profile 的 `dsh.profile.bundles` 追加条目；按 id 写 `disabled: false` 的旧 overlay 已无作用，可删除。随包可选 bundle 还有 `@deepseek-ai/dsh-experimental-voice-input-bundle` 和 `@deepseek-ai/dsh-experimental-auto-review`（智能体团队已随 base 组合提供，原 `dsh-experimental-agent-team-profile` 组合选项已退役，加载时会自动移除）。当前 Web 还提供用户反馈、插件管理、工作区改动摘要和文件交付卡片。
 
 ## 凭证与环境
 
@@ -196,7 +196,7 @@ export DEEPSEEK_SEARCH_BASE_URL=https://...
 
 `DEEPSEEK_BASE_URL` 和 `DEEPSEEK_SEARCH_BASE_URL` 可选。搜索和 HTTP fetch 仍会拒绝非公网目标。不要提交真实密钥。
 
-模型配置可以使用已安装提供方目录，也可以在 `$DSH_HOME/settings.yaml` 中声明自定义提供方。协议支持 `openai-completions`、`openai-responses` 和 `anthropic-messages`；一个提供方只使用一种协议。模型目录中的 `models` 列表会整体替换该路由的目录，`modelOverrides` 用于只修改某个已安装模型，`reasoningEfforts`、`input` 和 `compat` 用于声明推理等级、图片能力和网关兼容性。
+模型配置可以使用已安装提供方目录，也可以在 `$DSH_HOME/settings.yaml` 中声明自定义提供方。协议支持 `openai-completions`、`openai-responses`、`anthropic-messages` 和 `google-generative-ai`；一个提供方只使用一种协议，网关同时提供多种时需建多个提供方。Gemini API 的基础 URL 包含 API 版本（如 `https://gateway.example/v1beta`）。模型目录中的 `models` 列表会整体替换该路由的目录，`modelOverrides` 用于只修改某个已安装模型，`reasoningEfforts`、`input` 和 `compat` 用于声明推理等级、图片能力和网关兼容性。
 
 “获取可用模型”只对目录未描述的自定义路由发起网络请求：OpenAI 协议请求带 bearer 鉴权的 `GET {baseURL}/models`，Anthropic 协议请求 `/v1/models?limit=1000`，使用 `x-api-key` 和 `anthropic-version: 2023-06-01`；列表地址会规范化末尾的 `/v1`，模型请求仍使用配置中的原始 `baseURL`。响应可以是标准 `data` 数组或 `models` 对象映射；Anthropic 只读取前 1000 条，不跟随 `has_more`。配置 profile 的 headers 会参与发现，新填写的密钥优先于已存凭据。探测失败时手动填写模型 ID，结果等价。
 

@@ -31,7 +31,7 @@ waterfall 是环绕式中间件。只做观察或标注的监听器必须调用 
 
 基于 `dsh-base` 的 profile 默认使用 `read`、`write` 和 `edit` 文件工具；`str_replace_editor` 需要通过 patch 显式启用。`dsh-sdk-minimal` 不继承 base，只提供按平台选择的持久 shell，并使用未压缩 JSONL 保存会话。
 
-其他常见可选能力包括 `@deepseek-ai/dsh-ptc-runtime`（代码工作工具的执行 seam）、`@deepseek-ai/dsh-tool-present` 与 `@deepseek-ai/dsh-workspace-changes`（交付物与轮次改动摘要）、`@deepseek-ai/dsh-user-questions`（人类问答）、`@deepseek-ai/dsh-mcp-resources`（MCP 资源）、`@deepseek-ai/dsh-office-to-pdf`（Office 预览转换）和 `@deepseek-ai/dsh-deepseek-account`（账号状态与授权）。Schedule 相关的 `@deepseek-ai/dsh-schedule`、`@deepseek-ai/dsh-client-ui-schedule` 和 `@deepseek-ai/dsh-time-context` 已从 Web 组合移除，由随包可选 bundle `@deepseek-ai/dsh-experimental-schedule-bundle` 插入。它们是否生效取决于当前 profile 的 bundle 列表和 patch；包安装存在不代表能力已经挂载。
+其他常见可选能力包括 `@deepseek-ai/dsh-ptc-runtime`（代码工作工具的执行 seam）、`@deepseek-ai/dsh-tool-present` 与 `@deepseek-ai/dsh-workspace-changes`（交付物与轮次改动摘要）、`@deepseek-ai/dsh-user-questions`（人类问答）、`@deepseek-ai/dsh-mcp-resources`（MCP 资源）、`@deepseek-ai/dsh-office-kit`（Office 渲染/转换/重算，取代原 `dsh-office-to-pdf`）和 `@deepseek-ai/dsh-deepseek-account`（账号状态与授权）。Schedule 相关的 `@deepseek-ai/dsh-schedule`、`@deepseek-ai/dsh-client-ui-schedule` 和 `@deepseek-ai/dsh-time-context` 已从 Web 组合移除，由随包可选 bundle `@deepseek-ai/dsh-experimental-schedule-bundle` 插入。它们是否生效取决于当前 profile 的 bundle 列表和 patch；包安装存在不代表能力已经挂载。
 
 配置层按以下顺序生效：组合包列表 → profile 的 cordis.patch.yml → $DSH_HOME/cordis.patch.yml → 命令行 --patch。各层按顺序应用，同一行后应用的层覆盖前层；patch 替换整行 config，不是递归合并。因此修改时要保留依赖注入、!!js 表达式和其他未改动字段。`dsh-hmr` 负责启用配置层的串行重载；未挂载它的 profile 修改后需要重启。
 
@@ -210,11 +210,15 @@ PTC 运行时、MCP 资源、Office 转 PDF、SSH、语音输入、浏览器/计
 
 可继续子代理的模型消息只允许相邻 parent/child 关系：running 目标在最近步骤边界接收，waiting 目标被唤醒，无 Activation 的目标冷恢复后接收。`subagentCatalog` 投影按父会话事件顺序列出直接子级的持久身份、模式和标签，不加载或恢复子代理；一次性子代理不进入可继续列表。中断只取消当前轮次并保留未领取的 inbox，消息接受后的调用方取消不撤销已发布运行。
 
-## 实验性智能体团队（Agent Teams）
+## 智能体团队（Agent Teams）
 
-`ctx.agentTeams` 是公开发布但仍属实验性的协作 seam，由持久化 Lead 会话承载团队 roster、同伴邮箱和共享任务 DAG。成员拥有持久 Session id，消息先写入 Lead 会话再尝试投递；任务每次变更都会递增 `revision`，更新必须使用比较并交换，`writeScopes` 只是提示性路径前缀，不是文件锁。
+Agent Teams 随基于 base 的 profile 提供（不再需要显式安装实验性包），核心是一块由整棵子代理树共享的**任务 DAG**。`ctx.agentTeams` 承载任务板；成员发现、创建、消息和中断已归入标准 subagent 控制能力，不再由 Team 提供。
 
-团队服务提供 `membership`、`listMembers`、`spawnTeammate`、`sendMessage`、`createTask`、`getTask`、`listTasks`、`updateTask`、`waitForChange` 和 `interrupt` 等方法；Lead 才能创建或中断成员。团队消息写入 Lead 会话后统一尝试通过 `Steer` 投递：运行中的成员在最近步骤边界收到，空闲成员被唤醒，非活动成员冷恢复；调用方不能选择 quiet 或 followup 调度模式，工具包当前提供 9 个工具。使用时显式安装 `@deepseek-ai/dsh-experimental-agent-team` 与 `@deepseek-ai/dsh-experimental-tool-agent-team`，不能把它当作普通一次性子代理队列。
+任务每次变更都会递增 `revision`，更新必须使用比较并交换；`writeScopes` 是规范化的提示性路径前缀，不是文件锁。`blockedBy` 边必须指向未删除任务并维持无环。状态为 `pending`（未开始或已释放）、`in_progress`（携带负责人）、`completed`（满足依赖）和 `deleted`（保留墓碑）。
+
+**按 Session 选择**：`agentTeam.enabled` 记录根 Session 的选择，新 Session 默认关闭；`team/mode` 事件记录显式选择。只有根可调用 `setEnabled`，后代共享该模式。Web 在模型与推理等级菜单提供**使用智能体团队**开关，`/team on`、`/team off` 命令已移除。工具可用性在步骤准备时确定；关闭 Team 保留任务和子代理，已获准的操作继续完成，排队操作在开始时检查当前模式。
+
+包名（rc.2 起由 experimental 转正）：`@deepseek-ai/dsh-agent-team`、`@deepseek-ai/dsh-tool-agent-team`、`@deepseek-ai/dsh-client-ui-agent-team`。原 `@deepseek-ai/dsh-experimental-agent-team-profile` 组合选项已退役，由 base 与 Web 组合直接提供。**已退役语义**：旧 roster（`TeamMemberSnapshot`）与同伴邮箱（`TeamMessageId`、`team-message` source）仅作历史解码保留，不再投递；`TeamId` 是品牌化根 `SessionId`，`TeamTaskId` 使用 `task-<n>`。
 
 ## 会话导出
 

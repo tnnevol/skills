@@ -7,12 +7,12 @@ description: >-
   用户需要安装、运行、配置、排错或扩展 DeepSeek Harness（dsh）时使用，包括 profile 组合、Web 界面、工作区、工作区文件、智能体模式预设、无头任务、SDK、ACP、插件、Cordis、工具、模型适配器、会话、会话格式迁移、会话持久化、网络代理、设置卡片、图片和文件附件、文件交付、反馈、文件引用、Remote API、会话投影、子代理、智能体团队、会话导出和能力接缝。
 metadata:
   author: Tnnevol
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # dsh 技能
 
-使用本技能处理 DeepSeek Harness（简称 dsh）的安装、使用、配置和开发问题。它依据 `sources/dsh`（deepseek-harness 文档子模块，锁定 `dsh-v0.2.2-rc.1`）的中文文档快照整理；需要精确的类型、配置字段或当前实现时，优先读取该快照或用户工作区中的源项目文档和源码。
+使用本技能处理 DeepSeek Harness（简称 dsh）的安装、使用、配置和开发问题。它依据 `sources/dsh`（deepseek-harness 文档子模块，锁定 `dsh-v0.2.2-rc.4`）的中文文档快照整理；需要精确的类型、配置字段或当前实现时，优先读取该快照或用户工作区中的源项目文档和源码。
 
 ## 何时使用
 
@@ -33,7 +33,7 @@ npx @deepseek-ai/dsh web
 
 ### 使用源码
 
-源码开发要求 **Node.js 24.9+**（0.2.2 起不再支持 Node.js 22），并使用仓库固定的 pnpm 版本。当前源项目版本为 `0.2.2-rc.1`，仍处于开发者预览阶段，未来可能包含破坏性变更：
+源码开发要求 **Node.js 24.9+**（0.2.2 起不再支持 Node.js 22），并使用仓库固定的 pnpm 版本。当前源项目版本为 `0.2.2-rc.4`，仍处于开发者预览阶段，未来可能包含破坏性变更：
 
 ~~~sh
 git clone https://github.com/deepseek-ai/deepseek-harness.git
@@ -88,7 +88,7 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 5. **图片附件必须先校验并持久化。** 使用 `ctx.attachments` 的 `validateImage`、`admitEncodedImages`、`saveImage`、`saveImages`、`readImage`、`readImageRequest` 和 `imageHostPath`；批量保存要先完成全部校验。只有协议边界的 `EncodedImageAttachment` 可以承载 Base64，事件和模型仍只传递不透明附件引用；`imageHostPath` 返回宿主路径后，还必须由当前执行文件系统判断模型工具是否可读。
 6. **文件引用只提供路径，不提供文件内容。** `@file` 补全由 `ctx.fileReferences` 和匹配实际 `read` 工具命名空间的提供方负责；选中后写入 `@path` 或 `@"path with spaces"`，模型必须再调用文件工具读取内容。
 7. **客户端能力通过 Remote 生成契约暴露。** 宿主端控制器使用 `@Remote` 声明方法，构建时生成客户端投影；客户端通过 `ctx.remote` 调用，Connection 负责连接代际、认证和相关性，Gateway 负责分发与逻辑流。Remote 调用返回 `RemoteResult<T>`，失败统一使用 `RemoteError` 和 `<domain>/<reason>` 错误码；客户端按 `result.ok` 与 `error.code` 分支，不要使用 `instanceof` 判断。固定宿主信息从 `ctx.remote.$host` 读取，不要绕过这些边界直接让浏览器访问宿主服务。
-8. **智能体团队必须依托持久化 Lead 会话。** 团队的 roster、邮箱和任务板都写入 Lead 会话；消息统一尝试通过 `Steer` 投递：运行中的成员在最近步骤边界接收，空闲成员被唤醒，非活动成员冷恢复。不能选择旧的 quiet 或 followup 调度模式；任务更新使用 `revision` 做比较并交换，`writeScopes` 只是提示而不是锁。该能力仍是实验性的，需同时挂载团队包和工具包。
+8. **智能体团队是根 Session 可选的任务板，成员能力归 subagent 控制。** Team 随 base 组合提供，按根 Session 选择（`agentTeam.enabled`，新 Session 默认关闭，后代共享）。只有四个任务板工具属于 Team（`team_task_create` / `team_task_get` / `team_task_list` / `team_task_update`）；`list_agents`、`send_message`、`wait_agent`、`interrupt_agent` 是标准 subagent 控制工具，不受 Team 模式影响。**注意 `interrupt_agent` 默认关闭**：base 组合与 Web 的 standard/cordis/ptc preset 都设了 `tool-subagent-control` 的 `config.interrupt: false`；需要中断能力时在 profile 的 `cordis.patch.yml` 把该行改为 `interrupt: true`（Web/desktop 要 patch 对应 `preset-<name>` 声明的完整 config），重启并新建 Session 才生效。任务更新使用 `revision` 做比较并交换，`writeScopes` 只是提示而不是锁；`blockedBy` 必须无环。旧 roster 与邮箱仅作历史解码保留，不再投递。
 9. **持久会话必须通过句柄写入。** `ctx.sessionPersistence.create()` 和 `ctx.sessionPersistence.open()` 返回 `SessionHandle`；只有通过句柄获取的会话才会持久化。使用句柄的 `read()`、`append()`、`flush()` 和 `close()` 管理日志，不要使用按会话编号的 `append/load` 假设；`flush()` 是耐久屏障，并发写入需要遵守单写者约束。
 10. **生命周期必须可逆。** 通过 ctx.on()、注册表或 ctx.effect() 建立的资源要能在插件卸载、HMR 和退出时清理；异步清理必须等待完全停稳。
 11. **不要凭记忆猜配置和类型。** 优先运行 --help、--dump-config，再查看当前分支的配置目录、子系统页面或源码。
@@ -98,7 +98,7 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 15. **工作区文件读取遵守 Session 授权。** `workspaceFiles` 负责有界文本或字节读取、目录列举和变更流；文件读取可按文件系统权限访问工作区外路径，但 `list` 与 `changes` 只允许 Session 工作区，不能自行拼接宿主路径绕过检查。
 16. **反馈不启动模型轮次。** `/feedback`、`sessionFeedback` 和消息反馈都写入会话日志，不进入模型历史；消息反馈使用版本令牌做比较并交换，过期更新应报告冲突而不是覆盖。
 17. **CLI 的 profile 与诊断行为以当前参考为准。** `dsh <name>` 是 profile 简写，`--dump-config-schema` 输出 JSON Schema，必需插件启动失败会写入 `$DSH_HOME/logs/startup-<timestamp>-<uuid>.log`；不要把 schema dump 当作实际配置值，也不要在分享诊断前忽略其中可能包含的凭据或配置。
-18. **Web 组合不自动包含 Schedule 等可选能力。** 随发行版的 Web 组合不再包含 `schedule`、`ui-schedule` 和 `time-context` 三行；它们由随包可选 bundle「自动化任务」（`@deepseek-ai/dsh-experimental-schedule-bundle`）插入，默认关闭，需在插件管理页「官方」分组启用或手动加入 profile 的 `dsh.profile.bundles`。按 id 写 `disabled: false` 覆盖旧组合的 patch 在新版本会报 `patch: entry schedule not found`。随包可选 bundle 还包括智能体团队、语音输入、自动评审、LiveShare 与 Forge；PTC 代码执行、浏览器/计算机操作和 Office 转 PDF 仍按对应 bundle 或 profile 显式启用。
+18. **Web 组合不自动包含 Schedule 等可选能力。** 随发行版的 Web 组合不再包含 `schedule`、`ui-schedule` 和 `time-context` 三行；它们由随包可选 bundle「自动化任务」（`@deepseek-ai/dsh-experimental-schedule-bundle`）插入，默认关闭，需在插件管理页「官方」分组启用或手动加入 profile 的 `dsh.profile.bundles`。按 id 写 `disabled: false` 覆盖旧组合的 patch 在新版本会报 `patch: entry schedule not found`。随包可选 bundle 还包括语音输入、自动评审、LiveShare 与 Forge（智能体团队已随 base 组合提供，不再是可选 bundle）；PTC 代码执行、浏览器/计算机操作和 Office 渲染/转换/重算仍按对应 bundle 或 profile 显式启用。
 19. **工作区改动摘要与文件交付属于不同事实。** `@deepseek-ai/dsh-workspace-changes` 通过 `workspace/changes` 记录一轮改动摘要，`@deepseek-ai/dsh-tool-present` 通过 `deliverables/presented` 声明用户要接收的文件；前者默认只供客户端读取，后者只记录路径，不复制内容。
 20. **OTel 上报通过共享 `ctx.otel` 服务创建通道。** base 组合挂载 `@deepseek-ai/dsh-otel`；产品埋点（`ctx.productTelemetry`）和 Session 上传（`ctx.sessionTelemetry`）适配器都从它获取独立通道，Session 上传按 `maxRequestBytes`（上限 4,000,000 字节）分包串行发送。桌面产品埋点与 `ctx.productAnalytics` 采集仅在 Desktop profile 启用，普通 Web 客户端不采集产品事件。
 21. **提醒工具在 0.2.2 已改名，且语义变更为重复规则。** 四个工具是 `schedule_create`、`schedule_list`、`schedule_view`、`schedule_edit`；旧的 `schedule_update`、`schedule_delete` 已不存在，改名后不要再按旧名字调用。`schedule_edit` 同时负责修改、暂停、恢复和删除。提醒使用 RFC 5545 重复规则（例如每个工作日 09:00 或仅一次），并选择投递目标：当前对话、首次投递时创建的新对话，或每次投递都新建对话。子代理能看到这四个工具，但来自被委派子代理的调用会被工具拒绝。
@@ -118,7 +118,7 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 
 - **运行时组合**：用具名 profile、组合包和 patch 叠加出 Web、无头、SDK 或 ACP 运行时。
 - **智能体模式**：使用标准、PTC、极简或创造模式，按需选择工具集合和扩展能力；PTC 模式默认不提供 `workflow` 工具。
-- **模型接入**：通过 ctx.llm 注册适配器，统一处理流式分片、工具调用、用量、取消和错误；模型目录发现支持 `openai-completions`、`openai-responses` 和 `anthropic-messages`。
+- **模型接入**：通过 ctx.llm 注册适配器，统一处理流式分片、工具调用、用量、取消和错误；模型目录发现支持 `openai-completions`、`openai-responses`、`anthropic-messages` 和 `google-generative-ai`（Gemini API，基础 URL 含 API 版本，如 `https://gateway.example/v1beta`）。
 - **模型工具**：通过 ctx.tools.register() 注册 schema、执行器、策略钩子和 UI 展示投影。
 - **会话与 agent**：通过 `SessionHandle` 和 JSONL 持久化提供方记录模型可见事实，通过实时 agent 事件协调输入、步骤、请求、继续执行和错误恢复。
 - **会话格式**：使用 V4 当前逻辑格式和 v0→v1→v2→v3→v4 相邻迁移链，保留旧 generation 并在不支持时报告格式错误。
@@ -127,7 +127,7 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 - **Web 扩展**：通过设置卡片暴露配置和凭据，通过可回放的图片附件引用传递富内容，通过 Remote 和客户端适配器接入浏览器；会话投影为客户端提供按会话派生的完整状态。
 - **文件与会话**：提供 `@file` 路径补全；通过 `/export` 将会话树、子会话和附件作为 ZIP 下载，导出不会创建模型轮次。
 - **子代理与任务**：通过子代理能力接缝启动一次性或可继续的后台工作，并检查能力、权限、可选 provider/model/reasoningEffort 和任务生命周期。
-- **智能体团队**：通过实验性的 `ctx.agentTeams` 管理成员、消息和共享任务板，使用 `Steer` 唤醒或继续成员。
+- **智能体团队**：通过 `ctx.agentTeams` 管理整棵子代理树共享的任务板；按根 Session 开关，成员协作使用标准 subagent 控制工具。
 - **用户反馈**：通过 `/feedback`、`sessionFeedback` 和 `messageFeedback` 记录 Session 或单条 assistant 消息的反馈，不触发模型工作。
 - **PTC 与动态工具**：通过 `ctx.ptcRuntime` 运行绑定安全的 TypeScript/Python 程序；支持运行期间的工具更新时，按路由能力将工具增删以持久 `tool` 事件记录并回放。
 - **可选集成**：提供定时提醒、用户问题、MCP 资源、Office 转 PDF、语音输入和账号模型路由等可选能力，是否启用以当前 profile 组合为准；Schedule 相关能力随包可选 bundle 默认关闭。
@@ -190,7 +190,7 @@ dsh web 是 --profile web 的别名，默认监听 127.0.0.1:3080；`--no-open` 
 
 ## 文档源与同步
 
-本技能的参考文件提炼自仓库内子模块 `sources/dsh`（deepseek-ai/deepseek-harness，sparse 检出 `docs/`，固定在 `dsh-v0.2.2-rc.1`，详见 [GENERATION.md](GENERATION.md)）。约定：
+本技能的参考文件提炼自仓库内子模块 `sources/dsh`（deepseek-ai/deepseek-harness，sparse 检出 `docs/`，固定在 `dsh-v0.2.2-rc.4`，详见 [GENERATION.md](GENERATION.md)）。约定：
 
 - **仅维护简体中文**：改写只依据上游 `*.zh.md` 中文页；英文页与 `.i18n.yaml` 配对文件不纳入本技能。
 - **快照即依据**：回答基于锁定快照；用户本地 dsh 版本更高时，以 `--dump-config`、`--help` 和实际源码为准，并注明版本差异。
