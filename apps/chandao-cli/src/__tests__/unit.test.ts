@@ -1,6 +1,8 @@
+import { Buffer } from 'node:buffer'
 import { describe, expect, it } from 'vitest'
 import { chooseVersion } from '../client.js'
 import { maskToken, normalizeApiVersion, normalizeBaseUrl } from '../config.js'
+import { decodeKeychainSecret } from '../crypto.js'
 import { actionOp, OPS } from '../ops.js'
 
 describe('chooseVersion', () => {
@@ -90,6 +92,16 @@ describe('ops builders', () => {
 
   it('actionOp 拼接资源动作', () => {
     expect(actionOp('task', 'finish')).toBe('task.finish')
+  })
+})
+
+describe('crypto helpers', () => {
+  it('macOS keychain 的 hex 编码私钥可还原为 PEM', () => {
+    const pem = '-----BEGIN PRIVATE KEY-----\nABC\n-----END PRIVATE KEY-----\n'
+    const hex = Buffer.from(pem).toString('hex')
+    expect(decodeKeychainSecret(hex)?.trim()).toBe(pem.trim())
+    expect(decodeKeychainSecret(pem)?.trim()).toBe(pem.trim())
+    expect(decodeKeychainSecret(null)).toBeNull()
   })
 })
 

@@ -26,6 +26,7 @@ import process from 'node:process'
 
 export const ENC_PREFIX = 'enc:v1:'
 const KEYCHAIN_SERVICE = 'chandao-cli'
+const HEX_RE = /^[0-9a-f]+$/i
 const RSA_MODULUS = 3072
 
 export interface CryptoPaths {
@@ -74,8 +75,30 @@ function commandExists(cmd: string): boolean {
   }
 }
 
+/**
+ * macOS `security find-generic-password -w` 对含换行的密码会输出 **hex 字符串**，
+ * 而不是原始 PEM；这里统一还原。Linux secret-tool 一般返回原文，原样返回即可。
+ */
+export function decodeKeychainSecret(value: string | null | undefined): string | null {
+  if (!value)
+    return null
+  const raw = value.trim()
+  if (!raw)
+    return null
+  if (raw.includes('-----BEGIN'))
+    return raw
+  if (HEX_RE.test(raw) && raw.length % 2 === 0) {
+    const decoded = Buffer.from(raw, 'hex').toString('utf-8')
+    if (decoded.includes('-----BEGIN'))
+      return decoded
+  }
+  return raw
+}
+
 export function readPrivateKeyFromKeychain(): string | null {
-  if (!canUseKeychain())
+  // 读取不依赖交互终端：security/secret-tool 读取已创建的条目通常不需要授权弹窗；
+  // 需要禁用时用 CHANDAO_CLI_NO_KEYCHAIN=1（写入仍受 TTY 门控）。
+  if (process.env.CHANDAO_CLI_NO_KEYCHAIN === '1')
     return null
   const backend = keychainBackend()
   try {
@@ -85,7 +108,7 @@ export function readPrivateKeyFromKeychain(): string | null {
         ['find-generic-password', '-s', KEYCHAIN_SERVICE, '-a', 'private-key', '-w'],
         { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], timeout: KEYCHAIN_TIMEOUT_MS },
       )
-      return out.trim() || null
+      return decodeKeychainSecret(out)
     }
     if (backend === 'linux' && commandExists('secret-tool')) {
       const out = execFileSync(
@@ -170,6 +193,18 @@ export function readPrivateKeyPem(paths: CryptoPaths): string | null {
   return null
 }
 
+/** 比较公钥与私钥是否成对（都用 SPKI DER 比较）。 */
+function keyPairMatches(publicKeyPem: string, privateKeyPem: string): boolean {
+  try {
+    const publicDer = createPublicKey(publicKeyPem).export({ type: 'spki', format: 'der' })
+    const derivedDer = createPublicKey(createPrivateKey(privateKeyPem)).export({ type: 'spki', format: 'der' })
+    return Buffer.compare(publicDer, derivedDer) === 0
+  }
+  catch {
+    return false
+  }
+}
+
 export interface EnsureKeysResult {
   paths: CryptoPaths
   created: boolean
@@ -185,7 +220,16 @@ export function ensureKeys(dir: string): EnsureKeysResult {
   const existingPublic = readPublicKeyPem(paths)
   const existingPrivate = readPrivateKeyPem(paths)
   if (existingPublic && existingPrivate) {
-    return { paths, created: false, privateKeyStorage: keyStorage(paths) }
+    if (keyPairMatches(existingPublic, existingPrivate))
+      return { paths, created: false, privateKeyStorage: keyStorage(paths) }
+    // 公私钥不匹配时自动重建，避免“换账号后永远解密失败”
+  }
+  if (existingPublic && !existingPrivate) {
+    throw new Error(
+      '检测到 public.pem 但无法读取私钥（钥匙串可能需要交互终端）。'
+      + '为避免覆盖公钥导致已有加密配置无法解密，请在有交互终端的环境重试；'
+      + '若确认要重建密钥，请删除 ~/.chandao/public.pem 后重新 auth login。',
+    )
   }
 
   const pair = generateKeyPair()

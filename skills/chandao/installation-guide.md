@@ -206,4 +206,5 @@ chandao-cli testcase get --id <用例ID> --spec-version 1 # v1/v2 都支持
 | 命令参数不确定 | 执行 `chandao-cli <group> <command> --help` 查看最新用法 |
 | Node 版本过低 | 升级到 Node.js ≥ 20 |
 | 想退出登录 | `chandao-cli auth logout` 清除本地配置 |
-| 无法解密配置 | 私钥丢失/换机器：重新 `auth login` |
+| 无法解密配置 / 私钥不匹配 | 升级到 chandao-cli 3.0.1+（修复 macOS 钥匙串 hex 解码）；仍失败时删除 `~/.chandao/public.pem` 后重新 `auth login`（会重建密钥） |
+| 非交互环境读不到钥匙串私钥 | 3.0.1+ 已允许非 TTY 读取；仍不可用时设置 `CHANDAO_CLI_NO_KEYCHAIN=1` 并重新登录（改用文件私钥） |
