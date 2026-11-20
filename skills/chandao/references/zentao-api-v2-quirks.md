@@ -1,93 +1,97 @@
-# ZenTao RESTful API v2.0 常见坑点
+# v1 / v2 API 差异与实例限制
 
-## 1. 创建接口参数名必须带 `ID` 后缀
+`chandao-cli` 默认 auto：登录时同时探测 v2 与 v1，优先 v2；缺失操作回退 v1。下面这些差异是很多“明明参数对却失败”的根源。
 
-API v2 的创建接口（POST）要求关联字段使用 `xxxID` 格式，而非裸字段名。
+## 1. 登录与鉴权
 
-| 实体 | API 请求体字段 | 说明 |
-|------|--------------|------|
-| Task create | `executionID` | 不能用 `execution` |
-| Story create | `productID` | 不能用 `product` |
-| Bug create | `productID` | 不能用 `product` |
-| Execution create | `project` | 特殊，不需要 ID 后缀 |
-| Project create | `model`, `begin`, `end` | 项目类型字段是 `model`，非 `type` |
+| 维度 | v1 | v2 |
+| --- | --- | --- |
+| 登录 | `POST /api.php/v1/tokens` → 201 + token | `POST /api.php/v2/users/login` → 200 + token |
+| 请求头 | `Token: <token>` | `Token: <token>` |
+| 错误 | HTTP 4xx + `{"error":"..."}` | 多为 200 + `{"status":"fail","message":...}` |
 
-### 错误表现
+## 2. 分页与排序
 
-参数名错误时，API 返回 HTTP 403：
-```json
-{"status": "fail", "message": "Not allowed"}
-```
+| 维度 | v1 | v2 |
+| --- | --- | --- |
+| 页码 | `page` | `pageID` |
+| 每页 | `limit` | `recPerPage` |
+| 排序 | `order` | `orderBy` |
 
-**重要**：这个 403 不是权限问题，是参数名错误！
+CLI 已按版本自动转换，无需手写。
 
-如果参数名已确认正确仍返回 403，检查用户是否分配了角色（`role` 字段非空）。见 [zentao-api-permissions.md](./zentao-api-permissions.md)。
+## 3. 状态流转
 
-## 2. Bug create 的 `openedBuild` 是数组
+| 动作 | v1 | v2 |
+| --- | --- | --- |
+| Bug 解决/关闭/激活 | `POST /bugs/{id}/resolve|close|active` | `PUT /bugs/{id}/resolve|close|activate` |
+| 需求关闭/变更 | `POST /stories/{id}/close|change` | `PUT ...` |
+| 任务开始/完成/关闭 | `POST /tasks/{id}/start|finish|close` | `PUT ...` |
+| 执行启动/暂停/关闭 | ❌ 未实现 | `PUT /executions/{id}/start|suspend|close` |
 
-```json
-{
-  "productID": 21,
-  "title": "Bug标题",
-  "openedBuild": ["trunk"]
-}
-```
+## 4. 创建字段命名
 
-## 3. Task create 的必填字段
+| 资源 | v1 | v2 |
+| --- | --- | --- |
+| 需求 | body `product` | body `productID` |
+| Bug | body `product` | body `productID` |
+| 任务 | `POST /executions/{id}/tasks`，body 无 executionID | `POST /tasks`，body `executionID` |
+| 执行 | `POST /projects/{id}/executions` | `POST /executions`，body `project` |
 
-- `executionID` — 所属执行 ID
-- `name` — 任务名称
-- `type` — 任务类型（devel/test/design/discuss/ui）
+## 5. 响应结构
 
-## 4. 登录端点差异
+- v1：多为扁平对象/数组，如 `{"products":[...]}`、`{"id":1,...}`。
+- v2：外层通常有 `{"status":"success", ...}`，实体再包一层（`product`/`story`/`task`/`bug`/...）。
+- CLI 原样透传到 `data.data`，不做结构归一化，因此解析时要按版本取字段。
 
-- API v2 登录：`POST /api.php/v2/users/login`（脚本使用此端点）
-- 旧版登录：`POST /api.php/v2/tokens`
+## 6. 空响应 = 路由未实现
 
-## 5. list 端点默认过滤导致返回空数据
+v2 未实现的路由可能返回 **HTTP 200 + 空 body**（不是 404）。CLI 会把它当错误：
 
-以下模块的 `list` 命令返回空数据。**根因**：每个 list API 都有默认过滤参数，只返回特定状态的数据。
+- `/v2/doc/*`（本实例文档模块未实现）
+- 其他企业版模块（工作流、反馈、工单等）
 
-| 模块 | API 参数名 | 默认值 | 说明 |
-|------|-----------|--------|------|
-| requirement list | `browse` | `unclosed` | 未关闭的需求 |
-| epic list | `browse` | `unclosed` | 未关闭的史诗 |
-| testtask list | `browseType` | `all` | 所有测试单 |
+v1 未实现路由一般返回 404。
 
-- `story list` 和 `bug list` **不受影响**，默认就能返回数据
+## 7. 本实例已知情况（禅道 22.1）
 
-## 6. PUT/DELETE 端点可能返回空响应
+| 项 | 状态 |
+| --- | --- |
+| v1 文档化接口 | 96/97 可用（唯一例外是官方文档笔误的 `/productsplan/{id}`，真实为 `/productplans/{id}`） |
+| v2 核心模块 | 产品/项目/执行/任务/需求/Bug/用例/用户/附件可用 |
+| v2 文档模块 | `/v2/doc/*` 返回空（未实现） |
+| 分组 API | 仅 v1 `GET /groups`（官方文档未收录，源码 entry） |
+| 部门 API | 仅 v1 查询，无创建 |
+| 隐藏 v1 entry | `groups`、`tasks/{id}/active`、`projects/{id}/bugs` 等来自源码 `api/v1/entries/` |
+| 附件上传 | v2 必须绑定对象；v1 只上传不绑定 |
+| 历史版本读取 | story：仅 v2 `?version=N`；testcase：v1/v2 都支持 `?version=N`；task/bug：无 |
 
-禅道 API 的 PUT/DELETE 端点可能返回空响应体（HTTP 200 但 body 为空）。脚本内部已处理空响应，自动返回 `{"status": "success"}`。
+## 8. 附件上传语义
 
-## 7. 状态修改不能通过通用 PUT 端点
+| 维度 | v1 | v2 |
+| --- | --- | --- |
+| 路径 | `POST /v1/files` | `POST /v2/files` |
+| 表单字段 | `imgFile` | `file` |
+| 对象绑定 | ❌（仅 `uid`） | ✅ `objectType` + `objectID` |
+| 缺绑定 | 正常返回 | 200 空响应 |
+| 返回 | `{id, url}` | `{status,id,url,data:{id,url}}` |
 
-`PUT /bugs/{id}` 请求体中的 `status` 字段**会被静默忽略**。
+## 9. 登录探测与强制版本
 
-| 操作 | 端点 | 必填参数 |
-|------|------|---------|
-| 解决 Bug | `PUT /bugs/{id}/resolve` | `resolution`, `resolvedBuild` |
-| 关闭 Bug | `PUT /bugs/{id}/close` | 无 |
-| 激活 Bug | `PUT /bugs/{id}/activate` | 无 |
-| 完成 Task | `PUT /tasks/{id}/finish` | `consumed` |
-| 关闭 Task | `PUT /tasks/{id}/close` | 无 |
-| 激活 Task | `PUT /tasks/{id}/activate` | 无 |
+- auto：v2 可用则优先 v2；某命令只有 v1 时回退并标 `fallback: true`。
+- 强制 v1/v2：不支持的操作为失败，不会偷偷换版本——这适合回归测试。
 
-**关键教训**：API 返回 "成功" 不代表操作真的生效了。修改类操作后必须回查验证。
+## 10. 旧版 v1-only 实例（实测 chandao.freetek.cc）
 
-## 8. Bug resolve 会清空指派人
-
-`PUT /bugs/{id}/resolve` 如果不传 `assignedTo` 参数，会将指派人**清空为空字符串**。
-
-脚本 `bug resolve` action 支持 `--assignedTo` 参数，建议在解决 Bug 时显式传入。
-
-## 9. 修改参数后必须同步更新 SKILL.md
-
-脚本参数修改后，SKILL.md 中的参数表**必须同步更新**，否则 agent 会按过时文档引导用户。
-
-## 参考链接
-
-- [禅道 RESTful API v2.0 开发手册](https://www.zentao.net/book/api/)
-- [创建任务](https://www.zentao.net/book/api/post-tasks-2207.html)
-- [创建版本/构建](https://www.zentao.net/book/api/post-builds-2230.html)
-- [创建Bug](https://www.zentao.net/book/api/post-bugs-2192.html)
+| 项 | 结果 |
+|---|---|
+| 部署 | 子路径 `/zentao` |
+| v1 | ✅ 登录与全部读接口正常 |
+| v2 | ❌ 所有路由 PHP Fatal（`Class 'xxxEntry' not found`），HTTP 200 + HTML |
+| auto | ✅ 自动探测为 v1 |
+| 上传 | ✅ v1 返回绝对 URL `http://host/zentao/file-read-<id>.png` |
+| story 创建 | 需 `pri`/`category`/`branch`；CLI 默认 3/feature/0 |
+| story 更新 | `PUT /stories/{id}` 400 `error` → 用 `story change --reviewer` |
+| testcase steps | 需对象数组 `{desc,expect,type}`；CLI 自动转换 |
+| bug/testcase 创建 | 需 `type`；CLI 默认 `codeerror`/`feature` |
+| task 创建 | 需 `estStarted`（+`deadline`） |

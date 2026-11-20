@@ -1,78 +1,118 @@
-# 禅道 v2 API 创建接口 — 必填参数与字段名速查
+# 字段速查
 
-> 来源：禅道官方文档 https://www.zentao.net/book/api/ + Memos 笔记交叉验证
-> 整理日期：2026-05-08
+> CLI 已封装 v1/v2 字段差异；本表用于核对含义与必填项。
 
-## 通用规则
+## 产品 product
 
-- 请求 Header：`token: <token>`
-- 返回格式：`{status: 'success'|'fail', ...}`
-- 分页：`recPerPage` ≤ 1000, `pageID` 从 1 开始
-- 日期格式：`YYYY-MM-DD`
-- URL 格式：`{CHANDAO_URL}/api.php/v2/<resource>`
+| 字段 | 创建 | 说明 |
+| --- | --- | --- |
+| `name` | ✅ | 名称 |
+| `program` | 可选 | 项目集 |
+| `line` | 可选 | 产品线 |
+| `type` | 可选 | `normal` / `branch` / `platform` |
+| `PO` / `QD` / `RD` | 可选 | 负责人账号 |
+| `reviewer` | 可选 | 评审人（数组） |
+| `desc` | 可选 | 纯文本 |
+| `acl` | 可选 | `open` / `private` |
 
-## 创建接口必填参数
+## 项目 project
 
-| 接口 | 端点 | 必填参数 | 关键可选参数 |
-|------|------|----------|--------------|
-| 创建Bug | `POST /bugs` | productID, title, openedBuild | project, execution, severity, pri, type, steps, story |
-| 创建需求 | `POST /stories` | productID, title | pri, module, parent, estimate, spec, category, source, verify, assignedTo, reviewer, project, execution |
-| 创建任务 | `POST /tasks` | name, executionID | type, assignedTo, estStarted, deadline, pri, estimate, module, story, desc |
-| 创建项目 | `POST /projects` | name, model, begin, end, workflowGroup | products, parent, PM |
-| 创建产品 | `POST /products` | name | program, line, type, PO, reviewer, desc, QD, RD, acl |
-| 创建测试用例 | `POST /testcases` | productID, title | module, story, pri, type, precondition, steps, expects, stepType, project, execution |
-| 创建执行 | `POST /executions` | project, name, begin, end | lifetime, days, products, plans, PO, QD, PM, RD, acl |
-| 创建测试单 | `POST /testtasks` | productID, name, build, begin, end | execution, type, owner, status, desc |
-| 创建史诗 | `POST /epics` | productID, title | pri, parent, estimate, spec, category, source, verify, assignedTo, reviewer |
-| 创建用户需求 | `POST /requirements` | productID, title | pri, module, parent, estimate, spec, category, source, verify, assignedTo, reviewer |
-| 创建工单 | `POST /tickets` | productID, title | pri, type, assignedTo, deadline, description |
-| 创建反馈 | `POST /feedbacks` | productID, title | pri, type, assignedTo, deadline, description |
+| 字段 | 创建 | 说明 |
+| --- | --- | --- |
+| `name` | ✅ | 名称 |
+| `model` | ✅ | `scrum` / `waterfall` / `kanban` / `agileplus` / `waterfallplus` |
+| `begin` / `end` | ✅ | 起止日期 |
+| `PM` | 可选 | 项目经理 |
+| `products` | 可选 | 关联产品数组 |
+| `parent` | 可选 | 父项目/项目集 |
+| `workflowGroup` | 可选 | 工作流分组 |
 
-## 关键字段名（易错）
+## 需求 story
 
-| 正确字段名 | 错误写法 | 用于接口 |
-|-----------|----------|----------|
-| `productID` | `product` | Bug, Story, Testcase, Testtask, Epic, Requirement, Ticket, Feedback |
-| `executionID` | `execution` | Task |
-| `project` | `projectID` | Execution |
-| `openedBuild` | `openedBuild[]` | Bug（数组格式，主干填 `["trunk"]`）|
+| 字段 | 创建 | 说明 |
+| --- | --- | --- |
+| `product` / `productID` | ✅ | 所属产品 |
+| `title` | ✅ | 标题 |
+| `spec` | 可选 | **HTML 片段** |
+| `verify` | 可选 | **HTML 片段** |
+| `pri` | 可选 | 优先级 |
+| `module` / `parent` | 可选 | 模块/父需求 |
+| `estimate` | 可选 | 预计工时 |
+| `category` / `source` / `sourceNote` | 可选 | 类型/来源 |
+| `assignedTo` | 可选 | 指派 |
+| `reviewer` | 可选 | 评审人 |
+| `project` / `execution` | 可选 | 关联项目/执行 |
 
-## 状态流转
+## 任务 task
 
-### Bug
-- active → resolved（PUT /bugs/:id/resolve）
-- active/resolved → closed（PUT /bugs/:id/close）
-- closed/resolved → active（PUT /bugs/:id/activate）
+| 字段 | 创建 | 说明 |
+| --- | --- | --- |
+| `execution` / `executionID` | ✅ | 所属执行 |
+| `name` | ✅ | 任务名 |
+| `type` | 可选 | `devel` / `test` / `design` / `discuss` / `ui` |
+| `desc` | 可选 | **HTML 片段** |
+| `assignedTo` | 可选 | 指派 |
+| `estStarted` / `deadline` | 可选 | 预计开始/截止 |
+| `pri` / `estimate` | 可选 | 优先级/工时 |
+| `module` / `story` | 可选 | 模块/需求 |
 
-### Task
-- wait → started（PUT /tasks/:id/start）
-- started → finished（PUT /tasks/:id/finish）
-- finished → closed（PUT /tasks/:id/close）
-- closed/finished → active（PUT /tasks/:id/activate）
+## 执行 execution
 
-### Story
-- draft → active（评审通过）
-- active → closed（PUT /stories/:id/close）
-- closed → active（PUT /stories/:id/activate）
+| 字段 | 创建 | 说明 |
+| --- | --- | --- |
+| `project` | ✅ | 所属项目 |
+| `name` | ✅ | 名称 |
+| `begin` / `end` | ✅ | 起止日期 |
+| `lifetime` | 可选 | `short` / `long` / `ops` |
+| `days` | 可选 | 迭代天数 |
+| `products` | 可选 | 产品数组 |
+| `PO` / `QD` / `PM` / `RD` | 可选 | 负责人 |
+| `acl` | 可选 | `open` / `private` |
 
-## 官方文档链接
+## Bug bug
 
-- 创建Bug: https://www.zentao.net/book/api/post-bugs-2192.html
-- 创建需求: https://www.zentao.net/book/api/post-stories-2169.html
-- 创建任务: https://www.zentao.net/book/api/post-tasks-2207.html
-- 创建项目: https://www.zentao.net/book/api/post-projects-2156.html
-- 创建产品: https://www.zentao.net/book/api/post-products-2151.html
-- 创建测试用例: https://www.zentao.net/book/api/post-testcases-2201.html
-- 创建执行: https://www.zentao.net/book/api/post-executions-2160.html
-- 创建测试单: https://www.zentao.net/book/api/post-testtasks-2234.html
+| 字段 | 创建 | 说明 |
+| --- | --- | --- |
+| `product` / `productID` | ✅ | 所属产品 |
+| `title` | ✅ | 标题 |
+| `openedBuild` | 建议 | 影响版本，默认 `trunk` |
+| `steps` | 可选 | **HTML 片段** |
+| `severity` / `pri` | 可选 | 严重程度/优先级 |
+| `type` | 可选 | Bug 类型 |
+| `project` / `execution` | 可选 | 关联 |
+| `story` | 可选 | 相关需求（单个） |
+| `resolution` | resolve 必填 | 解决方案 |
+| `resolvedBuild` | 建议 | 解决版本 |
+| `assignedTo` | resolve 建议 | 指派人 |
 
-## Memos 笔记参考
+## 测试用例 testcase
 
-| 笔记 ID | 内容 |
-|----------|------|
-| `brJN8LeEXhLsKyuwWerZNw` | 禅道 RESTful API v2.0 文档索引（总） |
-| `8BYQFtAujXdcNn7iBKrdPL` | 禅道 RESTful API v2.0 文档索引（上） |
-| `KPcXoBDz4Z6WzbPCKAgCiQ` | 禅道 RESTful API v2.0 文档索引（下） |
-| `K2z5NfrYKVQXWB48YMNiNQ` | 禅道 v2 API 入参出参详解（二） |
-| `QVFR3ZSZFQ8Vy3b3r732um` | 禅道 v2 API 入参出参详解（一） |
-| `dUNfXqs3de9FRYmCLqjbqJ` | 禅道 v2 API 入参出参详解（P0核心模块） |
+| 字段 | 创建 | 说明 |
+| --- | --- | --- |
+| `product` / `productID` | ✅ | 所属产品 |
+| `title` | ✅ | 标题 |
+| `steps` | ✅ | 纯文本 JSON：`[{"step":"...","expect":"..."}]` |
+| `module` / `story` | 可选 | 模块/需求 |
+| `pri` / `type` | 可选 | 优先级/类型 |
+| `precondition` | 可选 | 前置条件（纯文本） |
+
+## 用户 user
+
+| 字段 | v1 | v2 |
+| --- | --- | --- |
+| `account` / `password` / `realname` | ✅ | ✅ |
+| `gender` | ✅ `f`/`m` | 有限 |
+| `role` | ✅ | 有限 |
+| `dept` | ✅ | ❌ |
+| `visions` | ✅ | ❌ |
+| `group` | ✅（逗号分隔 ID） | ❌ |
+| `email` | ✅ | ❌ |
+
+## 附件 file
+
+| 字段 | 说明 |
+| --- | --- |
+| `file` | 本地文件路径（CLI 参数 `--file`） |
+| `objectType` | `story` / `bug` / `task` / `testcase`（v2） |
+| `objectID` | 对象 ID（v2） |
+| `uid` | v1 编辑器会话（可选） |

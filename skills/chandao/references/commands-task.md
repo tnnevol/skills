@@ -1,85 +1,56 @@
-# 任务管理命令
+# 任务命令（task）
 
-| 命令 | 描述 |
-|------|------|
-| `/chandao task list [--execution <id>] [--limit N] [--page N]` | 列出任务 |
-| `/chandao task get <id>` | 获取任务详情 |
-| `/chandao task create --execution <id> --name <name> [--type <type>] [--assigned <user>] [--est-started <date>] [--deadline <date>] [--pri 1-4] [--estimate <hours>] [--module <id>] [--story <id>] [--desc <desc>]` | 创建任务 |
-| `/chandao task update <id> [--name <name>] [--assigned <user>] [--pri 1-4] [--status <status>] [--estimate <hours>] [--consumed <hours>]` | 更新任务 |
-| `/chandao task start <id> [--consumed <hours>] [--left <hours>]` | 开始任务（状态→进行中） |
-| `/chandao task finish <id> --consumed <hours> [--real-started <date>] [--finished-date <date>]` | 完成任务（**必须**指定 `--consumed`） |
-| `/chandao task close <id> [--reason <reason>]` | 关闭任务 |
-| `/chandao task activate <id> [--comment <text>]` | 激活已关闭的任务 |
-| `/chandao task delete <id>` | 删除任务 |
+```text
+chandao-cli task list --execution <id> [--page <n>] [--limit <n>]
+chandao-cli task get --id <id>
+chandao-cli task create --execution <id> --name <name> [--type devel|test|design|discuss|ui] [--desc "<html>"]
+chandao-cli task update --id <id> [--name ...] [--assignedTo ...] [--desc ...]
+chandao-cli task start --id <id> [--assignedTo ...] [--left <n>] [--comment ...]
+chandao-cli task pause --id <id> [--comment ...]
+chandao-cli task restart --id <id> [--left <n>] [--comment ...]
+chandao-cli task finish --id <id> --consumed <小时> [--left <n>] [--finishedDate ...]
+chandao-cli task close --id <id> [--comment ...]
+chandao-cli task activate --id <id>
+chandao-cli task delete --id <id> --yes
+```
 
-## 详细参数说明
+## 关联
 
-### `/chandao task create`
+- 必填 `--execution`（所属执行/迭代）；
+- 建议传 `--story <需求ID>` 把任务挂到需求，`--module` 归属模块；
+- 任务只挂在执行下，执行本身已关联项目，因此不再重复传 project。
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `--execution` | int | ✅ | 所属执行 ID |
-| `--name` | string | ✅ | 任务名称 |
-| `--type` | string | ❌ | 任务类型：`devel` / `test` / `design` / `discuss` / `ui` |
-| `--assigned` | string | ❌ | 指派给 |
-| `--est-started` | date | ❌ | 预计开始日期（YYYY-MM-DD） |
-| `--deadline` | date | ❌ | 截止日期（YYYY-MM-DD） |
-| `--pri` | int | ❌ | 优先级（1-4） |
-| `--estimate` | number | ❌ | 预计工时（小时） |
-| `--module` | int | ❌ | 所属模块 ID |
-| `--story` | int | ❌ | 相关需求 ID |
-| `--desc` | string | ❌ | 任务描述 |
-| `--dry-run` | flag | ❌ | 模拟运行 |
+## 关键字段
 
-### `/chandao task update <id>`
+| 参数 | 说明 |
+| --- | --- |
+| `--execution` | 所属执行（create/list 必填） |
+| `--name` | 任务名称（纯文本） |
+| `--desc` | 任务描述，**HTML 片段** |
+| `--type` | `devel` / `test` / `design` / `discuss` / `ui` |
+| `--assignedTo` | 指派账号 |
+| `--estimate` / `--consumed` / `--left` | 预计/已消耗/剩余工时 |
+| `--story` | 关联需求 ID |
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `id` | int | ✅ | 任务 ID |
-| `--name` | string | ❌ | 任务名称 |
-| `--assigned` | string | ❌ | 指派给 |
-| `--pri` | int | ❌ | 优先级（1-4） |
-| `--status` | string | ❌ | 状态 |
-| `--estimate` | number | ❌ | 预计工时（小时） |
-| `--consumed` | number | ❌ | 已消耗工时（小时） |
-| `--dry-run` | flag | ❌ | 模拟运行 |
+## 旧版 v1 注意
 
-### `/chandao task start <id>`
+- v1 创建任务必须传 `estStarted`（预计开始）；部分实例还要求 `deadline`。CLI 不设默认日期，请显式传。
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `id` | int | ✅ | 任务 ID |
-| `--consumed` | number | ❌ | 已消耗工时（小时） |
-| `--left` | number | ❌ | 剩余工时（小时） |
-| `--dry-run` | flag | ❌ | 模拟运行 |
+## 版本
 
-### `/chandao task finish <id>`
+任务没有内容版本历史：`update` 直接改当前内容，`version` 字段不会递增，也不支持 `--spec-version`；读取始终是最新内容。
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `id` | int | ✅ | 任务 ID |
-| `--consumed` | number | ✅ | 已消耗工时（小时） |
-| `--real-started` | date | ❌ | 实际开始日期（YYYY-MM-DD） |
-| `--finished-date` | date | ❌ | 实际完成日期（YYYY-MM-DD） |
-| `--dry-run` | flag | ❌ | 模拟运行 |
+## 注意
 
-### 其他命令
+- `task finish` 必须 `--consumed`。
+- 附件 workflow：先创建任务拿到 ID，再 `file upload --object-type task --object-id <id>`，最后 `task update --desc` 回显链接。
+- 更新会自动合并当前字段。
 
-| 命令 | 参数 | 必填 | 说明 |
-|------|------|------|------|
-| `get <id>` | `id` | ✅ | 任务 ID |
-| `close <id>` | `id`, `--reason` | ✅ | 关闭任务 |
-| `activate <id>` | `id`, `--comment` | ❌ | 激活已关闭的任务 |
-| `delete <id>` | `id`, `--yes` | ✅ | 删除任务 |
+## 示例
 
-### ⚠️ 更新操作前必须先获取当前值
-
-**问题**：禅道 API 的 PUT 请求会将未包含的字段重置为默认值。
-
-**正确流程**：
-1. 先执行 `<module> get <id>` 获取当前值
-2. 保留需要保持不变的字段值
-3. 只修改需要更新的字段
-4. 将所有字段一起发送更新请求
-
-**详见**：`references/pitfalls.md` 第 23 条
+```bash
+chandao-cli task list --execution 3 --limit 5
+chandao-cli task create --execution 3 --name "接口联调" --assignedTo mizen --estimate 8 --estStarted 2026-12-01 --deadline 2026-12-07
+chandao-cli task start --id 9 --left 8
+chandao-cli task finish --id 9 --consumed 8 --left 0
+```
