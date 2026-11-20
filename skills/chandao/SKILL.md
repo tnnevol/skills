@@ -5,7 +5,7 @@ slug: chandao
 description: 通过 chandao-cli 操作禅道（ZenTao）：产品、项目、执行、需求、任务、Bug、测试用例、测试单、用户与附件上传。强制需求 spec+verify 双 HTML 字段、测试用例纯文本步骤、创建时补齐产品/项目/执行/需求关联，并遵循“先上传附件、再把文件地址回显到 HTML”的图文 workflow。
 metadata:
   author: Tnnevol
-  version: "2.3.0"
+  version: "2.4.0"
 ---
 
 # SKILL: chandao（禅道）
@@ -13,6 +13,8 @@ metadata:
 让 AI Agent 通过 `chandao-cli` 操作禅道：查询/创建/更新产品、项目、需求、任务、执行、Bug、测试用例与用户，并正确处理**富文本 HTML 内容**与**附件/图片**。
 
 > 本 skill 已不再包含 `scripts/`。所有操作统一走 `apps/chandao-cli`，它内置 v1/v2 自动探测、鉴权持久化与版本强制。
+>
+> 首次安装、登录与验证见 [installation-guide.md](installation-guide.md)。
 
 ## 快速开始
 
@@ -368,6 +370,7 @@ api      <METHOD> <PATH>
 
 | Topic | Description | Reference |
 | --- | --- | --- |
+| Installation | 首次安装、登录、验证与排错 | [installation-guide.md](installation-guide.md) |
 | Setup | CLI 构建、登录、版本配置 | [setup.md](references/setup.md) |
 | Content Formatting | HTML 片段与纯文本规则 | [content-formatting.md](references/content-formatting.md) |
 | Relations | 产品/项目/执行/需求/任务/Bug/用例/测试单关联 | [relations.md](references/relations.md) |
