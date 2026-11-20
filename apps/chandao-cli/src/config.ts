@@ -195,18 +195,20 @@ export function resolveConfig(options: {
 }): ResolvedConfig {
   const fileConfig = loadConfig()
 
+  // 登录后配置优先于环境变量，避免换账号后被旧 CHANDAO_* 环境变量覆盖。
   const baseUrl = normalizeBaseUrl(
-    options.baseUrl || env.CHANDAO_URL || fileConfig?.baseUrl || '',
+    options.baseUrl || fileConfig?.baseUrl || env.CHANDAO_URL || '',
   )
-  const account = options.account || env.CHANDAO_ACCOUNT || fileConfig?.account
+  const account = options.account || fileConfig?.account || env.CHANDAO_ACCOUNT
   const apiVersion = normalizeApiVersion(
-    options.apiVersion || env.CHANDAO_API_VERSION || fileConfig?.apiVersion,
+    options.apiVersion || fileConfig?.apiVersion || env.CHANDAO_API_VERSION,
   )
 
   const tokens: Partial<Record<ApiVersion, string>> = {
-    v1: env.CHANDAO_TOKEN_V1 || fileConfig?.tokenV1,
-    v2: env.CHANDAO_TOKEN_V2 || fileConfig?.tokenV2,
+    v1: fileConfig?.tokenV1 || env.CHANDAO_TOKEN_V1,
+    v2: fileConfig?.tokenV2 || env.CHANDAO_TOKEN_V2,
   }
+  const hasConfigToken = Boolean(fileConfig?.tokenV1 || fileConfig?.tokenV2)
 
   if (!baseUrl) {
     console.error(
@@ -225,6 +227,6 @@ export function resolveConfig(options: {
     apiVersion,
     detectedVersion: fileConfig?.detectedVersion,
     tokens,
-    tokenOverride: options.token || env.CHANDAO_TOKEN,
+    tokenOverride: options.token || (hasConfigToken ? undefined : env.CHANDAO_TOKEN),
   }
 }

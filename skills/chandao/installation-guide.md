@@ -92,7 +92,7 @@ chandao-cli auth login --base-url http://host/zentao --account <账号>
 
 ## Step 4: 环境变量（可选）
 
-如果希望不落盘配置，或在 CI 中注入，可使用环境变量（优先级：命令行参数 > 环境变量 > 配置文件）：
+如果希望不落盘配置，或在 CI 中注入，可使用环境变量。优先级是：**命令行参数 > 配置文件 > 环境变量**——登录后配置优先，环境变量只在没有配置（或刚 logout）时作为回退：
 
 ```bash
 export CHANDAO_URL="http://192.168.0.19:8890"
@@ -205,6 +205,7 @@ chandao-cli testcase get --id <用例ID> --spec-version 1 # v1/v2 都支持
 | 登录成功但列表为空 | 确认过滤条件（需求/任务需要 product/project/execution），以及账号可见范围 |
 | 命令参数不确定 | 执行 `chandao-cli <group> <command> --help` 查看最新用法 |
 | Node 版本过低 | 升级到 Node.js ≥ 20 |
-| 想退出登录 | `chandao-cli auth logout` 清除本地配置 |
+| 想退出登录 | `chandao-cli auth logout` 清除本地配置；若终端里还 export 了 `CHANDAO_*`，命令会继续用环境变量，需一并 unset |
+| 换账号后仍用旧账号 | 检查是否设置了 `CHANDAO_URL/ACCOUNT/TOKEN` 环境变量；CLI 3.1+ 登录后配置优先，但 `logout` 后会回退环境变量 |
 | 无法解密配置 / 私钥不匹配 | 升级到 chandao-cli 3.0.1+（修复 macOS 钥匙串 hex 解码）；仍失败时删除 `~/.chandao/public.pem` 后重新 `auth login`（会重建密钥） |
 | 非交互环境读不到钥匙串私钥 | 3.0.1+ 已允许非 TTY 读取；仍不可用时设置 `CHANDAO_CLI_NO_KEYCHAIN=1` 并重新登录（改用文件私钥） |

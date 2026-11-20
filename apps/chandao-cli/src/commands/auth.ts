@@ -105,8 +105,9 @@ export function registerAuthCommand(program: Command): void {
       const opts = cmd.optsWithGlobals() as LoginOptions
       const fileConfig = loadConfig()
 
-      let baseUrl = (opts.baseUrl || env.CHANDAO_URL || fileConfig?.baseUrl || '').trim()
-      let account = (opts.account || env.CHANDAO_ACCOUNT || fileConfig?.account || '').trim()
+      // 已存在有效配置时，以配置为准；环境变量只在没有配置时作为回退。
+      let baseUrl = (opts.baseUrl || fileConfig?.baseUrl || env.CHANDAO_URL || '').trim()
+      let account = (opts.account || fileConfig?.account || env.CHANDAO_ACCOUNT || '').trim()
       let password = opts.password || env.CHANDAO_PASSWORD || ''
 
       try {
@@ -175,6 +176,10 @@ export function registerAuthCommand(program: Command): void {
         printSuccess({
           baseUrl,
           account,
+          source: {
+            baseUrl: opts.baseUrl ? 'cli' : (fileConfig?.baseUrl ? 'config' : 'env'),
+            account: opts.account ? 'cli' : (fileConfig?.account ? 'config' : 'env'),
+          },
           apiVersion: preference,
           detectedVersion: probe.detected,
           subpathDetected,
@@ -259,6 +264,16 @@ export function registerAuthCommand(program: Command): void {
     .description('清除本地登录配置')
     .action(() => {
       clearConfig()
+      const envKeys = ['CHANDAO_URL', 'CHANDAO_ACCOUNT', 'CHANDAO_TOKEN', 'CHANDAO_TOKEN_V1', 'CHANDAO_TOKEN_V2']
+        .filter(key => Boolean(env[key]))
+      if (envKeys.length > 0) {
+        printSuccess({
+          loggedOut: true,
+          envFallback: envKeys,
+          hint: '本机仍设置了 CHANDAO_* 环境变量，后续命令会回退使用它们；如需完全退出，请同时 unset 这些变量。',
+        }, 'auth.logout')
+        return
+      }
       printSuccess({ loggedOut: true }, 'auth.logout')
     })
 }

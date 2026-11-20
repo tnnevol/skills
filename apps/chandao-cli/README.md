@@ -73,6 +73,8 @@ chandao-cli --api-version v1 execution start --id 1
 | `CHANDAO_API_VERSION` | `auto` / `v1` / `v2` |
 | `CHANDAO_CLI_NO_KEYCHAIN=1` | 禁用以系统钥匙串保存私钥，改用本地文件（600） |
 
+优先级：**命令行参数 > `~/.chandao/config.json` > 环境变量**。登录后配置优先，环境变量只在未登录/无配置时作为回退；`logout` 会清除配置，但已 export 的环境变量仍会继续生效。
+
 配置目录：`~/.chandao/`
 
 - `config.json`：地址、账号、版本偏好、加密后的 `tokenV1` / `tokenV2`

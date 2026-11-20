@@ -54,7 +54,9 @@ chandao-cli auth login \
 | `CHANDAO_API_VERSION` | `auto` / `v1` / `v2` |
 | `CHANDAO_CLI_NO_KEYCHAIN=1` | 私钥改用本地文件（600） |
 
-优先级：命令行参数 > 环境变量 > `~/.chandao/config.json`。
+优先级：**命令行参数 > `~/.chandao/config.json` > 环境变量**。
+
+登录成功后配置文件优先，避免 shell 里遗留的 `CHANDAO_URL` / `CHANDAO_ACCOUNT` 旧账号覆盖新配置；没有配置或刚 `logout` 时才回退到环境变量。
 
 ## 4. 版本切换
 
