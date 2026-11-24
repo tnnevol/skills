@@ -107,7 +107,7 @@ chandao-cli --api-version v1 execution start --id 1
 | 用户 | `user list/get/create/update/delete` |
 | 权限分组/角色 | `group list`（仅 v1） |
 | 部门 | `dept list/get`（仅 v1） |
-| 附件 | `file upload/download/get`；需求图片批量下载用 `story images` |
+| 附件 | `file upload/download/get`；需求/Bug/任务图片批量下载用 `story/bug/task images` |
 | 任意接口 | `api <METHOD> <PATH>` |
 
 通用选项：
@@ -154,8 +154,10 @@ chandao-cli file upload --file ./mockup.png --object-type story --object-id 12
 # -> {"id":37,"url":"/index.php?m=file&f=read&t=png&fileID=37"}
 chandao-cli story update --id 12 --spec '<p>布局：</p><p><img src="/index.php?m=file&f=read&t=png&fileID=37" alt="布局"></p>'
 
-# 读取已有需求里的图片（Web 图片 URL 需要登录态，不能直接 curl）
+# 读取已有需求/Bug/任务里的图片（Web 图片 URL 需要登录态，不能直接 curl）
 chandao-cli story images --id 3251 --dir ./3251-images
+chandao-cli bug images --id 12 --dir ./bug-images
+chandao-cli task images --id 34 --dir ./task-images
 chandao-cli file download --id 55732 --output ./55732.png
 
 # 直接调用任意接口（path 可带 /v1 或 /v2）

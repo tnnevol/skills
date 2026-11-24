@@ -1,8 +1,8 @@
 import type { Command } from 'commander'
 import { Option } from 'commander'
 import { printError } from '../output.js'
+import { registerBugImagesCommand, registerStoryImagesCommand, registerTaskImagesCommand } from './resource-images.js'
 import { requireOption, runOperation, runUpdate } from './shared.js'
-import { registerStoryImagesCommand } from './story-images.js'
 
 interface OptDef {
   flags: string
@@ -382,6 +382,10 @@ export function registerResourceCommands(program: Command): void {
     ],
   })
 
+  const taskGroup = program.commands.find(command => command.name() === 'task')
+  if (taskGroup)
+    registerTaskImagesCommand(taskGroup)
+
   registerResource(program, {
     name: 'execution',
     entityKey: 'execution',
@@ -500,6 +504,10 @@ export function registerResourceCommands(program: Command): void {
       { command: 'delete', description: '删除 Bug', op: 'bug.delete', requireYes: true },
     ],
   })
+
+  const bugGroup = program.commands.find(command => command.name() === 'bug')
+  if (bugGroup)
+    registerBugImagesCommand(bugGroup)
 
   registerResource(program, {
     name: 'testcase',

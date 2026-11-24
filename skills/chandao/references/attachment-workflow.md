@@ -6,19 +6,29 @@
 
 不能写本地路径、不能 base64、不能外链、不能先写内容再补附件（会导致附件与内容脱节）。
 
-## 0. 读取已有图片/附件
+## 0. 图片默认下载 / 附件按需下载
 
 内容里的 `file-read-N.png` / `fileID=N` 是禅道 Web 路由，**需要登录 Cookie**；直接 `curl` 会 302 或返回登录页 HTML，不能当成图片。用 CLI 走 v1 文件接口下载：
 
 ```bash
-# 一次下载需求 spec+verify 里的全部图片/附件（去重）
+# 图片：get 之后默认立即下载，不询问用户
 chandao-cli story images --id 3251 --dir ./3251-images
+chandao-cli bug images --id 12 --dir ./bug-images
+chandao-cli task images --id 34 --dir ./task-images
 
 # 已知 fileID 时单独下载
 chandao-cli file download --id 55732 --output ./55732.png
 ```
 
-- `story images` 会提取 `file-read-N` 和 `?fileID=N` 两种形式，按响应 Content-Type 决定扩展名；
+**附件规则（必须遵守）**：
+
+1. `story/bug/task get` 后检查 `files` 是否非空；
+2. 有附件时**不要自动下载**，先完成正文阅读/总结；
+3. 在回复末尾说明附件数量与文件名，并询问用户：**“是否需要下载附件并查看内容？”**；
+4. 用户同意后才 `file download`，下载后用对应工具读取 PDF/Word/Excel 等内容；
+5. 用户不同意时只保留附件清单，不读取附件内容。
+
+- `story/bug/task images` 会提取 `file-read-N` 和 `?fileID=N` 两种形式，按响应 Content-Type 决定扩展名；
 - 下载走 `GET /api.php/v1/files/{id}`，v1-only 实例也可用；v2 实例需要登录时同时拿到 v1 token；
 - 输出 JSON 里 `files[]` 包含 `fileID`、`output`、`bytes`、`contentType`；默认跳过已存在文件，加 `--force` 覆盖。
 

@@ -5,7 +5,7 @@ slug: chandao
 description: 通过 chandao-cli 操作禅道（ZenTao）：产品、项目、执行、需求、任务、Bug、测试用例、测试单、用户与附件上传。强制需求 spec+verify 双 HTML 字段、测试用例纯文本步骤、创建时补齐产品/项目/执行/需求关联，并遵循“先上传附件、再把文件地址回显到 HTML”的图文 workflow。
 metadata:
   author: Tnnevol
-  version: "2.4.2"
+  version: "2.4.3"
 ---
 
 # SKILL: chandao（禅道）
@@ -95,6 +95,32 @@ chandao-cli product list --limit 5
 chandao-cli testcase create --product 1 --title "登录成功" \
   --steps '[{"step":"打开登录页","expect":"显示账号密码输入框"},{"step":"输入正确账号密码并提交","expect":"进入工作台"}]'
 ```
+
+## 图片 / 附件默认行为（必须遵守）
+
+每次 `story get` / `bug get` / `task get` 后，先检查内容里有没有图片和附件：
+
+| 对象 | 图片字段 | 附件字段 |
+| --- | --- | --- |
+| 需求 story | `spec`、`verify` | `files` |
+| Bug | `steps` | `files` |
+| 任务 task | `desc` | `files` |
+
+1. **内容里有图片：默认立即下载，不需要询问用户。**
+   ```bash
+   chandao-cli story images --id <storyID> --dir ./story-images
+   chandao-cli bug images --id <bugID> --dir ./bug-images
+   chandao-cli task images --id <taskID> --dir ./task-images
+   ```
+   下载后必须实际查看图片内容（尺寸/文字/界面），再把图片内容纳入理解；不要只报告“已下载”。
+
+2. **有附件：不要自动下载。**
+   - 先完成正文阅读/总结；
+   - 在回复里说明附件数量和文件名，明确询问用户：**“是否需要下载附件并查看内容？”**
+   - 用户同意后，用 `file download --id <fileID> --output <path>` 下载，再读取/查看附件内容（PDF/Word 等用对应工具）；
+   - 用户未同意时，只保留附件列表，不读取内容。
+
+3. 图片 URL 是 Web 登录路由，不能直接 `curl`；下载必须走 CLI 的 v1 files 接口。
 
 ## 附件 / 图文 Workflow（必须按顺序）
 
@@ -190,9 +216,9 @@ auth     login | status [--verify] | use <auto|v1|v2> | logout
 product  list | get | create | update | delete | list-by-program
 project  list | get | create | update | delete | list-by-program
 story    list | get | create | update | close | change | activate | delete | images
-task     list | get | create | update | start | pause | restart | finish | close | activate | delete
+task     list | get | create | update | start | pause | restart | finish | close | activate | delete | images
 execution list | get | create | update | start(v2) | suspend(v2) | close(v2) | delete
-bug      list | get | create | update | resolve | close | activate | confirm | delete
+bug      list | get | create | update | resolve | close | activate | confirm | delete | images
 testcase list | get | create | update | delete
 user     list | get | create | update | delete
 testtask list | get | delete        # 测试单（仅 v1 读）
@@ -294,6 +320,8 @@ api      <METHOD> <PATH>
 | 上传图片/附件 | `file upload --file <path> [--object-type story --object-id <id>]` |
 | 下载附件/图片 | `file download --id <fileID> [--output <path>]` |
 | 批量下载需求图片 | `story images --id <storyID> [--dir <dir>]` |
+| 批量下载 Bug 图片 | `bug images --id <bugID> [--dir <dir>]` |
+| 批量下载任务图片 | `task images --id <taskID> [--dir <dir>]` |
 | 查附件信息 | `file get --id <fileID>`（v2 元数据） |
 
 ### 用户 / 角色 / 部门

@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer'
 import { describe, expect, it } from 'vitest'
 import { chooseVersion } from '../client.js'
-import { collectFileIDs } from '../commands/story-images.js'
+import { collectFileIDs } from '../commands/resource-images.js'
 import { maskToken, normalizeApiVersion, normalizeBaseUrl } from '../config.js'
 import { decodeKeychainSecret } from '../crypto.js'
 import { actionOp, OPS } from '../ops.js'
