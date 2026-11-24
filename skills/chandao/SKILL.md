@@ -5,7 +5,7 @@ slug: chandao
 description: 通过 chandao-cli 操作禅道（ZenTao）：产品、项目、执行、需求、任务、Bug、测试用例、测试单、用户与附件上传。强制需求 spec+verify 双 HTML 字段、测试用例纯文本步骤、创建时补齐产品/项目/执行/需求关联，并遵循“先上传附件、再把文件地址回显到 HTML”的图文 workflow。
 metadata:
   author: Tnnevol
-  version: "2.5.0"
+  version: "2.4.2"
 ---
 
 # SKILL: chandao（禅道）
