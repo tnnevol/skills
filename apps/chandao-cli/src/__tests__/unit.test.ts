@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer'
 import { describe, expect, it } from 'vitest'
 import { chooseVersion } from '../client.js'
+import { collectFileIDs } from '../commands/story-images.js'
 import { maskToken, normalizeApiVersion, normalizeBaseUrl } from '../config.js'
 import { decodeKeychainSecret } from '../crypto.js'
 import { actionOp, OPS } from '../ops.js'
@@ -84,10 +85,17 @@ describe('ops builders', () => {
     expect(() => OPS['story.get'].v1!({ id: 1, specVersion: 1 })).toThrow(/v1/)
   })
 
+  it('story images 能从 HTML 中去重提取 fileID', () => {
+    const html = '<img src="file-read-10.png"><img src="x/file-read-11.png"><a href="?m=file&f=read&fileID=10">a</a>'
+    expect(collectFileIDs(html)).toEqual([10, 11])
+  })
+
   it('file.get 仅 v2，auto 在 v1 环境下回退 v2', () => {
     expect(OPS['file.get'].v1).toBeUndefined()
     expect(chooseVersion(OPS['file.get'], 'auto', 'v1')).toEqual({ version: 'v2', fallback: true })
     expect(() => chooseVersion(OPS['file.get'], 'v1', 'v1')).toThrow(/v1/)
+    expect(OPS['file.download'].v2).toBeUndefined()
+    expect(chooseVersion(OPS['file.download'], 'auto', 'v2')).toEqual({ version: 'v1', fallback: true })
   })
 
   it('actionOp 拼接资源动作', () => {

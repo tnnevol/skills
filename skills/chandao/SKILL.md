@@ -5,7 +5,7 @@ slug: chandao
 description: 通过 chandao-cli 操作禅道（ZenTao）：产品、项目、执行、需求、任务、Bug、测试用例、测试单、用户与附件上传。强制需求 spec+verify 双 HTML 字段、测试用例纯文本步骤、创建时补齐产品/项目/执行/需求关联，并遵循“先上传附件、再把文件地址回显到 HTML”的图文 workflow。
 metadata:
   author: Tnnevol
-  version: "2.4.1"
+  version: "2.5.0"
 ---
 
 # SKILL: chandao（禅道）
@@ -144,8 +144,12 @@ chandao-cli file upload --file ./report.pdf
 - 上传返回的 `url` 有两种形式：新版相对路径（`/index.php?m=file&f=read&t=png&fileID=37`）或旧版绝对地址（`http://host/zentao/file-read-37.png`）。**原样**放进 `src`/`href`，不要拼主机名、不要改写。
 - v2 上传**必须**同时提供 `--object-type` 与 `--object-id`；缺少时禅道返回空响应（CLI 会直接报错）。
 - v1 上传只接受文件本身（可选 `--uid`），**不绑定对象**；返回的 URL 仍可嵌入内容，但不会出现在对象的附件列表里。
-- 图片打开需要登录态：`file read` 路由未登录会 302 到登录页；页面里登录后正常显示，不要因为 curl 拿到 302 就判定上传失败。
-- 附件列表可用 `chandao-cli file get --id <fileID>` 校验（仅 v2）。
+- 图片 URL 的 `file read` 路由需要登录态，直接 `curl` 会 302/返回登录 HTML；下载图片请用 CLI（走 v1 `/files/{id}` 接口）：
+  ```bash
+  chandao-cli story images --id <storyID> --dir ./story-images
+  chandao-cli file download --id <fileID> --output ./file.png
+  ```
+- 附件列表可用 `chandao-cli file get --id <fileID>` 校验（仅 v2 元数据）。
 - 非图片附件用链接嵌入：`<p><a href="{url}">下载附件：report.pdf</a></p>`。
 
 ## 内容版本（读取/更新前必看）
@@ -185,14 +189,14 @@ v2 的 `--project` 与 `--execution` 是不同关联：传 project 进项目需�
 auth     login | status [--verify] | use <auto|v1|v2> | logout
 product  list | get | create | update | delete | list-by-program
 project  list | get | create | update | delete | list-by-program
-story    list | get | create | update | close | change | activate | delete
+story    list | get | create | update | close | change | activate | delete | images
 task     list | get | create | update | start | pause | restart | finish | close | activate | delete
 execution list | get | create | update | start(v2) | suspend(v2) | close(v2) | delete
 bug      list | get | create | update | resolve | close | activate | confirm | delete
 testcase list | get | create | update | delete
 user     list | get | create | update | delete
 testtask list | get | delete        # 测试单（仅 v1 读）
-file     upload | get               # 附件上传
+file     upload | download | get     # 附件上传/下载
 group    list                       # 仅 v1
 dept     list | get                 # 仅 v1
 api      <METHOD> <PATH>
@@ -288,7 +292,9 @@ api      <METHOD> <PATH>
 | 用户说法 | 命令 |
 | --- | --- |
 | 上传图片/附件 | `file upload --file <path> [--object-type story --object-id <id>]` |
-| 查附件信息 | `file get --id <fileID>`（v2） |
+| 下载附件/图片 | `file download --id <fileID> [--output <path>]` |
+| 批量下载需求图片 | `story images --id <storyID> [--dir <dir>]` |
+| 查附件信息 | `file get --id <fileID>`（v2 元数据） |
 
 ### 用户 / 角色 / 部门
 

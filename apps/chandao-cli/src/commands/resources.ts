@@ -2,6 +2,7 @@ import type { Command } from 'commander'
 import { Option } from 'commander'
 import { printError } from '../output.js'
 import { requireOption, runOperation, runUpdate } from './shared.js'
+import { registerStoryImagesCommand } from './story-images.js'
 
 interface OptDef {
   flags: string
@@ -280,6 +281,10 @@ export function registerResourceCommands(program: Command): void {
       },
     ],
   })
+
+  const storyGroup = program.commands.find(command => command.name() === 'story')
+  if (storyGroup)
+    registerStoryImagesCommand(storyGroup)
 
   registerResource(program, {
     name: 'task',

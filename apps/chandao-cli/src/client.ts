@@ -1,5 +1,6 @@
 import type { ApiVersion, ApiVersionPreference, ResolvedConfig } from './config.js'
 import type { OpDef } from './ops.js'
+import { Buffer } from 'node:buffer'
 import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
 import { request as undiciRequest } from 'undici'
@@ -156,6 +157,88 @@ export class ChandaoClient {
     }
 
     return { status: response.statusCode, data }
+  }
+
+  /** 下载二进制内容（附件/图片）；错误响应仍按 JSON 解析 message。 */
+  async requestBytes(
+    version: ApiVersion,
+    method: HttpMethod,
+    path: string,
+    body?: unknown,
+    token?: string,
+  ): Promise<{ status: number, body: Buffer, contentType?: string, contentDisposition?: string }> {
+    const url = `${apiBaseUrl(this.config.baseUrl, version)}${path}`
+    const headers: Record<string, string> = {}
+    const activeToken = token ?? this.tokenFor(version)
+    if (activeToken)
+      headers.Token = activeToken
+    if (body !== undefined)
+      headers['Content-Type'] = 'application/json'
+
+    let response
+    try {
+      response = await undiciRequest(url, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+        bodyTimeout: 60_000,
+        headersTimeout: 30_000,
+      })
+    }
+    catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      throw new ChandaoError(`请求失败（${method} ${path}）：${message}`, { kind: 'network', version })
+    }
+
+    const arrayBuffer = await response.body.arrayBuffer()
+    const header = (name: string): string | undefined => {
+      const value = response.headers[name]
+      return Array.isArray(value) ? value[0] : value?.toString()
+    }
+    return {
+      status: response.statusCode,
+      body: Buffer.from(arrayBuffer),
+      contentType: header('content-type'),
+      contentDisposition: header('content-disposition'),
+    }
+  }
+
+  /** 下载附件/图片（优先 v1 /files/{id}，v2 不提供二进制下载）。 */
+  async downloadFile(id: string | number): Promise<{
+    version: ApiVersion
+    fallback: boolean
+    body: Buffer
+    contentType?: string
+    contentDisposition?: string
+  }> {
+    const op = OPS['file.download']
+    const { version, fallback } = chooseVersion(op, this.config.apiVersion, this.config.detectedVersion)
+    const builder = op[version]
+    if (!builder)
+      throw new ChandaoError(`操作 file.download 在 ${version} 上没有实现`, { kind: 'unsupported', version })
+
+    const call = builder({ id })
+    const result = await this.requestBytes(version, call.method, call.path)
+    if (result.status >= 400) {
+      let message = `下载失败（HTTP ${result.status}）`
+      try {
+        const data = JSON.parse(result.body.toString('utf8')) as Record<string, unknown>
+        if (typeof data.message === 'string')
+          message = data.message
+      }
+      catch {}
+      throw new ChandaoError(message, { kind: 'api', status: result.status, version })
+    }
+    if (result.contentType?.includes('json')) {
+      let data: unknown
+      try {
+        data = JSON.parse(result.body.toString('utf8'))
+      }
+      catch {}
+      this.assertSuccess(version, call.method, call.path, result.status, data)
+      throw new ChandaoError('接口返回 JSON 而不是文件内容，无法下载', { kind: 'api', status: result.status, version })
+    }
+    return { version, fallback, body: result.body, contentType: result.contentType, contentDisposition: result.contentDisposition }
   }
 
   /** 用账号密码探测 v1/v2 登录可用性；v2 优先。 */

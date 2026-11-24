@@ -107,7 +107,7 @@ chandao-cli --api-version v1 execution start --id 1
 | 用户 | `user list/get/create/update/delete` |
 | 权限分组/角色 | `group list`（仅 v1） |
 | 部门 | `dept list/get`（仅 v1） |
-| 附件 | `file upload/get`（v2 可绑定对象，v1 仅上传） |
+| 附件 | `file upload/download/get`；需求图片批量下载用 `story images` |
 | 任意接口 | `api <METHOD> <PATH>` |
 
 通用选项：
@@ -115,7 +115,7 @@ chandao-cli --api-version v1 execution start --id 1
 - `--page <n>` / `--limit <n>`：分页（v1→page/limit，v2→pageID/recPerPage）
 - `--order <order>`：排序，默认 `id_desc`
 - `--yes`：删除类命令必须显式确认
-- `--spec-version <n>`：读取需求/用例的历史版本（仅 v2 支持；默认最新）
+- `--spec-version <n>`：读取需求/用例的历史版本（需求仅 v2；用例 v1/v2 都支持；默认最新）
 - `--pretty`：美化输出
 
 ## 示例
@@ -153,6 +153,10 @@ chandao-cli dept list
 chandao-cli file upload --file ./mockup.png --object-type story --object-id 12
 # -> {"id":37,"url":"/index.php?m=file&f=read&t=png&fileID=37"}
 chandao-cli story update --id 12 --spec '<p>布局：</p><p><img src="/index.php?m=file&f=read&t=png&fileID=37" alt="布局"></p>'
+
+# 读取已有需求里的图片（Web 图片 URL 需要登录态，不能直接 curl）
+chandao-cli story images --id 3251 --dir ./3251-images
+chandao-cli file download --id 55732 --output ./55732.png
 
 # 直接调用任意接口（path 可带 /v1 或 /v2）
 chandao-cli api GET '/v1/products?limit=2'

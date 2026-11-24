@@ -6,6 +6,22 @@
 
 不能写本地路径、不能 base64、不能外链、不能先写内容再补附件（会导致附件与内容脱节）。
 
+## 0. 读取已有图片/附件
+
+内容里的 `file-read-N.png` / `fileID=N` 是禅道 Web 路由，**需要登录 Cookie**；直接 `curl` 会 302 或返回登录页 HTML，不能当成图片。用 CLI 走 v1 文件接口下载：
+
+```bash
+# 一次下载需求 spec+verify 里的全部图片/附件（去重）
+chandao-cli story images --id 3251 --dir ./3251-images
+
+# 已知 fileID 时单独下载
+chandao-cli file download --id 55732 --output ./55732.png
+```
+
+- `story images` 会提取 `file-read-N` 和 `?fileID=N` 两种形式，按响应 Content-Type 决定扩展名；
+- 下载走 `GET /api.php/v1/files/{id}`，v1-only 实例也可用；v2 实例需要登录时同时拿到 v1 token；
+- 输出 JSON 里 `files[]` 包含 `fileID`、`output`、`bytes`、`contentType`；默认跳过已存在文件，加 `--force` 覆盖。
+
 ## 1. 上传命令
 
 ```bash
@@ -148,7 +164,8 @@ chandao-cli file upload --file ./case.png --object-type testcase --object-id <id
 | --- | --- |
 | 附件是否绑定 | `chandao-cli file get --id <fileID>`（v2 返回 objectType/objectID） |
 | 内容是否含 URL | `story get` / `bug get` / `task get` 查看对应字段 |
-| 图片能否打开 | 浏览器登录后访问；未登录访问 `file read` 会 302 到登录页，这是正常鉴权 |
+| 图片能否下载 | `story images --id <id>` 或 `file download --id <fileID>`（走 v1 `/files/{id}`，带 Token） |
+| Web 图片 URL 能否直接 curl | 不能：`file read` 需要登录 Cookie，未登录返回 302/登录 HTML |
 | 文件是否存在 | 上传命令返回 `id` 即成功；不要用 curl 未登录访问判断 |
 
 已知限制：

@@ -1,6 +1,8 @@
 import type { Command } from 'commander'
-import { existsSync } from 'node:fs'
+import { existsSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { printError, printSuccess } from '../output.js'
+import { extensionFor } from './attachment-utils.js'
 import { fail, getClient, requireOption, runOperation } from './shared.js'
 
 export function registerFileCommand(program: Command): void {
@@ -51,7 +53,38 @@ export function registerFileCommand(program: Command): void {
       }
     })
 
-  const get = file.command('get').description('查询附件信息')
+  file
+    .command('download')
+    .description('下载附件/图片二进制（v1 /files/{id}；v2 仅元数据）')
+    .requiredOption('--id <id>', '文件 ID')
+    .option('--output <path>', '保存路径（默认 ./file-<id>.<ext>）')
+    .option('--force', '覆盖已存在文件')
+    .action(async (_options, cmd: Command) => {
+      const opts = cmd.optsWithGlobals() as Record<string, any>
+      requireOption(opts.id, 'file download 需要 --id')
+      const client = getClient(cmd)
+      try {
+        const result = await client.downloadFile(opts.id)
+        const defaultName = `file-${opts.id}.${extensionFor(result.contentType, result.contentDisposition)}`
+        const output = resolve(String(opts.output || defaultName))
+        if (existsSync(output) && !opts.force)
+          printError(`文件已存在：${output}（加 --force 覆盖）`)
+        writeFileSync(output, result.body)
+        printSuccess({
+          version: result.version,
+          fileID: opts.id,
+          output,
+          bytes: result.body.length,
+          contentType: result.contentType ?? null,
+          fallback: result.fallback,
+        }, 'file.download')
+      }
+      catch (error) {
+        fail(error)
+      }
+    })
+
+  const get = file.command('get').description('查询附件信息（v2 元数据）')
   get.option('--id <id>', '文件 ID')
   get.action(async (_options, cmd: Command) => {
     const opts = cmd.optsWithGlobals() as Record<string, any>

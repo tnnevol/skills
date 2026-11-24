@@ -35,7 +35,8 @@ chandao-cli 的命令与禅道 REST API v1 / v2 的映射。基于对 `192.168.0
 | `group list` | ✅ | ❌ | v1 `/groups`（官方文档未收录，源码 `api/v1/entries/groups.php`） |
 | `dept list/get` | ✅ | ❌ | 仅查询，v1 无部门创建接口 |
 | `file upload` | ✅ | ✅ | v1 字段 `imgFile`，不绑定对象；v2 字段 `file` + `objectType/objectID`（缺绑定返回 200 空） |
-| `file get` | ❌ | ✅ | v1 `GET /files/{id}` 直接返回文件二进制；v2 返回元数据 |
+| `file get` | ❌ | ✅ | v2 返回元数据；v1 无此语义 |
+| `file download` / `story images` | ✅ | ❌（元数据） | 下载走 v1 `GET /files/{id}` 二进制；v2 只有元数据，无下载接口 |
 | `api <METHOD> <PATH>` | ✅ | ✅ | 直接透传，path 自带版本前缀 |
 
 ## 附件上传（实测）
@@ -46,7 +47,7 @@ chandao-cli 的命令与禅道 REST API v1 / v2 的映射。基于对 `192.168.0
 | v2 `POST /v2/files`（`file` + `objectType/objectID`） | ✅ 200，返回 `{status,id,url}`，绑定对象 |
 | v2 缺少 `objectType/objectID` | ⚠️ 200 空响应（CLI 直接报错） |
 | 返回 URL | `/index.php?m=file&f=read&t=png&fileID=N`，嵌入 HTML `<img src>` 后渲染正常（禅道会自动补 `onload`） |
-| 未登录访问 file read | 302 到登录页（正常鉴权） |
+| 未登录访问 file read | 302/登录 HTML（正常鉴权）；下载请用 `file download` 走 v1 files 接口 |
 
 ## 版本差异处理
 

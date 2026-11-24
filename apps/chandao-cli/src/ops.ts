@@ -600,6 +600,10 @@ export const OPS: Record<string, OpDef> = {
   'file.get': {
     v2: a => ({ method: 'GET', path: `/files/${a.id}` }),
   },
+  'file.download': {
+    // v2 的 /files/{id} 只返回元数据；v1 直接返回二进制
+    v1: a => ({ method: 'GET', path: `/files/${a.id}` }),
+  },
 
   // groups / departments（仅 v1）
   'group.list': {
