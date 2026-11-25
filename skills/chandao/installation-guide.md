@@ -171,7 +171,7 @@ chandao-cli bug list --product <产品ID> --limit 5
 chandao-cli testcase list --product <产品ID> --limit 5
 chandao-cli task list --execution <执行ID> --limit 5
 
-# 分组 / 部门（仅 v1）
+# 分组 / 部门（v1/v2）
 chandao-cli group list
 chandao-cli dept list
 

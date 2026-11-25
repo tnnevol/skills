@@ -18,14 +18,15 @@ A：确认地址可访问（`/api.php/v1/tokens`）、账号密码正确、站�
 
 ```bash
 chandao-cli auth status --verify
-# 返回 effectiveVersion / verify.version
+# 返回 verify.v1 / verify.v2 两个版本各自的状态，verify.ok 表示当前生效版本是否正常
+# v1 token 是 session_id，失效后 v1 功能 401，但 v2 不受影响
 ```
 
 ## 版本
 
 **Q：为什么 `group list` 用 v2 报错？**
 
-A：分组只有 v1；auto 会自动回退，强制 v2 会失败。去掉 `--api-version v2`。
+A：v2 的 `/groups` 已支持；如果实例没有该接口，auto 会自动回退 v1。强制 v2 仍失败时去掉 `--api-version v2`。
 
 **Q：为什么 `execution start` 在 v1 报错？**
 

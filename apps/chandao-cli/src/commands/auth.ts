@@ -1,5 +1,6 @@
 import type { Command } from 'commander'
 import type { Buffer } from 'node:buffer'
+import type { ChandaoError } from '../client.js'
 import type { ApiVersionPreference } from '../config.js'
 import { env, stderr, stdin } from 'node:process'
 import { createInterface } from 'node:readline/promises'
@@ -226,13 +227,35 @@ export function registerAuthCommand(program: Command): void {
       }
 
       if (options.verify) {
-        const client = new ChandaoClient(resolveConfig({}))
-        try {
-          const result = await client.call('product.list', { limit: 1 })
-          payload.verify = { ok: true, version: result.version, fallback: Boolean(result.fallback) }
+        const check = async (version: 'v1' | 'v2'): Promise<Record<string, unknown>> => {
+          const token = version === 'v1' ? config.tokenV1 : config.tokenV2
+          if (!token)
+            return { ok: false, version, message: `未保存 ${version} token` }
+          try {
+            const client = new ChandaoClient(resolveConfig({ apiVersion: version }))
+            const result = await client.call('product.list', { limit: 1 })
+            return { ok: true, version: result.version, fallback: Boolean(result.fallback) }
+          }
+          catch (error) {
+            const err = error as ChandaoError
+            return {
+              ok: false,
+              version,
+              ...(err.status !== undefined ? { status: err.status } : {}),
+              message: error instanceof Error ? error.message : String(error),
+            }
+          }
         }
-        catch (error) {
-          payload.verify = { ok: false, message: error instanceof Error ? error.message : String(error) }
+
+        const [v1, v2] = await Promise.all([check('v1'), check('v2')])
+        const effectiveResult = effective === 'v1' ? v1 : v2
+        payload.verify = {
+          ok: Boolean(effectiveResult.ok),
+          version: effective,
+          fallback: Boolean(effectiveResult.fallback),
+          effective,
+          v1,
+          v2,
         }
       }
 

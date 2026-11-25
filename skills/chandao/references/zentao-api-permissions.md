@@ -6,7 +6,7 @@
 
 | 命令 | 能力 |
 | --- | --- |
-| `group list` | 列出分组、角色、成员、`privs`（仅 v1） |
+| `group list` | 列出分组、角色、成员；v1 带 `privs`，v2 带 `users` |
 | `user get --id` | 查看用户 `role`、`dept`、`group` |
 | `user create/update --group <ids>` | 分配分组（仅 v1） |
 

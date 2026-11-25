@@ -84,9 +84,11 @@ CLI 已封装；绕过 CLI 直接调 API 时才会踩到。
 
 `execution start/suspend/close` 仅 v2。强制 v1 会报“该操作在 v1 未提供”。
 
-## 14. 版本差异：分组/部门只有 v1
+## 14. 分组/部门：v1、v2 都有
 
-`group list`、`dept list/get` 仅 v1；auto 模式下会自动回退并输出 `fallback: true`。
+`group list`、`dept list/get` 在 v1 和 v2 都有实现；auto 优先 v2，v2 不可用时回退 v1。
+
+注意两类 token 的生命周期不同：**v1 token 是 `session_id()`，会话级、几小时后可能失效**；v2 token 才能长期使用。v1 报 401 时重登即可，不要把它当长期凭证。
 
 ## 15. 修改角色权限没有 REST API
 
@@ -94,7 +96,7 @@ CLI 已封装；绕过 CLI 直接调 API 时才会踩到。
 
 ## 16. 部门只能查
 
-禅道 v1 没有 `POST /departments`；`dept list/get` 只读。新建部门需 Web/DB。
+禅道 v1/v2 都没有创建部门的 REST 接口；`dept list/get` 只读。新建部门需 Web/DB。
 
 ## 17. 文档 API 受限
 

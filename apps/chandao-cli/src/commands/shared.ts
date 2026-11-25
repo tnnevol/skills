@@ -24,7 +24,7 @@ export function fail(error: unknown, fallbackMessage = '操作失败'): never {
     printError(error.message, {
       httpStatus: error.status,
       version: error.version,
-      details: error.kind === 'api' ? error.data : undefined,
+      details: error.kind === 'api' || error.kind === 'auth' ? error.data : undefined,
     })
   }
   printError(error instanceof Error ? error.message : fallbackMessage)

@@ -92,9 +92,9 @@ bug      list | get | create | update | resolve | close | activate | confirm | d
 testcase list | get | create | update | delete
 testtask list | get | delete       # 测试单（仅 v1 读）
 user     list | get | create | update | delete
-file     upload | get               # 附件上传
-group    list                       # 仅 v1
-dept     list | get                 # 仅 v1
+file     upload | download | get    # 附件上传/下载
+group    list
+dept     list | get
 api      <METHOD> <PATH>            # 任意接口，path 可带 /v1 或 /v2 前缀
 ```
 

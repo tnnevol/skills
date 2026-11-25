@@ -5,7 +5,7 @@ slug: chandao
 description: 通过 chandao-cli 操作禅道（ZenTao）：产品、项目、执行、需求、任务、Bug、测试用例、测试单、用户与附件上传。强制需求 spec+verify 双 HTML 字段、测试用例纯文本步骤、创建时补齐产品/项目/执行/需求关联，并遵循“先上传附件、再把文件地址回显到 HTML”的图文 workflow。
 metadata:
   author: Tnnevol
-  version: "2.4.3"
+  version: "2.4.4"
 ---
 
 # SKILL: chandao（禅道）
@@ -38,7 +38,7 @@ chandao-cli product list --limit 5
 
 ### 版本选择
 
-- 默认 `auto`：优先 v2；某操作只有 v1（如 `group list`、`dept list`）时自动回退，输出带 `fallback: true`。
+- 默认 `auto`：优先 v2；某个操作在当前版本未实现时自动回退另一版本，输出带 `fallback: true`。
 - 强制：全局加 `--api-version v1|v2`，或 `chandao-cli auth use v1|v2|auto`。
 - 强制版本不支持该操作会直接报错，不会静默换版本。
 
@@ -192,6 +192,7 @@ chandao-cli file upload --file ./report.pdf
 - 输出里 `data.version` 是当前版本号；按版本读取时 `data.requestedVersion` 是请求的版本号（实体 `version` 仍显示当前版本）。
 - v1 的 story get 不接受 `version` 查询参数，CLI 在强制 v1 时会直接报错；
 - v1 的 testcase get **支持** `?version=N`，返回的 `currentVersion` 是实际读取的版本。
+- **v1 token 本质是 `session_id()`（会话级临时凭证），几小时后可能失效；不要把它当长期 token。** v1 功能 401 时重新 `auth login` 即可，v2 功能不受影响。
 
 ## 关联关系（创建前必须确认）
 
@@ -223,8 +224,8 @@ testcase list | get | create | update | delete
 user     list | get | create | update | delete
 testtask list | get | delete        # 测试单（仅 v1 读）
 file     upload | download | get     # 附件上传/下载
-group    list                       # 仅 v1
-dept     list | get                 # 仅 v1
+group    list
+dept     list | get
 api      <METHOD> <PATH>
 ```
 
@@ -396,7 +397,7 @@ api      <METHOD> <PATH>
 - ⚠️ v2 创建字段名带 `ID` 后缀（如 `executionID`），CLI 已封装，不要绕过 CLI 直接改。
 - ⚠️ Bug 状态流转用专用命令（`resolve/close/activate/confirm`），`bug update --status` 无效。
 - ⚠️ `story close` 必须 `--reason`；`story change` 必须 `--reviewer`；`task finish` 必须 `--consumed`。
-- ⚠️ `execution start/suspend/close` 仅 v2；`group list`、`dept list/get` 仅 v1。
+- ⚠️ `execution start/suspend/close` 仅 v2；`group list`、`dept list/get` 在 v1/v2 都可用。
 - ⚠️ 修改角色权限（grouppriv）没有 REST API，只能 Web/DB。
 - ⚠️ 删除必须 `--yes`。
 

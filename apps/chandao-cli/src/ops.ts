@@ -608,12 +608,15 @@ export const OPS: Record<string, OpDef> = {
   // groups / departments（仅 v1）
   'group.list': {
     v1: () => ({ method: 'GET', path: '/groups' }),
+    v2: () => ({ method: 'GET', path: '/groups' }),
   },
   'dept.list': {
     v1: () => ({ method: 'GET', path: '/departments' }),
+    v2: () => ({ method: 'GET', path: '/depts' }),
   },
   'dept.get': {
     v1: a => ({ method: 'GET', path: `/departments/${a.id}` }),
+    v2: a => ({ method: 'GET', path: `/depts/${a.id}` }),
   },
 }
 

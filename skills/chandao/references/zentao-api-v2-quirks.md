@@ -60,8 +60,8 @@ v1 未实现路由一般返回 404。
 | v1 文档化接口 | 96/97 可用（唯一例外是官方文档笔误的 `/productsplan/{id}`，真实为 `/productplans/{id}`） |
 | v2 核心模块 | 产品/项目/执行/任务/需求/Bug/用例/用户/附件可用 |
 | v2 文档模块 | `/v2/doc/*` 返回空（未实现） |
-| 分组 API | 仅 v1 `GET /groups`（官方文档未收录，源码 entry） |
-| 部门 API | 仅 v1 查询，无创建 |
+| 分组 API | v1 `GET /groups`；v2 `GET /groups`（字段含 `users`，无 v1 的 `privs`） |
+| 部门 API | v1 `/departments`、v2 `/depts` 均可查询；无创建接口 |
 | 隐藏 v1 entry | `groups`、`tasks/{id}/active`、`projects/{id}/bugs` 等来自源码 `api/v1/entries/` |
 | 附件上传 | v2 必须绑定对象；v1 只上传不绑定 |
 | 历史版本读取 | story：仅 v2 `?version=N`；testcase：v1/v2 都支持 `?version=N`；task/bug：无 |

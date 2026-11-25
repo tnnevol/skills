@@ -32,8 +32,8 @@ chandao-cli 的命令与禅道 REST API v1 / v2 的映射。基于对 `192.168.0
 | `story get --spec-version` | ❌ | ✅ | v1 忽略 version 参数；v2 返回指定版本内容，实体 version 仍为当前版本 |
 | `testcase get --spec-version` | ✅ | ✅ | v1/v2 都支持 `?version=N`；v1 响应 `currentVersion` 标识读取版本 |
 | `testtask list/get/delete` | ✅ | ❌ | 测试单读接口仅 v1；创建需 project+product+execution+build，CLI 暂未封装 |
-| `group list` | ✅ | ❌ | v1 `/groups`（官方文档未收录，源码 `api/v1/entries/groups.php`） |
-| `dept list/get` | ✅ | ❌ | 仅查询，v1 无部门创建接口 |
+| `group list` | ✅ | ✅ | v1 `/groups` 带 `privs`；v2 `/groups` 带 `users` |
+| `dept list/get` | ✅ | ✅ | v1 `/departments`、v2 `/depts`；均无创建接口 |
 | `file upload` | ✅ | ✅ | v1 字段 `imgFile`，不绑定对象；v2 字段 `file` + `objectType/objectID`（缺绑定返回 200 空） |
 | `file get` | ❌ | ✅ | v2 返回元数据；v1 无此语义 |
 | `file download` / `story images` | ✅ | ❌（元数据） | 下载走 v1 `GET /files/{id}` 二进制；v2 只有元数据，无下载接口 |

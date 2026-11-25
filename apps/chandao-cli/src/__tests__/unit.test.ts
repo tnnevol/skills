@@ -12,7 +12,7 @@ describe('chooseVersion', () => {
   })
 
   it('auto 首选 v2 但操作仅 v1 时回退 v1', () => {
-    expect(chooseVersion(OPS['group.list'], 'auto', 'v2')).toEqual({ version: 'v1', fallback: true })
+    expect(chooseVersion(OPS['testtask.list'], 'auto', 'v2')).toEqual({ version: 'v1', fallback: true })
   })
 
   it('auto 未探测时默认按 v2 偏好', () => {
@@ -24,7 +24,7 @@ describe('chooseVersion', () => {
   })
 
   it('强制版本不支持时抛错', () => {
-    expect(() => chooseVersion(OPS['group.list'], 'v2', 'v2')).toThrow(/v2/)
+    expect(() => chooseVersion(OPS['testtask.list'], 'v2', 'v2')).toThrow(/v2/)
   })
 })
 
@@ -88,6 +88,13 @@ describe('ops builders', () => {
   it('story images 能从 HTML 中去重提取 fileID', () => {
     const html = '<img src="file-read-10.png"><img src="x/file-read-11.png"><a href="?m=file&f=read&fileID=10">a</a>'
     expect(collectFileIDs(html)).toEqual([10, 11])
+  })
+
+  it('group/dept 同时提供 v1 与 v2 映射', () => {
+    expect(OPS['group.list'].v1!({}).path).toBe('/groups')
+    expect(OPS['group.list'].v2!({}).path).toBe('/groups')
+    expect(OPS['dept.list'].v2!({}).path).toBe('/depts')
+    expect(OPS['dept.get'].v2!({ id: 1 }).path).toBe('/depts/1')
   })
 
   it('file.get 仅 v2，auto 在 v1 环境下回退 v2', () => {

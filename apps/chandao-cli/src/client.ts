@@ -412,8 +412,16 @@ export class ChandaoClient {
 
   private assertSuccess(version: ApiVersion, method: HttpMethod, path: string, status: number, data: unknown): void {
     if (status === 401 || status === 403) {
+      const serverMessage = extractMessage(data)
+      const reason = version === 'v1'
+        ? 'v1 会话凭证已失效（禅道 v1 token 本质是 session_id，会随会话过期）'
+        : 'v2 token 无效或权限不足'
+      const hint = version === 'v1'
+        ? '请重新执行 `chandao-cli auth login`；如果只是 v1 功能不可用，可改用 v2 或重登后再试。'
+        : '请重新执行 `chandao-cli auth login`，或检查账号角色/权限。'
+      const server = serverMessage ? `；服务端返回：${serverMessage}` : ''
       throw new ChandaoError(
-        `鉴权失败（HTTP ${status}）：token 无效或权限不足，请重新执行 \`chandao-cli auth login\`。`,
+        `鉴权失败（HTTP ${status}）：${reason}${server}。${hint}`,
         { status, data, kind: 'auth', version },
       )
     }

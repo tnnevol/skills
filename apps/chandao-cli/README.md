@@ -38,10 +38,10 @@ chandao-cli auth login \
 1. 尝试 `POST /api.php/v2/users/login`；
 2. 尝试 `POST /api.php/v1/tokens`；
 3. 两个版本都成功时记录 **detectedVersion = v2**，并把两套 token 都加密保存；
-4. `auto` 模式下命令优先走 v2；某个操作只有 v1（如 `group list`、`dept list`）时自动回退 v1，并在输出里标 `fallback: true`。
+4. `auto` 模式下命令优先走 v2；某个操作在当前版本未实现时自动回退，并在输出里标 `fallback: true`。
 
 ```bash
-chandao-cli auth status --verify   # 查看配置并用当前版本实际请求一次
+chandao-cli auth status --verify   # 查看配置，并分别验证 v1/v2
 chandao-cli auth use v1            # 强制默认 v1（也可 auto / v2）
 chandao-cli auth logout            # 清除本地配置
 ```
@@ -85,10 +85,12 @@ chandao-cli --api-version v1 execution start --id 1
 
 ### 认证
 
+> v1 token 是禅道的 `session_id()`，属于会话级临时凭证，几小时后可能失效；v2 token 才能长期使用。v1 接口 401 时重登即可，不影响 v2 功能。
+
 | 命令 | 说明 |
 |---|---|
 | `auth login` | 登录并探测 v1/v2，保存 token |
-| `auth status [--verify]` | 查看配置、版本与 token 状态 |
+| `auth status [--verify]` | 查看配置、版本与 token 状态；`--verify` 分别验证 v1/v2（`verify.ok` 表示当前生效版本） |
 | `auth use <auto\|v1\|v2>` | 切换版本偏好 |
 | `auth logout` | 清除本地配置 |
 
@@ -105,8 +107,8 @@ chandao-cli --api-version v1 execution start --id 1
 | 测试用例 | `testcase list/get/create/update/delete` |
 | 测试单 | `testtask list/get/delete`（仅 v1 读；创建需 build） |
 | 用户 | `user list/get/create/update/delete` |
-| 权限分组/角色 | `group list`（仅 v1） |
-| 部门 | `dept list/get`（仅 v1） |
+| 权限分组/角色 | `group list`（v1 带 privs，v2 带 users） |
+| 部门 | `dept list/get`（v1/v2） |
 | 附件 | `file upload/download/get`；需求/Bug/任务图片批量下载用 `story/bug/task images` |
 | 任意接口 | `api <METHOD> <PATH>` |
 
