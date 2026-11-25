@@ -5,7 +5,7 @@ slug: chandao
 description: 通过 chandao-cli 操作禅道（ZenTao）：产品、项目、执行、需求、任务、Bug、测试用例、测试单、用户与附件上传。强制需求 spec+verify 双 HTML 字段、测试用例纯文本步骤、创建时补齐产品/项目/执行/需求关联，并遵循“先上传附件、再把文件地址回显到 HTML”的图文 workflow。
 metadata:
   author: Tnnevol
-  version: "2.4.5"
+  version: "2.4.6"
 ---
 
 # SKILL: chandao（禅道）
@@ -126,7 +126,8 @@ chandao-cli testcase create --product 1 --title "登录成功" \
 
 - 文档正文不是普通 HTML 字段：创建/修改时用 `--content-type doc`，`content` 才是 **Markdown**，禅道会转成块编辑器并生成 HTML 快照；`--content-type html` 才是原样 HTML。
 - 文档里的本地图片必须先上传到文档附件库（`objectType=doc`、`objectID=<docID>`），再把返回 URL 写进正文；`doc create/update` 已自动处理 Markdown/HTML 中的本地图片路径。
-- v1 只有文档读取；v2 文档写接口需要禅道 **22.5+**，22.1 会返回空，必须用 Web 或升级。
+- v1 只有文档读取；v2 文档写接口需要禅道 **22.5+**，22.1 会返回空，必须用 Web 编辑或升级。
+- **禁止用「删除文档 + 重新创建」实现编辑**：`doc update` 会保留 docID、附件、历史和链接；删除重建会换 ID，导致附件/链接/历史全部断裂。22.1 只能在 Web 里编辑原文档。
 - 详见 [commands-doc.md](references/commands-doc.md)。
 
 ## 附件 / 图文 Workflow（必须按顺序）

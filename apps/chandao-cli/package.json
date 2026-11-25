@@ -1,7 +1,7 @@
 {
   "name": "@tnnevol/chandao-cli",
   "type": "module",
-  "version": "3.1.4",
+  "version": "3.1.5",
   "description": "CLI for ZenTao (禅道) - REST API v1/v2 with automatic version detection",
   "author": "tnnevol",
   "license": "AGPL-3.0",

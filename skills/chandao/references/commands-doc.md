@@ -41,6 +41,8 @@ chandao-cli doc update --id 10 \
   --content-type doc
 ```
 
+> **编辑文档不要用「删除 + 重建」**：`doc update` 走 `PUT /v2/doc/docs/{docID}`，会保留文档 ID、附件、历史和链接，只递增内容版本；删除重建会换 ID，附件/链接/历史全部断掉。
+
 ### `contentType` 是关键（缺了就不会转 HTML）
 
 | 值 | 行为 |
@@ -70,5 +72,5 @@ CLI 默认 `--content-type doc`。如果传入 Markdown 却用 `html`，页面�
 ## 22.1 怎么办
 
 - 读取：用上面的 v1 命令；
-- 写入：22.1 没有文档写接口，CLI 会阻止并提示；用 Web 界面创建/编辑；
+- 写入：22.1 没有文档写接口，CLI 会阻止并提示；用 Web 界面**编辑原文档**（不要删除重建）；
 - 升级到 22.5+ 后即可用 v2 全量命令。

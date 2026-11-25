@@ -343,6 +343,8 @@ export function registerDocCommand(program: Command): void {
           printError('需要 --content 或 --content-file（当前文档详情没有可复用正文）')
         const title = opts.title || String(entity.title ?? '')
         const body = docBody({ ...opts, title }, content)
+        // 未显式指定时保留原文档格式，避免 html 文档被误转成 doc
+        body.contentType = opts.contentType || entity.contentType || 'doc'
         const { content: finalContent, uploads } = await uploadLocalImages(client, opts.id, content)
         body.content = finalContent
         const updated = await client.requestDirect('PUT', docGetPath(String(opts.id)), body, 'v2')
