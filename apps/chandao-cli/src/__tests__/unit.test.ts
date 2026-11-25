@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer'
 import { describe, expect, it } from 'vitest'
 import { chooseVersion } from '../client.js'
+import { collectImageSources, docLibsPath, docListPath } from '../commands/doc.js'
 import { collectFileIDs } from '../commands/resource-images.js'
 import { maskToken, normalizeApiVersion, normalizeBaseUrl } from '../config.js'
 import { decodeKeychainSecret } from '../crypto.js'
@@ -88,6 +89,13 @@ describe('ops builders', () => {
   it('story images 能从 HTML 中去重提取 fileID', () => {
     const html = '<img src="file-read-10.png"><img src="x/file-read-11.png"><a href="?m=file&f=read&fileID=10">a</a>'
     expect(collectFileIDs(html)).toEqual([10, 11])
+  })
+
+  it('doc 路径拼接与图片提取', () => {
+    expect(docLibsPath('product', { objectId: '1' })).toBe('/v2/doc/product/spaces/1/libs')
+    expect(docListPath('project', { objectId: '2' }, '3')).toBe('/v2/doc/project/spaces/2/libs/3/docs')
+    expect(docLibsPath('team', { space: '5' })).toBe('/v2/doc/team/spaces/5/libs')
+    expect(collectImageSources('![a](./a.png) <img src="./b.png"> ![](https://x/y.png)')).toEqual(['./a.png', './b.png'])
   })
 
   it('group/dept 同时提供 v1 与 v2 映射', () => {

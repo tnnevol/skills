@@ -5,7 +5,7 @@ slug: chandao
 description: 通过 chandao-cli 操作禅道（ZenTao）：产品、项目、执行、需求、任务、Bug、测试用例、测试单、用户与附件上传。强制需求 spec+verify 双 HTML 字段、测试用例纯文本步骤、创建时补齐产品/项目/执行/需求关联，并遵循“先上传附件、再把文件地址回显到 HTML”的图文 workflow。
 metadata:
   author: Tnnevol
-  version: "2.4.4"
+  version: "2.4.5"
 ---
 
 # SKILL: chandao（禅道）
@@ -122,6 +122,13 @@ chandao-cli testcase create --product 1 --title "登录成功" \
 
 3. 图片 URL 是 Web 登录路由，不能直接 `curl`；下载必须走 CLI 的 v1 files 接口。
 
+## 文档（doc）特殊规则
+
+- 文档正文不是普通 HTML 字段：创建/修改时用 `--content-type doc`，`content` 才是 **Markdown**，禅道会转成块编辑器并生成 HTML 快照；`--content-type html` 才是原样 HTML。
+- 文档里的本地图片必须先上传到文档附件库（`objectType=doc`、`objectID=<docID>`），再把返回 URL 写进正文；`doc create/update` 已自动处理 Markdown/HTML 中的本地图片路径。
+- v1 只有文档读取；v2 文档写接口需要禅道 **22.5+**，22.1 会返回空，必须用 Web 或升级。
+- 详见 [commands-doc.md](references/commands-doc.md)。
+
 ## 附件 / 图文 Workflow（必须按顺序）
 
 涉及图片、截图、附件的需求/Bug/任务，**先上传附件拿到 URL，再把 URL 回显进 HTML 片段，最后保存内容**。禁止跳过上传直接写本地路径或 base64。
@@ -223,6 +230,7 @@ bug      list | get | create | update | resolve | close | activate | confirm | d
 testcase list | get | create | update | delete
 user     list | get | create | update | delete
 testtask list | get | delete        # 测试单（仅 v1 读）
+doc      spaces | libs | list | get | create | update | delete
 file     upload | download | get     # 附件上传/下载
 group    list
 dept     list | get
@@ -407,6 +415,7 @@ api      <METHOD> <PATH>
 | --- | --- | --- |
 | Installation | 首次安装、登录、验证与排错 | [installation-guide.md](installation-guide.md) |
 | Setup | CLI 构建、登录、版本配置 | [setup.md](references/setup.md) |
+| Doc | 文档读写、Markdown→HTML、图片上传 | [commands-doc.md](references/commands-doc.md) |
 | Content Formatting | HTML 片段与纯文本规则 | [content-formatting.md](references/content-formatting.md) |
 | Relations | 产品/项目/执行/需求/任务/Bug/用例/测试单关联 | [relations.md](references/relations.md) |
 | Attachment Workflow | 上传 → URL → HTML 回显 | [attachment-workflow.md](references/attachment-workflow.md) |

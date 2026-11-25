@@ -110,6 +110,7 @@ chandao-cli --api-version v1 execution start --id 1
 | 权限分组/角色 | `group list`（v1 带 privs，v2 带 users） |
 | 部门 | `dept list/get`（v1/v2） |
 | 附件 | `file upload/download/get`；需求/Bug/任务图片批量下载用 `story/bug/task images` |
+| 文档 | `doc spaces/libs/list/get/create/update/delete`（v1 只读；v2 需 22.5+） |
 | 任意接口 | `api <METHOD> <PATH>` |
 
 通用选项：
@@ -161,6 +162,9 @@ chandao-cli story images --id 3251 --dir ./3251-images
 chandao-cli bug images --id 12 --dir ./bug-images
 chandao-cli task images --id 34 --dir ./task-images
 chandao-cli file download --id 55732 --output ./55732.png
+
+# 文档：Markdown 创建（contentType=doc 才会转块编辑器/HTML；本地图片自动上传到文档附件库）
+chandao-cli doc create --type product --object-id 1 --lib 2 --title "接口说明" --content-file ./doc.md --content-type doc
 
 # 直接调用任意接口（path 可带 /v1 或 /v2）
 chandao-cli api GET '/v1/products?limit=2'

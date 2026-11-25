@@ -2,6 +2,7 @@ import type { Command } from 'commander'
 import { createRequire } from 'node:module'
 import { Command as Commander } from 'commander'
 import { registerAuthCommand } from './commands/auth.js'
+import { registerDocCommand } from './commands/doc.js'
 import { registerFileCommand } from './commands/file.js'
 import { registerResourceCommands } from './commands/resources.js'
 import { fail, getClient } from './commands/shared.js'
@@ -28,6 +29,7 @@ program
   })
 
 registerAuthCommand(program)
+registerDocCommand(program)
 registerFileCommand(program)
 registerResourceCommands(program)
 registerApiCommand(program)
