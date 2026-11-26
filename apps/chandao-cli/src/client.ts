@@ -241,6 +241,21 @@ export class ChandaoClient {
     return { version, fallback, body: result.body, contentType: result.contentType, contentDisposition: result.contentDisposition }
   }
 
+  /** 读取站点版本（/?mode=getconfig，无需登录）。 */
+  async getSiteVersion(): Promise<string | null> {
+    const url = `${this.baseUrl.replace(TRAILING_SLASHES, '')}/?mode=getconfig`
+    try {
+      const response = await undiciRequest(url, { headersTimeout: 5_000, bodyTimeout: 5_000 })
+      if (response.statusCode >= 400)
+        return null
+      const data = JSON.parse(await response.body.text()) as Record<string, unknown>
+      return typeof data.version === 'string' ? data.version : null
+    }
+    catch {
+      return null
+    }
+  }
+
   /** 用账号密码探测 v1/v2 登录可用性；v2 优先。 */
   static async probe(baseUrl: string, account: string, password: string): Promise<DetectResult> {
     const normalized = baseUrl.replace(TRAILING_SLASHES, '')

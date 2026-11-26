@@ -20,6 +20,38 @@ const HTML_IMAGE_RE = /<img[^>]*src\s*=\s*["']([^"']+)["'][^>]*>/gi
 const REMOTE_RE = /^(?:https?:)?\/\//i
 const EXT_RE = /\.([a-z0-9]{1,8})$/i
 
+const VERSION_RE = /^(biz|max|ipd)?\s*(\d+)\.(\d+)/i
+
+const DOC_API_MIN: Record<string, [number, number]> = {
+  standard: [22, 5],
+  biz: [13, 5],
+  max: [8, 5],
+  ipd: [5, 5],
+}
+
+/** 文档 v2 API 的最低版本：标准版 22.5 / biz13.5 / max8.5 / ipd5.5。 */
+export function isDocApiSupported(version: string): boolean {
+  const match = version.match(VERSION_RE)
+  if (!match)
+    return true
+  const series = (match[1] || 'standard').toLowerCase()
+  const required = DOC_API_MIN[series] ?? DOC_API_MIN.standard
+  const major = Number(match[2])
+  const minor = Number(match[3])
+  return major > required[0] || (major === required[0] && minor >= required[1])
+}
+
+async function ensureDocApiVersion(client: ChandaoClient): Promise<void> {
+  const version = await client.getSiteVersion()
+  if (version && !isDocApiSupported(version)) {
+    throw new ChandaoError(
+      `当前禅道版本 ${version} 低于文档 v2 API 的最低版本（标准版 22.5 / biz13.5 / max8.5 / ipd5.5）。`
+      + '请升级禅道，或使用 Web 编辑原文档；CLI 不会通过删除重建来修改文档。',
+      { kind: 'unsupported' },
+    )
+  }
+}
+
 interface DocPathOptions {
   type?: string
   objectId?: string
@@ -53,8 +85,8 @@ function docGetPath(id: string): string {
 
 function unsupportedDocApi(): never {
   throw new ChandaoError(
-    '当前实例的文档 v2 接口返回空（禅道 22.1 未实现文档 API，需 22.5+）。'
-    + '请升级禅道，或使用 Web 界面创建文档；v1 只能读取文档/文档库。',
+    '当前实例的文档 v2 接口返回空（文档 API 需要标准版 22.5+ / biz13.5+ / max8.5+ / ipd5.5+）。'
+    + '请升级禅道，或使用 Web 界面编辑原文档；CLI 不会删除重建。',
     { kind: 'unsupported', version: 'v2' },
   )
 }
@@ -162,7 +194,9 @@ export function registerDocCommand(program: Command): void {
       const opts = cmd.optsWithGlobals() as Record<string, any>
       try {
         const type = assertType(opts.type)
-        const result = await getClient(cmd).requestDirect('GET', SPACES_PATH[type])
+        const client = getClient(cmd)
+        await ensureDocApiVersion(client)
+        const result = await client.requestDirect('GET', SPACES_PATH[type])
         if (result.data === null)
           unsupportedDocApi()
         printSuccess({ type, version: 'v2', data: result.data }, 'doc.spaces')
@@ -295,6 +329,7 @@ export function registerDocCommand(program: Command): void {
         const type = assertType(opts.type)
         if (client.effectiveVersion === 'v1')
           printError('v1 没有文档创建接口；文档创建需要 v2（禅道 22.5+），或使用 Web 界面。')
+        await ensureDocApiVersion(client)
         const content = readContent(opts)
         const path = docListPath(type, opts, String(opts.lib))
         const created = await client.requestDirect('POST', path, docBody(opts, content), 'v2')
@@ -333,7 +368,8 @@ export function registerDocCommand(program: Command): void {
       try {
         requireOption(opts.id, 'doc update 需要 --id')
         if (client.effectiveVersion === 'v1')
-          printError('v1 没有文档修改接口；文档修改需要 v2（禅道 22.5+），或使用 Web 界面。')
+          printError('v1 没有文档修改接口；文档修改需要 v2（禅道 22.5+），或使用 Web 编辑原文档。')
+        await ensureDocApiVersion(client)
         const current = await client.requestDirect('GET', docGetPath(String(opts.id)), undefined, 'v2')
         const entity = extractDoc(current.data)
         if (!entity)
@@ -369,6 +405,7 @@ export function registerDocCommand(program: Command): void {
           printError('删除需要显式加 --yes')
         if (client.effectiveVersion === 'v1')
           printError('v1 没有文档删除接口；v2 需禅道 22.5+，或使用 Web 界面。')
+        await ensureDocApiVersion(client)
         const result = await client.requestDirect('DELETE', docGetPath(String(opts.id)), undefined, 'v2')
         printSuccess({ version: 'v2', id: Number(opts.id), data: result.data }, 'doc.delete')
       }

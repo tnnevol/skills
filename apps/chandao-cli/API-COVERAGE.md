@@ -38,7 +38,7 @@ chandao-cli 的命令与禅道 REST API v1 / v2 的映射。基于对 `192.168.0
 | `file get` | ❌ | ✅ | v2 返回元数据；v1 无此语义 |
 | `file download` / `story images` | ✅ | ❌（元数据） | 下载走 v1 `GET /files/{id}` 二进制；v2 只有元数据，无下载接口 |
 | `doc libs/list/get` | ✅ | ✅ | v1 `/doclibs`、`/docs`、`/doc/{id}`；v2 `/doc/...`（22.5+） |
-| `doc create/update/delete` | ❌ | ✅ | v2 文档写接口需 22.5+；22.1 返回空。`contentType=doc` 才会 Markdown→HTML |
+| `doc create/update/delete` | ❌ | ✅ | v2 文档写接口需 22.5+；CLI 先读站点版本，低于 22.5 直接提示。`contentType=doc` 才会 Markdown→HTML |
 | `api <METHOD> <PATH>` | ✅ | ✅ | 直接透传，path 自带版本前缀 |
 
 ## 附件上传（实测）

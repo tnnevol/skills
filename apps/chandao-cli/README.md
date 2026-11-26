@@ -110,7 +110,7 @@ chandao-cli --api-version v1 execution start --id 1
 | 权限分组/角色 | `group list`（v1 带 privs，v2 带 users） |
 | 部门 | `dept list/get`（v1/v2） |
 | 附件 | `file upload/download/get`；需求/Bug/任务图片批量下载用 `story/bug/task images` |
-| 文档 | `doc spaces/libs/list/get/create/update/delete`（v1 只读；v2 需 22.5+） |
+| 文档 | `doc spaces/libs/list/get/create/update/delete`（v1 只读；v2 需 22.5+，低版本直接提示） |
 | 任意接口 | `api <METHOD> <PATH>` |
 
 通用选项：

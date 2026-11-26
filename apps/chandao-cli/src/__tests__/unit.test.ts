@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer'
 import { describe, expect, it } from 'vitest'
 import { chooseVersion } from '../client.js'
-import { collectImageSources, docLibsPath, docListPath } from '../commands/doc.js'
+import { collectImageSources, docLibsPath, docListPath, isDocApiSupported } from '../commands/doc.js'
 import { collectFileIDs } from '../commands/resource-images.js'
 import { maskToken, normalizeApiVersion, normalizeBaseUrl } from '../config.js'
 import { decodeKeychainSecret } from '../crypto.js'
@@ -89,6 +89,14 @@ describe('ops builders', () => {
   it('story images 能从 HTML 中去重提取 fileID', () => {
     const html = '<img src="file-read-10.png"><img src="x/file-read-11.png"><a href="?m=file&f=read&fileID=10">a</a>'
     expect(collectFileIDs(html)).toEqual([10, 11])
+  })
+
+  it('文档 v2 API 版本门槛', () => {
+    expect(isDocApiSupported('22.1')).toBe(false)
+    expect(isDocApiSupported('22.5')).toBe(true)
+    expect(isDocApiSupported('23.0')).toBe(true)
+    expect(isDocApiSupported('biz13.4')).toBe(false)
+    expect(isDocApiSupported('biz13.5')).toBe(true)
   })
 
   it('doc 路径拼接与图片提取', () => {
